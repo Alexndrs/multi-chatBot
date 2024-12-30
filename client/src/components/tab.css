@@ -48,11 +48,13 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    outline: none;
   }
   
   .tab-button:hover {
     border-color: var(--key-button-hover-color);
     color: var(--key-button-hover-color);
+    background-color: transparent;
   }
   
 .tabContent-Container{
@@ -68,7 +70,7 @@
 }
 
 .tabChild {
-  border : 1px solid var(--key-button-color);
+  border : 1px solid var(--hight-contrast);
   border-radius: 5px;
   padding: 10px;
 }

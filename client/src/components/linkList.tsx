@@ -1,10 +1,16 @@
 import "./linkList.css";
 import { Link } from "react-router-dom";
 import { FaUser, FaSearch } from "react-icons/fa";
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
+import { FiPlusSquare } from "react-icons/fi";
+
+
+
 
 const links = [
     { url: "/profile", name: "Profile", icon: <FaUser /> },
-    { url: null, name: "Search", icon: <FaSearch /> }
+    { url: null, name: "Search", icon: <FaSearch /> },
+    { url: "/chat/newId", name: "New Conversation", icon: <FiPlusSquare /> }
 ]
 
 

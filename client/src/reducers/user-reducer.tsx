@@ -1,7 +1,6 @@
 export type UserState = {
     name: string;
     profilePic: string;
-    level: number;
     email: string;
     isConnected: boolean;
     theme: string;

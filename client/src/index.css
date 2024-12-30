@@ -12,11 +12,12 @@
   -moz-osx-font-smoothing: grayscale;
 
   margin: 0;
-  font-size: 16px;
+  font-size: 20px;
 
   --tab-width: 14vw;
   --window-padding : 5%;
   --app-border-radius: 30px;
+  box-sizing: border-box;
 }
 
 
@@ -54,10 +55,16 @@
   --flash-color : aquamarine;
   --text-color : rgb(184, 196, 195);
   --button-bg-color : rgb(184, 196, 195);
+  --button-hover-bg-color : rgb(117, 128, 127);
   --button-font-color : #11131d;
   --small-contrast : rgba(255,255,255,0.01);
   --medium-contrast : rgba(255,255,255,0.1);
   --hight-contrast : rgba(255,255,255,0.2);
+
+  --chatBot-bg-color : linear-gradient(135deg, transparent, rgb(68, 91, 128));
+  --user-bg-color : linear-gradient(135deg, transparent, rgb(80, 63, 92));
+  --chatBot-text-color : white;
+  --user-text-color : white;
 
   --bg-bg : linear-gradient(135deg, #ff4800, #d0ff00);
 }
@@ -77,10 +84,16 @@
   --flash-color : rgb(255, 0, 64);
   --text-color : rgb(45, 43, 51);
   --button-bg-color : rgb(45, 43, 51);
+  --button-hover-bg-color : rgb(70, 68, 79);
   --button-font-color : #f9f3eb;
   --small-contrast : rgba(0,0,0,0.01);
   --medium-contrast : rgba(0,0,0,0.1);
   --hight-contrast : rgba(0,0,0,0.2);
+
+  --user-bg-color : linear-gradient(225deg, transparent, white);
+  --chatBot-bg-color : linear-gradient(225deg, rgb(128, 68, 87), rgb(47, 54, 65));
+  --user-text-color : black;
+  --chatBot-text-color : white;
 
   --bg-bg : linear-gradient(135deg, #140f17, #2b3c4e);
 
@@ -105,27 +118,28 @@ button {
   border-radius: 8px;
   border: none;
   padding: 11px 15px;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 500;
   font-family: inherit;
   background-color: var(--button-bg-color);
   color: var(--button-font-color);
   cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+button:hover {
+  background-color: var(--button-hover-bg-color);
 }
 
 .page {
-  margin-top: 30px;
   margin-left: calc(var(--tab-width) + 30px);
   margin-right: 30px;
-  display: block;
-  overflow-y: scroll;
+  margin-top : 30px;
+  margin-bottom : 30px;
+  height: calc(100% - 60px);
 }
 
-
-
-.page::-webkit-scrollbar {
-  display: none;
-}
 
 /* @media (prefers-color-scheme: light) {
   :root {

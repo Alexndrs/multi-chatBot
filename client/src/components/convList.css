@@ -1,5 +1,16 @@
 .conv-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
+}
+
+.link {
+    background-color: transparent;
+    padding:7px 15px;
+    transition: all 0.3s ease;
+    border-radius: 5px;
+}
+
+.link:hover {
+    background-color: var(--medium-contrast);
 }

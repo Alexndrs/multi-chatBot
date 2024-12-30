@@ -38,7 +38,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<LoginPage />} />
             <Route element={<PrivateRoute />}>
-              <Route path="/chat/:chatId" element={<ChatPage />} />
+              <Route path="/chat/:convId" element={<ChatPage />} />
               <Route path="/" element={<HomePage />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/profile" element={<ProfilePage />} />

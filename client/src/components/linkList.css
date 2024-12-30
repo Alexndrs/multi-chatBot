@@ -6,4 +6,5 @@
 
 .link {
     color : var(--tab-font-color);
+    cursor: pointer;
 }

@@ -29,7 +29,6 @@ const ProfilePage: React.FC = () => {
             <h2>Profile Page</h2>
             <p>Name: {state.name}</p>
             <p>Email: {state.email}</p>
-            <p>Level: {state.level}</p>
             <button onClick={handleChangeTheme}>
                 Switch to {state.theme === 'Dark' ? 'Light' : 'Dark'} Theme
             </button>
