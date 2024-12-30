@@ -39,7 +39,8 @@
 
 .messageBox {
     padding: 20px;
-    border-radius: 30px;
+    border-radius: 5px 5px 40px 15px;
+    white-space: pre-wrap;
 }
 
 
