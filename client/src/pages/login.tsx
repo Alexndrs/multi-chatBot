@@ -1,4 +1,4 @@
-// import "./login.css";
+import "./login.css";
 import React, { useContext } from "react";
 import { UserContext } from "../context/user-context";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,8 @@ const LoginPage: React.FC = () => {
                 profilePic: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/John_Doe%2C_born_John_Nommensen_Duchac.jpg/1200px-John_Doe%2C_born_John_Nommensen_Duchac.jpg",
                 level: 10,
                 email: "johndoe@example.com",
-                isConnected: true
+                isConnected: true,
+                theme: "Dark"
             },
         });
 

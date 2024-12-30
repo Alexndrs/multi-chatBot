@@ -1,5 +1,7 @@
 import "./tab.css";
 import { useEffect, useState } from "react";
+import LinkList from "./linkList.tsx";
+import ConvList from "./convList.tsx";
 // import { UserContext } from "../context/user-context";
 // import { AppContextProvider } from "../context/app-context";
 // import { initialState } from "../reducers/reservation-reducer";
@@ -44,7 +46,14 @@ const Tab = () => {
     return (
         <>
             <section className={`tab-container ${isVisible ? "" : "hidden"}`}>
-
+                <div className="tabContent-Container">
+                    <div className="tabChild linkContainer">
+                        <LinkList />
+                    </div>
+                    <div className="tabChild convContainer">
+                        <ConvList />
+                    </div>
+                </div>
             </section>
             <button onClick={() => setIsVisible(true)} className="tab-button">
                 T

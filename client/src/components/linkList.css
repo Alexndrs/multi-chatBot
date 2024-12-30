@@ -1,0 +1,9 @@
+.link-list {
+    display: flex;
+    gap : 15px;
+    flex-wrap: wrap;
+}
+
+.link {
+    color : var(--tab-font-color);
+}
