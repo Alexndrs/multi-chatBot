@@ -9,7 +9,7 @@ const ProfilePage: React.FC = () => {
         throw new Error("ProfilePage must be used within a UserContextProvider");
     }
 
-    const { state, dispatch } = userContext;
+    const { userState, dispatch } = userContext;
 
     const handleUpdateUser = () => {
         dispatch({
@@ -27,9 +27,9 @@ const ProfilePage: React.FC = () => {
     return (
         <div className="page profile-container">
             <h2>Profile Page</h2>
-            <p>Email: {state.email}</p>
+            <p>Email: {userState.email}</p>
             <button onClick={handleChangeTheme}>
-                Switch to {state.theme === 'Dark' ? 'Light' : 'Dark'} Theme
+                Switch to {userState.theme === 'Dark' ? 'Light' : 'Dark'} Theme
             </button>
             <button onClick={handleUpdateUser}>Logout</button>
         </div>

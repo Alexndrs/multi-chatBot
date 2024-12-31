@@ -3,7 +3,7 @@ import { userReducer, initialUserState, UserState, UserAction } from "../reducer
 
 // Définir le type du contexte
 type UserContextType = {
-    state: UserState;
+    userState: UserState;
     dispatch: React.Dispatch<UserAction>;
 };
 
@@ -12,10 +12,10 @@ export const UserContext = createContext<UserContextType | undefined>(undefined)
 
 // Créer le provider
 export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [state, dispatch] = useReducer(userReducer, initialUserState);
+    const [userState, dispatch] = useReducer(userReducer, initialUserState);
 
     return (
-        <UserContext.Provider value={{ state, dispatch }}>
+        <UserContext.Provider value={{ userState, dispatch }}>
             {children}
         </UserContext.Provider>
     );

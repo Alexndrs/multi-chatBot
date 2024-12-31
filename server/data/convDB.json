@@ -1,1 +1,28 @@
-{}
+{
+    "21dc8c8d-bbcb-4585-b868-c6a7b2c2a44e": {
+        "convId": "21dc8c8d-bbcb-4585-b868-c6a7b2c2a44e",
+        "convTitle": "workin conv 😎",
+        "lastMessageDate": "2024-12-31T18:00:24.158Z",
+        "messageList": [
+            {
+                "messageID": "3d6fb816-db58-4802-af82-7cd6b162848a",
+                "messageSender": "user",
+                "messageContent": "workin conv 😎",
+                "messageDate": "2024-12-31T18:00:24.158Z"
+            }
+        ]
+    },
+    "c9bbc2f6-e4f3-4d4d-9122-f931eb727be8": {
+        "convId": "c9bbc2f6-e4f3-4d4d-9122-f931eb727be8",
+        "convTitle": "finally",
+        "lastMessageDate": "2024-12-31T18:00:33.601Z",
+        "messageList": [
+            {
+                "messageID": "9a2a6a34-5d54-497e-913c-f6ecae8ea430",
+                "messageSender": "user",
+                "messageContent": "finally",
+                "messageDate": "2024-12-31T18:00:33.601Z"
+            }
+        ]
+    }
+}

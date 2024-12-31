@@ -2,8 +2,9 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef, useContext } from "react";
 import "./chatPage.css"
 import { FaPaperPlane } from "react-icons/fa";
-import { serverAPI } from "../api/api";
+import { createConv, updateConv } from "../api/api";
 import { UserContext } from "../context/user-context";
+import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
 type Message = {
@@ -15,96 +16,42 @@ type Message = {
 
 
 const ChatPage: React.FC = () => {
+    const navigate = useNavigate();
     const { convId } = useParams<{ convId: string }>();
     const userContext = useContext(UserContext);
     if (!userContext) {
         throw new Error("ProfilePage must be used within a UserContextProvider");
     }
-    const { state } = userContext;
+    const { userState, dispatch } = userContext;
     const [messageList, setMessageList] = useState<Message[]>([]);
 
 
-    const buildMessage = (messageString: string, messageSender: string): Message => {
-        return {
-            messageID: uuidv4(),
-            messageSender: messageSender,
-            messageContent: messageString,
-            messageDate: new Date()
-        }
+    const sendMessage = async () => {
+        await updateConv();
     }
+
+    const handleFirstMessage = async () => {
+        await createConv();
+        await updateConv();
+    }
+
+
+
+
 
     // Whenever the convId changes, we need to handle it and load the messages
     useEffect(() => {
         if (convId === "newConv") {
             // Wait for first message before creating the conv on the server
+            setMessageList([]);
         }
         else {
-            const fetchMessages = async () => {
-                // fetch messages from the server
-                const token = state.token;
-                if (!token) {
-                    throw new Error("Token is missing");
-                }
 
-                const options = {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Auth-Token": token
-                    }
-                }
-                const response = await fetch(`${serverAPI}conv/${convId}`, options);
-                const convContent = await response.json();
-                console.log(convContent);
-            }
-            fetchMessages();
         };
 
     }, [convId]);
 
-    // When we send the first message : we should create a new conversation on the server
-    const handleFistMessage = async (firstMessage: Message) => {
 
-        // Create a new conversation
-        const token = state.token;
-        if (!token) {
-            throw new Error("Token is missing");
-        }
-
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Auth-Token": token
-            },
-            body: JSON.stringify(firstMessage)
-        }
-        const response = await fetch(`${serverAPI}conv`, options);
-        const convContent = await response.json();
-        console.log(convContent);
-
-    }
-
-    // Send message with enter key
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-        }
-    };
-
-    // Send message with button
-    const handleSendMessage = () => {
-        console.log("Message a envoyé:", inputValue);
-        const wrappedMsg = buildMessage(inputValue, "user");
-
-        if (messageList.length === 0) {
-            handleFistMessage(wrappedMsg);
-        }
-
-        setMessageList([...messageList, wrappedMsg]);
-        setInputValue("");
-    };
 
     // Handling the textarea to make it grow with the content
     const [inputValue, setInputValue] = useState<string>("");
@@ -118,6 +65,29 @@ const ChatPage: React.FC = () => {
         setInputValue(e.target.value);
     };
 
+    // Detecting the enter key
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    // Calling the functions to send the message on the server (and update the UI)
+    const handleSendMessage = async () => {
+        if (messageList.length === 0) {
+            await handleFirstMessage();
+        }
+        await sendMessage();
+
+
+        const textarea = textareaRef.current;
+        if (textarea) {
+            textarea.style.height = "auto";
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+        setInputValue("");
+    };
 
     return (
         <div className="page chat-page-container">

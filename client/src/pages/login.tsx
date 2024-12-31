@@ -78,13 +78,12 @@ const LoginPage: React.FC = () => {
             console.log("Error while adding");
         }
         const token = await response.json();
-        console.log("token : ", token);
         dispatch({
             type: "UPDATE_USER",
             payload: {
                 email: email,
-                token: token,
-                convInfos: [],
+                token: token.userId,
+                convInfos: {},
                 theme: "Dark"
             },
         });

@@ -1,34 +1,21 @@
 {
-    "c3d06068-efeb-42d1-85a3-93f5b3bc42a7": {
-        "id": "c3d06068-efeb-42d1-85a3-93f5b3bc42a7",
+    "8e7c55a8-beed-4ab1-b630-eb11b1e52c18": {
+        "id": "8e7c55a8-beed-4ab1-b630-eb11b1e52c18",
         "mail": "alexandred56700@gmail.com",
-        "hashedPassword": "$2a$10$F6XXpNVTrC6b.aEbSKFEwuk9cRSzZqWLVTcakbWcWylVMlPbxufZi",
-        "convInfos": []
-    },
-    "72a8b780-5088-42f3-aa28-90a987f5404d": {
-        "convId": "72a8b780-5088-42f3-aa28-90a987f5404d",
-        "convTitle": "Hey",
-        "lastMessageDate": "2024-12-31T13:58:54.423Z",
-        "messageList": [
-            {
-                "messageID": "9db7d7cd-ed7e-49fb-8165-ca5663223de9",
-                "messageSender": "user",
-                "messageContent": "Hey",
-                "messageDate": "2024-12-31T13:58:54.423Z"
+        "hashedPassword": "$2a$10$y14O03fZ6USATk2k5TLXS.U7BDGDFR5sk9E6QGHZ2r8oIWRcg.npG",
+        "convInfos": {
+            "21dc8c8d-bbcb-4585-b868-c6a7b2c2a44e": {
+                "convId": "21dc8c8d-bbcb-4585-b868-c6a7b2c2a44e",
+                "title": "workin conv 😎",
+                "lastMessageDate": "2024-12-31T18:00:24.158Z",
+                "numberOfMessages": 1
+            },
+            "c9bbc2f6-e4f3-4d4d-9122-f931eb727be8": {
+                "convId": "c9bbc2f6-e4f3-4d4d-9122-f931eb727be8",
+                "title": "finally",
+                "lastMessageDate": "2024-12-31T18:00:33.601Z",
+                "numberOfMessages": 1
             }
-        ]
-    },
-    "e1a6f81d-6e7d-4d9b-8218-fd40acef7244": {
-        "convId": "e1a6f81d-6e7d-4d9b-8218-fd40acef7244",
-        "convTitle": "Hey",
-        "lastMessageDate": "2024-12-31T13:59:42.912Z",
-        "messageList": [
-            {
-                "messageID": "a5cedefc-6270-48d9-9ca4-ebad125c0801",
-                "messageSender": "user",
-                "messageContent": "Hey",
-                "messageDate": "2024-12-31T13:59:42.912Z"
-            }
-        ]
+        }
     }
 }

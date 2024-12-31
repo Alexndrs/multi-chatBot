@@ -28,9 +28,9 @@ function App() {
   if (!userContext) {
     throw new Error('App must be used within a UserContextProvider');
   }
-  const { state } = userContext;
+  const { userState } = userContext;
   return (
-    <div className={`app-container ${state.theme}`}>
+    <div className={`app-container ${userState.theme}`}>
       <div className="app theme">
         <Router>
           <TabOnLogin />

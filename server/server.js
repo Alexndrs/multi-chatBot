@@ -14,7 +14,7 @@ class Server {
     constructor() {
         this.userManager = new UserManager(path.resolve(__dirname, "data/userDB.json"));
         this.userRouter = new UserRouter(this.userManager);
-        this.convManager = new ConvManager(path.resolve(__dirname, "data/userDB.json"));
+        this.convManager = new ConvManager(path.resolve(__dirname, "data/convDB.json"));
         this.convRouter = new ConvRouter(this.convManager);
 
         this.configureRoutes();

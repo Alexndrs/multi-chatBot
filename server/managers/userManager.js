@@ -17,7 +17,7 @@ const bcrypt = require("bcryptjs");
  * @property {string} id    //Servira de token X-auth pour les requêtes
  * @property {string} mail
  * @property {string} hashedPassword 
- * @property {List[ConvInfo]} convInfos
+ * @property {Object[String : ConvInfo]} convInfos
  * 
  */
 
@@ -57,7 +57,7 @@ class UserManager {
                 "id": id,
                 "mail": mail,
                 "hashedPassword": hashedPassword,
-                "convInfos": []
+                "convInfos": {}
             }
             datas[id] = newUser;
             await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
@@ -87,12 +87,12 @@ class UserManager {
         }
     }
 
-    async addConv(userId, convId, title) {
+    async updateConvInfos(userId, convInfo) {
         try {
             const datas = await this.getDatas();
             const user = datas[userId];
             if (user) {
-                user.convInfos.push({ "id": convId, "title": title, "lastMessageDate": new Date() });
+                user.convInfos[convInfo.convId] = convInfo;
                 await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
                 return true;
             }
@@ -103,22 +103,18 @@ class UserManager {
         }
     }
 
-    async updateConv(userId, convId, title) {
+    async updateMessageConvInfos(userId, convInfo) {
         try {
             const datas = await this.getDatas();
             const user = datas[userId];
             if (user) {
-                const conv = user.convInfos.find(x => x.id === convId);
-                if (conv) {
-                    conv.title = title;
-                    conv.lastMessageDate = new Date();
-                    await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
-                    return true;
-                }
+                user.convInfos.push(convInfo);
+                await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
+                return true;
             }
             return false;
         } catch (err) {
-            console.error("Erreur dans updateConv :", err);
+            console.error("Erreur dans addConv :", err);
             throw err;
         }
     }

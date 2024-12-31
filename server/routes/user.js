@@ -27,7 +27,6 @@ class UserRouter {
         });
 
         this.router.post('/login', async (req, res) => {
-            console.log("try login with :", req.body.mail, req.body.hashedPassword);
             const userInfo = await this.userManager.loginUser(req.body.mail, req.body.password);
             if (!userInfo) {
                 return res.status(HTTP_STATUS.UNAUTHORIZED).send({ message: "Invalid credentials." });
@@ -42,6 +41,16 @@ class UserRouter {
                 return res.status(HTTP_STATUS.BAD_REQUEST).send({ message: "User already exists." });
             }
             return res.send({ userId });
+        });
+
+
+        this.router.put('/:userId', async (req, res) => {
+
+            const convId = await this.userManager.updateConvInfos(req.params.userId, req.body);
+            if (!convId) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).send({ message: "Conv already exists." });
+            }
+            return res.send({ convId });
         });
     }
 }

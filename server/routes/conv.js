@@ -19,7 +19,7 @@ class ConvRouter {
 
 
         this.router.get('/:convId', async (req, res) => {
-            console.log(req.params.convId);
+            console.log("load conv :", req.params.convId);
             const datas = await this.convManager.getDataById(req.params.convId);
             if (!datas) {
                 return res.status(HTTP_STATUS.NOT_FOUND).send({ message: "Conv not found." });
