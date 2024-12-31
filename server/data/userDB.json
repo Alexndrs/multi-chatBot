@@ -4,5 +4,31 @@
         "mail": "alexandred56700@gmail.com",
         "hashedPassword": "$2a$10$F6XXpNVTrC6b.aEbSKFEwuk9cRSzZqWLVTcakbWcWylVMlPbxufZi",
         "convInfos": []
+    },
+    "72a8b780-5088-42f3-aa28-90a987f5404d": {
+        "convId": "72a8b780-5088-42f3-aa28-90a987f5404d",
+        "convTitle": "Hey",
+        "lastMessageDate": "2024-12-31T13:58:54.423Z",
+        "messageList": [
+            {
+                "messageID": "9db7d7cd-ed7e-49fb-8165-ca5663223de9",
+                "messageSender": "user",
+                "messageContent": "Hey",
+                "messageDate": "2024-12-31T13:58:54.423Z"
+            }
+        ]
+    },
+    "e1a6f81d-6e7d-4d9b-8218-fd40acef7244": {
+        "convId": "e1a6f81d-6e7d-4d9b-8218-fd40acef7244",
+        "convTitle": "Hey",
+        "lastMessageDate": "2024-12-31T13:59:42.912Z",
+        "messageList": [
+            {
+                "messageID": "a5cedefc-6270-48d9-9ca4-ebad125c0801",
+                "messageSender": "user",
+                "messageContent": "Hey",
+                "messageDate": "2024-12-31T13:59:42.912Z"
+            }
+        ]
     }
 }

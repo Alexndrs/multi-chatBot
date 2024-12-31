@@ -4,18 +4,19 @@ const { v4: uuidv4 } = require('uuid');
 
 /**
  * 
- * Méthadonnées d'une conv
- * @typedef {Object} ConvInfo
- * @property {string} id 
- * @property {string} title
+ * données d'une conv
+ * @typedef {Object} convContent
+ * @property {string} convId 
+ * @property {string} convTitle
  * @property {Date} lastMessageDate
+ * @property {List[message]} messageList
  *  
- * Metadonnées d'un user
- * @typedef {Object} userData
- * @property {string} id    //Servira de token X-auth pour les requêtes
- * @property {string} mail
- * @property {string} hashedPassword 
- * @property {List[ConvInfo]} convInfos
+ * Metadonnées d'un message
+ * @typedef {Object} message
+ * @property {string} messageID
+ * @property {string} messageSender //"user"|"chatbot"
+ * @property {string} messageContent 
+ * @property {Date} messageDate 
  * 
  */
 
@@ -33,28 +34,59 @@ class ConvManager {
         const fileContent = await fs.readFile(this.path, { encoding: "utf-8" });
         const datas = JSON.parse(fileContent);
         return datas;
-
     }
 
-    // async updateConv(convId, title) {
-    //     try {
-    //         const datas = await this.getDatas(); // Charger les données existantes
-    //         const user = datas[userId];
-    //         if (user) {
-    //             const conv = user.convInfos.find(x => x.id === convId);
-    //             if (conv) {
-    //                 conv.title = title;
-    //                 conv.lastMessageDate = new Date();
-    //                 await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
-    //                 return true;
-    //             }
-    //         }
-    //         return false;
-    //     } catch (err) {
-    //         console.error("Erreur dans updateConv :", err);
-    //         throw err;
-    //     }
-    // }
+    async getDataById(id) {
+        const datas = await this.getDatas();
+        return datas[id];
+    }
+
+    async getDataByIdList(idList) {
+        const datas = await this.getDatas();
+        const result = idList.map(id => datas[id]);
+        return result;
+    }
+
+    async generateTitle(messageContent) {
+        return messageContent.slice(0, 20);
+    }
+
+    async addConv(firstMessage) {
+        try {
+            const datas = await this.getDatas();
+            const id = uuidv4();
+            const newConv = {
+                "convId": id,
+                "convTitle": await this.generateTitle(firstMessage.messageContent),
+                "lastMessageDate": firstMessage.messageDate,
+                "messageList": [firstMessage]
+            };
+            datas[id] = newConv;
+            await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
+            return newConv;
+        }
+        catch (err) {
+            console.error("Erreur dans addConv :", err);
+            throw err;
+        }
+    }
+
+    async addMessage(convId, message) {
+        try {
+            const datas = await this.getDatas();
+            const conv = datas[convId];
+            if (conv) {
+                conv.messageList.push(message);
+                conv.lastMessageDate = message.messageDate;
+                await fs.writeFile(this.path, JSON.stringify(datas, null, 4), { encoding: "utf-8" });
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.error("Erreur dans addMessage :", err);
+            throw err;
+        }
+    }
 }
 
 module.exports = { ConvManager };

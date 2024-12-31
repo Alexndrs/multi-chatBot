@@ -10,6 +10,7 @@ const bcrypt = require("bcryptjs");
  * @property {string} id 
  * @property {string} title
  * @property {Date} lastMessageDate
+ * @property {int} numberOfMessages
  *  
  * Metadonnées d'un user
  * @typedef {Object} userData

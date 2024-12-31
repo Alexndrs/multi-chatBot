@@ -8,7 +8,6 @@ import CryptoJS from 'crypto-js';
 
 const hashPasswordDeterministically = (password: string) => {
     return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-    // return password;
 };
 
 const LoginPage: React.FC = () => {
@@ -46,6 +45,7 @@ const LoginPage: React.FC = () => {
             payload: {
                 email: userInfo.mail,
                 token: userInfo.id,
+                convInfos: userInfo.convInfos,
                 theme: "Dark"
             },
         });
@@ -84,6 +84,7 @@ const LoginPage: React.FC = () => {
             payload: {
                 email: email,
                 token: token,
+                convInfos: [],
                 theme: "Dark"
             },
         });
