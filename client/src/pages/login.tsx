@@ -3,6 +3,13 @@ import React, { useContext, useState } from "react";
 import { UserContext } from "../context/user-context";
 import { useNavigate } from "react-router-dom";
 import { serverAPI } from "../api/api.ts";
+import bcrypt from "bcryptjs";
+import CryptoJS from 'crypto-js';
+
+const hashPasswordDeterministically = (password: string) => {
+    return CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
+    // return password;
+};
 
 const LoginPage: React.FC = () => {
     const [isLoginMode, setIsLoginMode] = useState(true);
@@ -20,8 +27,8 @@ const LoginPage: React.FC = () => {
         const form = e.target as HTMLFormElement;
         const email = (form[0] as HTMLInputElement).value;
         const password = (form[1] as HTMLInputElement).value;
+        const firstHash = hashPasswordDeterministically(password);
 
-        // call the server :
         const options = {
             method: "POST",
             headers: {
@@ -29,7 +36,7 @@ const LoginPage: React.FC = () => {
             },
             body: JSON.stringify({
                 mail: email,
-                hashedPassword: password
+                password: firstHash
             }),
         }
         const response = await fetch(serverAPI + "user/login", options);
@@ -48,17 +55,14 @@ const LoginPage: React.FC = () => {
 
 
 
-
-
-
-
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.target as HTMLFormElement;
         const email = (form[0] as HTMLInputElement).value;
         const password = (form[1] as HTMLInputElement).value;
+        const firstHash = hashPasswordDeterministically(password);
+        const hashedPassword = await bcrypt.hash(firstHash, 10);
 
-        // call the server :
         const options = {
             method: "POST",
             headers: {
@@ -66,7 +70,7 @@ const LoginPage: React.FC = () => {
             },
             body: JSON.stringify({
                 mail: email,
-                hashedPassword: password
+                hashedPassword: hashedPassword
             }),
         }
         const response = await fetch(serverAPI + "user/add", options);

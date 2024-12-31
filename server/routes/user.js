@@ -28,7 +28,7 @@ class UserRouter {
 
         this.router.post('/login', async (req, res) => {
             console.log("try login with :", req.body.mail, req.body.hashedPassword);
-            const userInfo = await this.userManager.loginUser(req.body.mail, req.body.hashedPassword);
+            const userInfo = await this.userManager.loginUser(req.body.mail, req.body.password);
             if (!userInfo) {
                 return res.status(HTTP_STATUS.UNAUTHORIZED).send({ message: "Invalid credentials." });
             }

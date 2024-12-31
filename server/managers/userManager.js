@@ -1,6 +1,7 @@
 const fs = require("fs/promises");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require("bcryptjs");
 
 /**
  * 
@@ -66,11 +67,16 @@ class UserManager {
         }
     }
 
-    async loginUser(mail, hashedPassword) {
+    async loginUser(mail, password) {
         try {
             const datas = await this.getDatas();
-            const user = Object.values(datas).find(x => x.mail === mail && x.hashedPassword === hashedPassword);
+            const user = Object.values(datas).find(x => x.mail === mail);
             if (!user) {
+                return undefined;
+            }
+            const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
+            if (!isPasswordValid) {
+                console.log("Mot de passe invalide");
                 return undefined;
             }
             return this.getDataById(user.id);
