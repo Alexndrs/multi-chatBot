@@ -1,8 +1,6 @@
 export type UserState = {
-    name: string;
-    profilePic: string;
     email: string;
-    isConnected: boolean;
+    token: string | null;
     theme: string;
 };
 
@@ -12,11 +10,8 @@ export type UserAction =
     | { type: "CHANGE_THEME" };
 
 export const initialUserState: UserState = {
-    name: "",
-    profilePic: "https://isobarscience.com/wp-content/uploads/2020/09/default-profile-picture1.jpg",
-    level: 0,
     email: "",
-    isConnected: false,
+    token: null,
     theme: "Dark"
 };
 

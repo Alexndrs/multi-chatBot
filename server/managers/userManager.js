@@ -70,7 +70,10 @@ class UserManager {
         try {
             const datas = await this.getDatas();
             const user = Object.values(datas).find(x => x.mail === mail && x.hashedPassword === hashedPassword);
-            return user ? user.id : undefined;
+            if (!user) {
+                return undefined;
+            }
+            return this.getDataById(user.id);
         } catch (err) {
             console.error("Erreur dans loginUser :", err);
             throw err;

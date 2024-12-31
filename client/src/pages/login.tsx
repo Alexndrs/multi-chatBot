@@ -1,9 +1,11 @@
 import "./login.css";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { UserContext } from "../context/user-context";
 import { useNavigate } from "react-router-dom";
+import { serverAPI } from "../api/api.ts";
 
 const LoginPage: React.FC = () => {
+    const [isLoginMode, setIsLoginMode] = useState(true);
     const userContext = useContext(UserContext);
 
     if (!userContext) {
@@ -13,25 +15,121 @@ const LoginPage: React.FC = () => {
     const { dispatch } = userContext;
     const navigate = useNavigate();
 
-    const handleUpdateUser = () => {
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const form = e.target as HTMLFormElement;
+        const email = (form[0] as HTMLInputElement).value;
+        const password = (form[1] as HTMLInputElement).value;
+
+        // call the server :
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                mail: email,
+                hashedPassword: password
+            }),
+        }
+        const response = await fetch(serverAPI + "user/login", options);
+        const userInfo = await response.json();
         dispatch({
             type: "UPDATE_USER",
             payload: {
-                name: "John Doe",
-                profilePic: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/John_Doe%2C_born_John_Nommensen_Duchac.jpg/1200px-John_Doe%2C_born_John_Nommensen_Duchac.jpg",
-                level: 10,
-                email: "johndoe@example.com",
-                isConnected: true,
+                email: userInfo.mail,
+                token: userInfo.id,
                 theme: "Dark"
             },
         });
 
         navigate("/", { replace: true });
-    };
+    }
+
+
+
+
+
+
+
+    const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const form = e.target as HTMLFormElement;
+        const email = (form[0] as HTMLInputElement).value;
+        const password = (form[1] as HTMLInputElement).value;
+
+        // call the server :
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                mail: email,
+                hashedPassword: password
+            }),
+        }
+        const response = await fetch(serverAPI + "user/add", options);
+        if (!response.ok) {
+            console.log("Error while adding");
+        }
+        const token = await response.json();
+        console.log("token : ", token);
+        dispatch({
+            type: "UPDATE_USER",
+            payload: {
+                email: email,
+                token: token,
+                theme: "Dark"
+            },
+        });
+
+        navigate("/", { replace: true });
+    }
 
     return (
-        <div className="login-container">
-            <button onClick={handleUpdateUser}>Login</button>
+        <div className="auth-container">
+            <div className={`auth-wrapper ${isLoginMode ? '' : 'show-register'}`}>
+                {/* Panneau de fond qui se déplace */}
+                <div className="colored-panel">
+                    <div className="panel-content">
+                        <h3>{isLoginMode ? 'New Here ?' : 'Already used to here?'}</h3>
+                        <p>{isLoginMode ? 'Sign-up to discover this chatBot' : 'Sign-in to continue chatting'}</p>
+                        <button
+                            className="ghost-button"
+                            onClick={() => setIsLoginMode(!isLoginMode)}
+                        >
+                            {isLoginMode ? "Sign-Up" : "Sign-In"}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="form-container login-container">
+                    <form onSubmit={handleLogin}>
+                        <h2>Login</h2>
+                        <div className="form-group">
+                            <input type="email" placeholder="Email" />
+                        </div>
+                        <div className="form-group">
+                            <input type="password" placeholder="Mot de passe" />
+                        </div>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+
+                <div className="form-container register-container">
+                    <form onSubmit={handleRegister}>
+                        <h2>Register</h2>
+                        <div className="form-group">
+                            <input type="email" placeholder="Email" />
+                        </div>
+                        <div className="form-group">
+                            <input type="password" placeholder="Password" />
+                        </div>
+                        <button type="submit">Create Account</button>
+                    </form>
+                </div>
+            </div>
         </div>
     );
 };

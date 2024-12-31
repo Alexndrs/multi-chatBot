@@ -4,8 +4,8 @@ const cors = require("cors");
 
 const { UserManager } = require("./managers/userManager");
 const { UserRouter } = require("./routes/user");
-const { ConvManager } = require("./managers/convManager");
-const { ConvRouter } = require("./routes/conv");
+// const { ConvManager } = require("./managers/convManager");
+// const { ConvRouter } = require("./routes/conv");
 
 
 
@@ -14,8 +14,8 @@ class Server {
     constructor() {
         this.userManager = new UserManager(path.resolve(__dirname, "data/userDB.json"));
         this.userRouter = new UserRouter(this.userManager);
-        this.convManager = new ConvManager(path.resolve(__dirname, "data/userDB.json"));
-        this.convRouter = new ConvRouter(this.convManager);
+        // this.convManager = new ConvManager(path.resolve(__dirname, "data/userDB.json"));
+        // this.convRouter = new ConvRouter(this.convManager);
 
         this.configureRoutes();
     }
@@ -26,7 +26,7 @@ class Server {
         this.app.use(express.json());
 
         // Routeur de gallerie
-        this.app.use("/conv", this.convRouter.router);
+        // this.app.use("/conv", this.convRouter.router);
         this.app.use("/user", this.userRouter.router);
 
         this.app.use("/test", async () => {

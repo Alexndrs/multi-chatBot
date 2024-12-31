@@ -26,12 +26,14 @@ class UserRouter {
             return res.send(datas);
         });
 
-        this.router.get('/login', async (req, res) => {
-            const userId = await this.userManager.loginUser(req.body.mail, req.body.hashedPassword);
-            if (!userId) {
+        this.router.post('/login', async (req, res) => {
+            console.log("try login with :", req.body.mail, req.body.hashedPassword);
+            const userInfo = await this.userManager.loginUser(req.body.mail, req.body.hashedPassword);
+            if (!userInfo) {
                 return res.status(HTTP_STATUS.UNAUTHORIZED).send({ message: "Invalid credentials." });
             }
-            return res.send({ userId });
+            const { hashedPassword, ...userWithoutPassword } = userInfo;
+            return res.send(userWithoutPassword);
         });
 
         this.router.post('/add', async (req, res) => {

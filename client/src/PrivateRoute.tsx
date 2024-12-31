@@ -9,7 +9,7 @@ const PrivateRoute = () => {
     }
     const { state } = userContext;
 
-    if (!state.isConnected) {
+    if (!state.token) {
         return <Navigate to="/login" replace />;
     }
 

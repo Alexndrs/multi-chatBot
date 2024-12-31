@@ -27,7 +27,6 @@ const ProfilePage: React.FC = () => {
     return (
         <div className="page profile-container">
             <h2>Profile Page</h2>
-            <p>Name: {state.name}</p>
             <p>Email: {state.email}</p>
             <button onClick={handleChangeTheme}>
                 Switch to {state.theme === 'Dark' ? 'Light' : 'Dark'} Theme
