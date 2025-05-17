@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "userId": "54a0557e-46aa-48ce-b75b-1252c24a37b2",
+      "userInfo": {
+        "name": "Test User",
+        "email": "user@example.com",
+        "password": "hashed_password",
+        "preferences": {}
+      },
+      "conversations": []
+    }
+  ]
+}
