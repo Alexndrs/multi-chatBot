@@ -2,36 +2,6 @@ const { chatWithPython } = require('../services/python_api');
 const db = require('../db/interface');
 const uuidv4 = require('uuid').v4;
 
-
-/**
- * 
- * @param {string} mail 
- * @param {string} name 
- * @param {string} hpass 
- * @returns {import('../db/interface').userObject}
- */
-async function createUser(mail, name, hpass) {
-    // Verify if user already exists
-    if (db.getUserByMail(mail)) {
-        throw new Error('Email already exists');
-    }
-
-    // Create a new user
-    const newUser = {
-        userId: uuidv4(),
-        userInfo: {
-            name: name,
-            email: mail,
-            password: hpass,
-            preferences: {}
-        },
-        conversations: []
-    };
-
-    db.addUser(newUser);
-    return newUser;
-}
-
 /**
  * 
  * @param {string} userId 
@@ -53,12 +23,15 @@ async function handleMessage(userId, convId, messageContent) {
     // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
     const reply = await chatWithPython(conv);
     // Ajouter la réponse de l'IA à la conversation
-    db.addMessage(userId, convId, {
+    const newMsg = {
         msgId: uuidv4(),
         role: 'assistant',
         content: reply,
         timestamp: new Date().toISOString()
-    })
+    }
+
+    db.addMessage(userId, convId, newMsg)
+    return newMsg;
 }
 
 /**
@@ -76,7 +49,8 @@ async function createConversation(userId, messageContent) {
     newConv.convName = convName;
     db.addConversation(userId, newConv);
 
-    handleMessage(userId, newConv.convId, messageContent);
+    await handleMessage(userId, newConv.convId, messageContent);
+    return newConv.convId;
 }
 
 /**
@@ -103,6 +77,14 @@ function deleteConversation(userId, convId) {
     }
 }
 
+function getConversationById(userId, convId) {
+    const conv = db.getConversationById(userId, convId);
+    if (!conv) {
+        throw new Error('Conversation not found');
+    }
+    return conv;
+}
+
 /**
  * 
  * @param {string} userId 
@@ -127,7 +109,8 @@ async function editMessage(userId, convId, msgId, newContent) {
             db.deleteMessage(userId, convId, m.msgId);
         })
 
-        await handleMessage(userId, convId, newContent);
+        const newMsg = await handleMessage(userId, convId, newContent);
+        return newMsg;
     }
     catch (err) {
         throw new Error('Message not found');
@@ -145,7 +128,7 @@ async function editMessage(userId, convId, msgId, newContent) {
 
 module.exports = {
     handleMessage,
-    createUser,
+    getConversationById,
     createConversation,
     changeConversationName,
     deleteConversation,

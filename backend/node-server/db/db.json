@@ -1,14 +1,33 @@
 {
   "users": [
     {
-      "userId": "54a0557e-46aa-48ce-b75b-1252c24a37b2",
+      "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
       "userInfo": {
-        "name": "Test User",
-        "email": "user@example.com",
-        "password": "hashed_password",
+        "name": "Alex",
+        "email": "alex@example.com",
+        "password": "$2b$10$15Pk0A7/mXdRHNtxg5brR.DzVb54IJEyfkRqReN0jB9xO/Mky9U6G",
         "preferences": {}
       },
-      "conversations": []
+      "conversations": [
+        {
+          "convId": "73d3955c-e5ad-483d-84a7-a9c30c36bae2",
+          "convName": "Ma conversation renommée",
+          "msgList": [
+            {
+              "msgId": "c2b36a4d-b2bb-4f5d-8bdc-17f0b5e913b3",
+              "role": "user",
+              "content": "Bonjour, comment tu vas ?",
+              "timestamp": "2025-05-18T00:31:26.108Z"
+            },
+            {
+              "msgId": "571800e9-2b7c-4f80-b9e3-5c02b98c2837",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-18T00:31:26.116Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,83 @@
+### 🔐 Créer un utilisateur
+POST http://localhost:8000/user
+Content-Type: application/json
+
+{
+  "mail": "alex@example.com",
+  "name": "Alex",
+  "password": "password123"
+}
+
+
+### 🔑 Connexion utilisateur (GET avec body → REST Client supporte)
+GET http://localhost:8000/user
+Content-Type: application/json
+
+{
+  "mail": "alex@example.com",
+  "password": "password123"
+}
+
+
+### 🧠 Créer une conversation
+POST http://localhost:8000/conversation
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "messageContent": "Bonjour, comment tu vas ?"
+}
+
+
+### 📩 Envoyer un message
+POST http://localhost:8000/message
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0",
+  "messageContent": "Peux-tu m'expliquer les trous noirs ?"
+}
+
+
+### ✏️ Modifier un message
+PUT http://localhost:8000/message
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0",
+  "msgId": "ff9e3703-46ab-4860-a9f6-159f2a60aff8",
+  "newContent": "Finalement explique-moi plutôt les étoiles"
+}
+
+
+### 🗃 Récupérer une conversation
+GET http://localhost:8000/conversation
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0"
+}
+
+
+### 🗑 Supprimer une conversation
+DELETE http://localhost:8000/conversation
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0"
+}
+
+
+### 📝 Renommer une conversation
+PUT http://localhost:8000/conversation
+Content-Type: application/json
+
+{
+  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+  "convId": "73d3955c-e5ad-483d-84a7-a9c30c36bae2",
+  "newName": "Ma conversation renommée"
+}

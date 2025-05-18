@@ -10,9 +10,6 @@ generator = pipeline("text-generation", model="gpt2")
 
 # Start the FastAPI server with : $ uvicorn app:app --reload
 
-
-
-
 @app.get("/")
 def read_root():
     print("Reading root")
