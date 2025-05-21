@@ -1,14 +1,12 @@
-import ChatPage from './pages/chatPage.tsx';
-
-
+import Layout from './components/layout';
+import UIPage from './pages/uiPage';
 
 function App() {
-
   return (
-    <main>
-      <ChatPage />
-    </main>
-  )
+    <Layout>
+      <UIPage />
+    </Layout>
+  );
 }
 
-export default App
+export default App;

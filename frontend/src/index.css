@@ -1,1 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
+
+
+@theme {
+    --font-playfair: 'Playfair Display', serif;
+    --font-roboto: 'Roboto', sans-serif;
+}
+
+body {
+    @apply font-roboto;
+}
+
+.custom-scrollbar {
+  scrollbar-color: #526b946f transparent; /* poignée bleue, fond transparent */
+}
+
+/* Pour Chrome, Edge, Safari */
+.custom-scrollbar::-webkit-scrollbar {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #526b946f; /* bleu-500 */
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

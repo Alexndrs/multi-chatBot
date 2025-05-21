@@ -1,0 +1,101 @@
+import { useEffect, useMemo } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleUser, faSquarePlus, faNoteSticky } from "@fortawesome/free-regular-svg-icons";
+import LogoIcon from "../icons/LogoIcon";
+import SideBarConvItem from "./sideBarConvItem";
+import { SideBarItem } from "./sideBarItem";
+
+type ConversationItem = {
+    id: string;
+    name: string;
+    date: string;
+};
+
+export default function SideBar({ open, onClose, conversations, username }: { open: boolean; onClose: () => void, conversations: ConversationItem[], username: string }) {
+
+    // Group conversations by Today, Yesterday, Last 7 days, Preceding conversations
+    const groupedConversations = useMemo(() => {
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const yesterdayStr = new Date(Date.now() - 86400000).toDateString();
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);
+
+        const groups = {
+            Today: [] as ConversationItem[],
+            Yesterday: [] as ConversationItem[],
+            Last7: [] as ConversationItem[],
+            Preceding: [] as ConversationItem[],
+        };
+
+        for (const conv of conversations) {
+            const convDate = new Date(conv.date);
+            const convStr = convDate.toDateString();
+            if (convStr === todayStr) groups.Today.push(conv);
+            else if (convStr === yesterdayStr) groups.Yesterday.push(conv);
+            else if (convDate > sevenDaysAgo) groups.Last7.push(conv);
+            else groups.Preceding.push(conv);
+        }
+
+        return groups;
+    }, [conversations]);
+
+
+    // Handing the escape key to close the sidebar
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [onClose]);
+
+
+
+    return (
+        <div
+            className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-tr from-[#12141b] to-[#191c2a] border-r-2 border-gray-700 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
+                }`}
+        >
+            <button
+                className="absolute top-4 right-4 text-gray-400 text-3xl hover:text-white transition-colors duration-200 active:scale-105 cursor-pointer"
+                onClick={onClose}
+            >
+                &times;
+            </button>
+
+            <div className="flex flex-col h-full text-white">
+                <div className="mb-2 px-4">
+                    <LogoIcon className="w-15 h-15 mb-8 text-lime-300" />
+                    <SideBarItem name="New conversation" onClick={() => { }} icon={<FontAwesomeIcon icon={faSquarePlus} />} />
+                    <SideBarItem name="Notes" onClick={() => { }} icon={<FontAwesomeIcon icon={faNoteSticky} />} />
+                </div>
+
+
+                <div className="flex-grow overflow-y-auto px-4 py-3 border-t border-gray-700 flex flex-col gap-2 custom-scrollbar">
+                    {Object.entries(groupedConversations).map(([label, list]) =>
+                        list.length > 0 ? (
+                            <div key={label}>
+                                <div className="text-gray-400 text-xs font-bold my-2">{label}</div>
+                                {list.map((conv) => (
+                                    <SideBarConvItem key={conv.id} {...conv} />
+                                ))}
+                            </div>
+                        ) : null
+                    )}
+                </div>
+
+
+
+
+                <div className="px-3 pt-2 pb-0 border-t border-gray-700">
+                    {/* <div className="flex items-center gap-2 rounded-md p-3 text-gray-400 hover:text-white hover:bg-gray-800 transition cir">
+
+                        <FontAwesomeIcon icon={faCircleUser} className="text-2xl" />
+                        <span>{username}</span>
+                    </div> */}
+                    <SideBarItem name={username} onClick={() => { }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
+                </div>
+            </div>
+        </div>
+    );
+}
