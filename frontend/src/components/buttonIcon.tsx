@@ -10,22 +10,29 @@ const variantClasses = {
     transparent: "bg-transparent hover:bg-gray-200/2 border-4 border-gray-200/2 hover:border-gray-200/5 text-gray-200/15 hover:text-gray-200/30",
 };
 
-interface ButtonProps {
-    text: string;
-    onClick: () => void;
+interface ButtonIconProps {
+    icon: React.ReactNode
+    onClick: ((e: React.MouseEvent<HTMLButtonElement>) => void) | (() => void);
+    text?: string;
     type?: keyof typeof variantClasses;
 }
 
-export default function Button({ text, onClick, type = "primary" }: ButtonProps) {
+export default function ButtonIcon({ icon, onClick, text = "", type = "primary" }: ButtonIconProps) {
     return (
         <button
             onClick={onClick}
             className={clsx(
-                "py-2 px-4 rounded-lg transition duration-150 border-2 cursor-pointer",
+                "flex py-2 px-4 rounded-lg transition duration-150 border-2 cursor-pointer",
                 variantClasses[type]
             )}
         >
-            {text}
+            <span className={
+                clsx(
+                    "flex items-center justify-center",
+                    text ? "mr-2" : ""
+                )
+            }>{icon}</span>
+            {text && <span className="text-sm">{text}</span>}
         </button>
     );
 }
