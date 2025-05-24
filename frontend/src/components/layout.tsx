@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     &#9776;
                 </button>
             )}
-            <div className={sidebarOpen ? "pl-0 sm:pl-68 transition-all" : "pl-0 transition-all"}>
+            <div className={sidebarOpen ? "pl-0 sm:pl-64 transition-all" : "pl-0 transition-all"}>
                 {children}
             </div>
         </div>

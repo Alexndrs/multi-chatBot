@@ -53,7 +53,7 @@ export default function SideBar({ open, onClose, conversations, username }: { op
 
     return (
         <div
-            className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-tr from-[#12141b] to-[#191c2a] border-r-2 border-gray-700 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
+            className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-t from-[#12141b] to-[#191c2a] border-r-2 border-gray-700 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
                 }`}
         >
             <button
@@ -71,7 +71,7 @@ export default function SideBar({ open, onClose, conversations, username }: { op
                 </div>
 
 
-                <div className="flex-grow overflow-y-auto px-4 py-3 border-t border-gray-700 flex flex-col gap-2 custom-scrollbar">
+                <div className="flex-grow overflow-y-auto px-4 py-3 border-t border-gray-700 flex flex-col gap-2 custom-scrollbar scroll-smooth">
                     {Object.entries(groupedConversations).map(([label, list]) =>
                         list.length > 0 ? (
                             <div key={label}>

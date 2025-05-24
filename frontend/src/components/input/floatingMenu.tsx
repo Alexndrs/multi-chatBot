@@ -27,11 +27,11 @@ export default function FloatingMenu({ items, onSelect, onClose }: FloatingMenuP
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 gray-900 text-gray-400 shadow-lg rounded-lg py-2 text-sm w-40 border-2 border-gray-800">
+            className="absolute bottom-full mb-4 left-0 z-50 gray-900 text-gray-400 shadow-lg rounded-lg py-2 text-sm w-40 border-2 border-gray-800 backdrop-blur-xs">
             {items.map((item, index) => (
                 <div
                     key={index}
-                    className="px-4 py-2 hover:bg-gray-800 hover:text-blue-300 cursor-pointer"
+                    className="px-4 py-2 hover:bg-gray-800 hover:text-blue-300 cursor-pointer transition duration-200 ease-in-out"
                     onClick={() => {
                         onSelect(item);
                         onClose();
