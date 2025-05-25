@@ -9,23 +9,23 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const user = await auth.createUser(mail, name, password);
-        res.status(201).json({ user });
+        const { userId, token } = await auth.createUser(mail, name, password);
+        res.status(201).json({ userId, token });
     } catch (error) {
         console.error('Error creating user:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-router.get('/', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { mail, password } = req.body;
     if (!mail || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-        const user = await auth.loginUser(mail, password);
-        res.status(200).json({ user });
+        const { userId, token } = await auth.loginUser(mail, password);
+        res.status(200).json({ userId, token });
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ error: 'Internal server error' });

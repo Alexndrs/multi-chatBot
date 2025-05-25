@@ -1,9 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const chatAPI = require('../core/chatAPI');
+const authenticateToken = require('../middleware/auth');
 
-router.post('/', async (req, res) => {
-    const { userId, messageContent } = req.body;
+
+router.get('/', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    if (!userId) {
+
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    try {
+        const conversationsIdsAndNameAndDate = await chatAPI.getAllConvIdsAndNameAndDate(userId);
+        res.status(200).json({ conversationsIdsAndNameAndDate });
+    } catch (error) {
+        console.error('Error fetching conversations:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/', authenticateToken, async (req, res) => {
+    const { messageContent } = req.body;
+    const userId = req.user.userId;
     if (!userId || !messageContent) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -17,8 +35,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
-    const { userId, convId } = req.body;
+router.get(`/:convId`, authenticateToken, async (req, res) => {
+    const { convId } = req.params;
+    const userId = req.user.userId;
     if (!userId || !convId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -32,8 +51,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.delete('/', async (req, res) => {
-    const { userId, convId } = req.body;
+router.delete('/', authenticateToken, async (req, res) => {
+    const { convId } = req.body;
+    const userId = req.user.userId;
     if (!userId || !convId) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -47,8 +67,9 @@ router.delete('/', async (req, res) => {
     }
 });
 
-router.put('/', async (req, res) => {
-    const { userId, convId, newName } = req.body;
+router.put('/', authenticateToken, async (req, res) => {
+    const { convId, newName } = req.body;
+    const userId = req.user.userId;
     if (!userId || !convId || !newName) {
         return res.status(400).json({ error: 'Missing required fields' });
     }

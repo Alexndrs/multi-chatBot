@@ -2,6 +2,17 @@ const { chatWithPython } = require('../services/python_api');
 const db = require('../db/interface');
 const uuidv4 = require('uuid').v4;
 
+async function getAllConvIdsAndNameAndDate(userId) {
+    const convIdsAndName = db.getUserConversationsIdAndNameAndDate(userId);
+    if (!convIdsAndName) {
+        throw new Error('No conversations found');
+    }
+    return convIdsAndName;
+}
+
+
+
+
 /**
  * 
  * @param {string} userId 
@@ -43,7 +54,8 @@ async function createConversation(userId, messageContent) {
     const newConv = {
         convId: uuidv4(),
         convName: '',
-        msgList: []
+        msgList: [],
+        date: new Date().toISOString()
     }
     const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title' + messageContent + '/no_think' }]);
     newConv.convName = convName;
@@ -117,18 +129,11 @@ async function editMessage(userId, convId, msgId, newContent) {
     }
 }
 
-// createUser("alex@example.com", "Alex", "password123").then((user) => {
-//     console.log('Utilisateur créé:', user);
-//     createConversation(user.userId, "Hello, how are you?").then((conv) => {
-//         console.log('Conversation créée:', conv);
-//     });
-// });
-
-
 
 module.exports = {
     handleMessage,
     getConversationById,
+    getAllConvIdsAndNameAndDate,
     createConversation,
     changeConversationName,
     deleteConversation,

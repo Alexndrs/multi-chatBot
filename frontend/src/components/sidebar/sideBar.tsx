@@ -5,7 +5,7 @@ import LogoIcon from "../icons/LogoIcon";
 import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
 
-type ConversationItem = {
+export type ConversationItem = {
     id: string;
     name: string;
     date: string;

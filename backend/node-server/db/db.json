@@ -1,29 +1,42 @@
 {
   "users": [
     {
-      "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
+      "userId": "e940b7b9-88f0-4355-8a20-3bc4994ae099",
       "userInfo": {
         "name": "Alex",
         "email": "alex@example.com",
-        "password": "$2b$10$15Pk0A7/mXdRHNtxg5brR.DzVb54IJEyfkRqReN0jB9xO/Mky9U6G",
+        "password": "$2b$10$Z7Rd6jxAmaejNHdZ.sIXKeQ8bfB67cofkjMwZKQTy2E0gUXt3AcKO",
         "preferences": {}
       },
       "conversations": [
         {
-          "convId": "73d3955c-e5ad-483d-84a7-a9c30c36bae2",
-          "convName": "Ma conversation renommée",
+          "convId": "d0d2866e-5e9c-4e2c-8e63-386ca6aaabb1",
+          "convName": "[Réponse IA simulée]",
+          "date": "2025-05-24T18:43:43.655Z",
           "msgList": [
             {
-              "msgId": "c2b36a4d-b2bb-4f5d-8bdc-17f0b5e913b3",
+              "msgId": "dd8f0384-90f7-416b-851a-5a06bdad5fbb",
               "role": "user",
               "content": "Bonjour, comment tu vas ?",
-              "timestamp": "2025-05-18T00:31:26.108Z"
+              "timestamp": "2025-05-24T18:40:54.384Z"
             },
             {
-              "msgId": "571800e9-2b7c-4f80-b9e3-5c02b98c2837",
+              "msgId": "98fba628-2306-4f68-9d4b-95efc3a21961",
               "role": "assistant",
               "content": "[Réponse IA simulée]",
-              "timestamp": "2025-05-18T00:31:26.116Z"
+              "timestamp": "2025-05-24T18:40:54.414Z"
+            },
+            {
+              "msgId": "de4c56f0-2e22-4af9-9214-95264e3404dd",
+              "role": "user",
+              "content": "Finalement explique-moi plutôt les étoiles",
+              "timestamp": "2025-05-24T18:43:43.633Z"
+            },
+            {
+              "msgId": "46f03958-a091-445b-a8d5-30d9b056e844",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-24T18:43:43.655Z"
             }
           ]
         }

@@ -1,8 +1,11 @@
 const db = require('../db/interface');
 const uuidv4 = require('uuid').v4;
 const bcrypt = require('bcrypt');
-
+const jwt = require('jsonwebtoken');
 const saltRounds = 10;
+
+const JWT_SECRET = process.env.JWT_SECRET
+
 /**
  * 
  * @param {string} mail 
@@ -28,8 +31,10 @@ async function createUser(mail, name, pass) {
         conversations: []
     };
 
+
     db.addUser(newUser);
-    return newUser;
+    const token = jwt.sign({ userId: newUser.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
+    return { userId: newUser.userId, token };
 }
 
 /**
@@ -50,11 +55,14 @@ async function loginUser(mail, pass) {
     if (!match) {
         throw new Error('Invalid password');
     }
+    // Générer le token
+    const token = jwt.sign({ userId: user.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
 
-    return user;
+    return { userId: user.userId, token };
 }
 
 module.exports = {
     createUser,
-    loginUser
+    loginUser,
+    JWT_SECRET
 };

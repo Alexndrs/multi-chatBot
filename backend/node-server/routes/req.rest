@@ -1,5 +1,5 @@
 ### 🔐 Créer un utilisateur
-POST http://localhost:8000/user
+POST http://localhost:8000/auth
 Content-Type: application/json
 
 {
@@ -8,9 +8,8 @@ Content-Type: application/json
   "password": "password123"
 }
 
-
 ### 🔑 Connexion utilisateur (GET avec body → REST Client supporte)
-GET http://localhost:8000/user
+POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
@@ -18,66 +17,68 @@ Content-Type: application/json
   "password": "password123"
 }
 
-
-### 🧠 Créer une conversation
+### Copie le token reçu ici après connexion (remplacez VOTRE_TOKEN_JWT)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlOTQwYjdiOS04OGYwLTQzNTUtOGEyMC0zYmM0OTk0YWUwOTkiLCJlbWFpbCI6ImFsZXhAZXhhbXBsZS5jb20iLCJpYXQiOjE3NDgxMTE5MzUsImV4cCI6MTc0ODExOTEzNX0.0jN_iLYYTP4S7eK-kPzjtH7ZHuYTMtXkUuAg5mPpjkA
 POST http://localhost:8000/conversation
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
   "messageContent": "Bonjour, comment tu vas ?"
 }
 
 
-### 📩 Envoyer un message
+### Get all conv Id
+GET http://localhost:8000/conversation
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 📩 Envoyer un message (protégée)
+# @convId = d0d2866e-5e9c-4e2c-8e63-386ca6aaabb1
 POST http://localhost:8000/message
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
-  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0",
+  "convId":"d0d2866e-5e9c-4e2c-8e63-386ca6aaabb1",
   "messageContent": "Peux-tu m'expliquer les trous noirs ?"
 }
 
-
-### ✏️ Modifier un message
+### ✏️ Modifier un message (protégée)
 PUT http://localhost:8000/message
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
-  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0",
-  "msgId": "ff9e3703-46ab-4860-a9f6-159f2a60aff8",
+  "convId": "d0d2866e-5e9c-4e2c-8e63-386ca6aaabb1",
+  "msgId": "d4fa4df4-ecd7-4d0e-9ea7-153dcb0eba0c",
   "newContent": "Finalement explique-moi plutôt les étoiles"
 }
 
-
-### 🗃 Récupérer une conversation
+### 🗃 Récupérer une conversation (protégée)
 GET http://localhost:8000/conversation
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
-  "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0"
+  "convId": "d0d2866e-5e9c-4e2c-8e63-386ca6aaabb1"
 }
 
-
-### 🗑 Supprimer une conversation
+### 🗑 Supprimer une conversation (protégée)
 DELETE http://localhost:8000/conversation
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
   "convId": "ff7fd90b-0853-4d2e-87f9-7c9979ebf1a0"
 }
 
-
-### 📝 Renommer une conversation
+### 📝 Renommer une conversation (protégée)
 PUT http://localhost:8000/conversation
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "userId": "5df5009f-0e51-4e84-8775-b9cf979b979b",
   "convId": "73d3955c-e5ad-483d-84a7-a9c30c36bae2",
   "newName": "Ma conversation renommée"
 }

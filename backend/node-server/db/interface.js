@@ -27,6 +27,7 @@ function writeDB(data) {
  * @typedef {Object} conversationObject
  * @property {string} convId
  * @property {string} convName
+ * @property {string} date
  * @property {Array<messageObject>} msgList
  */
 
@@ -88,7 +89,7 @@ function updateUser(userId, updatedInfo) {
 /**
  * 
  * @param {string} userId 
- * @returns 
+ * @returns Array<conversationObject>
  */
 function getUserConversations(userId) {
     const db = readDB();
@@ -101,6 +102,23 @@ function getUserConversations(userId) {
 /**
  * 
  * @param {string} userId 
+ * @returns Array<string>
+ */
+
+function getUserConversationsIdAndNameAndDate(userId) {
+    const db = readDB();
+    const user = db.users.find(u => u.userId === userId);
+    if (!user) throw new Error("Utilisateur non trouvé");
+
+    return user.conversations.map(c => ({
+        convId: c.convId,
+        convName: c.convName,
+        date: c.date
+    }));
+}
+/**
+ * 
+ * @param {string} userId 
  * @param {string} convId 
  * @returns 
  */
@@ -110,7 +128,7 @@ function getConversationById(userId, convId) {
     if (!user) throw new Error("Utilisateur non trouvé");
 
     const conversation = user.conversations.find(c => c.convId === convId);
-    if (!conversation) throw new Error("Conversation non trouvée");
+    if (!conversation) throw new Error("Conversation non trouvée avec l'id :", convId);
 
     return conversation;
 }
@@ -223,8 +241,10 @@ function addMessage(userId, convId, message) {
         msgId: message.msgId,
         role: message.role,
         content: message.content,
-        timestamp: new Date().toISOString(),
+        timestamp: message.timestamp,
     });
+
+    conv.date = new Date().toISOString();
 
     writeDB(db);
     return message.msgId
@@ -249,6 +269,8 @@ function editMessage(userId, convId, msgId, newContent) {
     if (!message) throw new Error("Message non trouvé");
 
     message.content = newContent;
+    message.data = new Date().toISOString();
+    conv.date = new Date().toISOString();
     writeDB(db);
 }
 
@@ -282,6 +304,7 @@ module.exports = {
     addUser,
     updateUser,
     getUserConversations,
+    getUserConversationsIdAndNameAndDate,
     getConversationById,
     addConversation,
     deleteConversation,

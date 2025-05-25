@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const chatAPI = require('../core/chatAPI');
+const authenticateToken = require('../middleware/auth');
 
-router.post('/', async (req, res) => {
-    const { userId, convId, messageContent } = req.body;
+router.post('/', authenticateToken, async (req, res) => {
+    const { convId, messageContent } = req.body;
+    const userId = req.user.userId;
     if (!userId || !convId || !messageContent) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -18,8 +20,9 @@ router.post('/', async (req, res) => {
 });
 
 
-router.put('/', async (req, res) => {
-    const { userId, convId, msgId, newContent } = req.body;
+router.put('/', authenticateToken, async (req, res) => {
+    const { convId, msgId, newContent } = req.body;
+    const userId = req.user.userId;
     if (!userId || !convId || !msgId || !newContent) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
