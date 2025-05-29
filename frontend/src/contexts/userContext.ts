@@ -5,7 +5,6 @@ export interface UserData {
     name: string | null;
     email: string | null;
     token: string | null;
-    userId: string | null;
     conversations: ConversationItem[] | null;
 }
 

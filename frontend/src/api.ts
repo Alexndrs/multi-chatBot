@@ -56,10 +56,47 @@ export const loginUser = async (mail: string, password: string) => {
 }
 
 
-export const getToken = () => localStorage.getItem('token');
+export const getToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No token found, please login');
+    }
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('token');
+            throw new Error('Token expired, please login again');
+        }
+    } catch {
+        localStorage.removeItem('token');
+        throw new Error('Invalid token, please login again');
+    }
+    return token;
+}
+
+export const getUserInfo = async () => {
+    const token = getToken();
+
+    const response = await fetch(`${serverUrl}/auth`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to get user info');
+    }
+
+    const data = await response.json();
+    return data;
+}
+
 
 export const getUserConversations = async () => {
     const token = getToken();
+
     const response = await fetch(`${serverUrl}/conversation`, {
         method: 'GET',
         headers: {
@@ -91,5 +128,26 @@ export const getConversation = async (conversationId: string) => {
     }
 
     const data = await response.json();
-    return data;
+    return data.response;
 }
+
+export const createConversation = async (message: string) => {
+    const token = getToken();
+    const response = await fetch(`${serverUrl}/conversation`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            messageContent: message
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create conversation');
+    }
+
+    const data = await response.json();
+    return data;
+};

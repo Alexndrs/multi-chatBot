@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../core/auth');
+const authenticateToken = require('../middleware/auth');
 
 router.post('/', async (req, res) => {
     const { mail, name, password } = req.body;
@@ -28,6 +29,20 @@ router.post('/login', async (req, res) => {
         res.status(200).json({ userId, token });
     } catch (error) {
         console.error('Error logging in user:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.get('/', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    try {
+        const userInfo = await auth.getUserInfo(userId);
+        if (!userInfo) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.status(200).json(userInfo);
+    } catch (error) {
+        console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

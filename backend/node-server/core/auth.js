@@ -61,8 +61,18 @@ async function loginUser(mail, pass) {
     return { userId: user.userId, token };
 }
 
+async function getUserInfo(userId) {
+    const userInfo = db.getUserInfo(userId);
+    if (!userInfo) {
+        throw new Error('User not found');
+    }
+    return userInfo;
+}
+
+
 module.exports = {
     createUser,
     loginUser,
+    getUserInfo,
     JWT_SECRET
 };

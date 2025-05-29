@@ -1,33 +1,31 @@
 import { useEffect } from 'react';
-import { loginUser, getUserConversations, getConversation } from './api';
+import { loginUser, getUserInfo, getUserConversations, getConversation, getToken } from './api';
 import { useUser } from './hooks/useUser';
 import ChatPage from './pages/chatPage';
-
 
 const AppContent = () => {
     const { setUserData } = useUser();
 
     useEffect(() => {
         const init = async () => {
-            const localToken = localStorage.getItem('token');
-
-            if (localToken) {
-                console.log('Token déjà présent, skip login.');
-            } else {
+            try {
+                const localToken = getToken();
+                if (localToken) {
+                    console.log('Token déjà présent');
+                }
+            } catch {
                 const loginData = await loginUser('alex@example.com', 'password123');
-                localStorage.setItem('token', loginData.token); // sécurité min
+                localStorage.setItem('token', loginData.token);
             }
 
-            const conversations = await getUserConversations();
-            const firstConv = conversations[0];
 
-            const fullConversation = await getConversation(firstConv.convId);
+            const userInfo = await getUserInfo();
+            const conversations = await getUserConversations();
 
             const newUser = {
                 token: localStorage.getItem('token'),
-                name: null,
-                email: null,
-                userId: fullConversation.userId,
+                name: userInfo.name,
+                email: userInfo.email,
                 conversations,
             }
 

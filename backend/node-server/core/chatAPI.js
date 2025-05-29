@@ -22,12 +22,15 @@ async function getAllConvIdsAndNameAndDate(userId) {
  */
 async function handleMessage(userId, convId, messageContent) {
     // Ajouter le message à la conversation
-    db.addMessage(userId, convId, {
+
+    const userMsg = {
         msgId: uuidv4(),
         role: 'user',
         content: messageContent,
         timestamp: new Date().toISOString()
-    })
+    }
+
+    db.addMessage(userId, convId, userMsg)
     // Récupérer l'historique de la conversation
     const conv = db.getAllMessages(userId, convId);
 
@@ -42,7 +45,7 @@ async function handleMessage(userId, convId, messageContent) {
     }
 
     db.addMessage(userId, convId, newMsg)
-    return newMsg;
+    return { userMsg, newMsg };
 }
 
 /**
@@ -61,8 +64,8 @@ async function createConversation(userId, messageContent) {
     newConv.convName = convName;
     db.addConversation(userId, newConv);
 
-    await handleMessage(userId, newConv.convId, messageContent);
-    return newConv.convId;
+    const { userMsg, newMsg } = await handleMessage(userId, newConv.convId, messageContent);
+    return { conv: newConv, userMessage: userMsg, newMessage: newMsg };
 }
 
 /**
@@ -121,8 +124,8 @@ async function editMessage(userId, convId, msgId, newContent) {
             db.deleteMessage(userId, convId, m.msgId);
         })
 
-        const newMsg = await handleMessage(userId, convId, newContent);
-        return newMsg;
+        const { userMsg, newMessage } = await handleMessage(userId, convId, newContent);
+        return { userMessage: userMsg, newMessage: newMessage };
     }
     catch (err) {
         throw new Error('Message not found');

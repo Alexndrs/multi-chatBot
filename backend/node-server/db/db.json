@@ -39,6 +39,158 @@
               "timestamp": "2025-05-24T18:43:43.655Z"
             }
           ]
+        },
+        {
+          "convId": "95988723-ac76-4a5c-ab66-83d81db2f95a",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "4e202504-fe1a-482d-930c-2ba06965563f",
+              "role": "user",
+              "content": "Hello world",
+              "timestamp": "2025-05-29T15:50:38.562Z"
+            },
+            {
+              "msgId": "e937a08c-5652-42b6-8189-be91d3b4b626",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T15:50:38.613Z"
+            }
+          ],
+          "date": "2025-05-29T15:50:38.613Z"
+        },
+        {
+          "convId": "cfecb1a2-474f-4b60-96ca-74c510d30631",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "9589b6d8-11c6-44bc-aa01-a033f2c0560c",
+              "role": "user",
+              "content": "Allo",
+              "timestamp": "2025-05-29T15:58:07.664Z"
+            },
+            {
+              "msgId": "12f8fd0c-a62c-44ff-af13-9c66dde3b52d",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T15:58:07.689Z"
+            }
+          ],
+          "date": "2025-05-29T15:58:07.689Z"
+        },
+        {
+          "convId": "1b1cf987-2590-4837-bd6f-9b8d5eb96146",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "49757662-2a41-4e93-b789-b181e5235353",
+              "role": "user",
+              "content": "Hello comment ça va ?",
+              "timestamp": "2025-05-29T16:06:41.926Z"
+            },
+            {
+              "msgId": "f85f3f6c-c3a5-40c0-8986-a8c2ae6da40b",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:06:41.954Z"
+            }
+          ],
+          "date": "2025-05-29T16:06:41.954Z"
+        },
+        {
+          "convId": "7bee8ec8-d9c9-4ecc-89ee-a6ab58538ccf",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "d1fee710-9261-412a-8dce-60985a1fc7d9",
+              "role": "user",
+              "content": "Ce test va fonctionner !!!",
+              "timestamp": "2025-05-29T16:14:08.483Z"
+            },
+            {
+              "msgId": "63772947-4a2f-4662-bdad-9d5c9321b6b2",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:14:08.510Z"
+            }
+          ],
+          "date": "2025-05-29T16:14:08.511Z"
+        },
+        {
+          "convId": "01bbf8c6-8c61-4c67-a7a4-859dd4d2e018",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "d718b795-9a68-463f-abd5-7b724c6c7b32",
+              "role": "user",
+              "content": "Cette fois ci c'est la bonne",
+              "timestamp": "2025-05-29T16:16:04.470Z"
+            },
+            {
+              "msgId": "0ab36da7-eabe-4caa-99a2-cce35aba0a2a",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:16:04.500Z"
+            }
+          ],
+          "date": "2025-05-29T16:16:04.501Z"
+        },
+        {
+          "convId": "75f93bfe-1750-4920-8402-7e6dc5537214",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "2533a271-11c1-4d69-8687-a9371b841132",
+              "role": "user",
+              "content": "Bon cette fois par contre",
+              "timestamp": "2025-05-29T16:16:52.361Z"
+            },
+            {
+              "msgId": "725f0942-b48d-4070-b6d8-daba0cf31513",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:16:52.391Z"
+            }
+          ],
+          "date": "2025-05-29T16:16:52.391Z"
+        },
+        {
+          "convId": "bd121ab9-1286-4f06-ae18-822e196070bf",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "adfb2c10-55a9-4d97-9c99-b73505ce5d30",
+              "role": "user",
+              "content": "Hey",
+              "timestamp": "2025-05-29T16:20:45.042Z"
+            },
+            {
+              "msgId": "5b58690c-93c5-425c-96fc-56f2557e1c93",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:20:45.066Z"
+            }
+          ],
+          "date": "2025-05-29T16:20:45.066Z"
+        },
+        {
+          "convId": "8f63bddf-8851-41b7-b8df-139adbe9a4d2",
+          "convName": "[Réponse IA simulée]",
+          "msgList": [
+            {
+              "msgId": "1756cde7-8557-44b2-8c7e-7b173630e0b7",
+              "role": "user",
+              "content": "Creation d'une conv",
+              "timestamp": "2025-05-29T16:28:08.426Z"
+            },
+            {
+              "msgId": "9bb29437-9ca6-453c-9509-33531b8eb768",
+              "role": "assistant",
+              "content": "[Réponse IA simulée]",
+              "timestamp": "2025-05-29T16:28:08.449Z"
+            }
+          ],
+          "date": "2025-05-29T16:28:08.449Z"
         }
       ]
     }

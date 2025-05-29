@@ -4,14 +4,22 @@ import { faCircleUser, faSquarePlus, faNoteSticky } from "@fortawesome/free-regu
 import LogoIcon from "../icons/LogoIcon";
 import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
+import { useUser } from '../../hooks/useUser';
+import { useConv } from "../../hooks/useConv";
+import { getConversation } from "../../api";
 
 export type ConversationItem = {
-    id: string;
-    name: string;
+    convId: string;
+    convName: string;
     date: string;
 };
 
-export default function SideBar({ open, onClose, conversations, username }: { open: boolean; onClose: () => void, conversations: ConversationItem[], username: string }) {
+export default function SideBar({ open, onClose }: { open: boolean; onClose: () => void }) {
+
+
+    const { UserData } = useUser();
+    const { setConversationData } = useConv();
+
 
     // Group conversations by Today, Yesterday, Last 7 days, Preceding conversations
     const groupedConversations = useMemo(() => {
@@ -26,18 +34,21 @@ export default function SideBar({ open, onClose, conversations, username }: { op
             Last7: [] as ConversationItem[],
             Preceding: [] as ConversationItem[],
         };
-
-        for (const conv of conversations) {
-            const convDate = new Date(conv.date);
-            const convStr = convDate.toDateString();
-            if (convStr === todayStr) groups.Today.push(conv);
-            else if (convStr === yesterdayStr) groups.Yesterday.push(conv);
-            else if (convDate > sevenDaysAgo) groups.Last7.push(conv);
-            else groups.Preceding.push(conv);
+        if (UserData?.conversations) {
+            for (const conv of UserData.conversations) {
+                const convDate = new Date(conv.date);
+                const convStr = convDate.toDateString();
+                if (convStr === todayStr) groups.Today.push(conv);
+                else if (convStr === yesterdayStr) groups.Yesterday.push(conv);
+                else if (convDate > sevenDaysAgo) groups.Last7.push(conv);
+                else groups.Preceding.push(conv);
+            }
         }
-
+        Object.values(groups).forEach(list =>
+            list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        );
         return groups;
-    }, [conversations]);
+    }, [UserData?.conversations]);
 
 
     // Handing the escape key to close the sidebar
@@ -49,6 +60,16 @@ export default function SideBar({ open, onClose, conversations, username }: { op
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
+    // Function to open a conversation
+    const openConv = async (convId: string) => {
+        const convData = await getConversation(convId);
+        setConversationData(convData);
+    };
+
+
+    const onCreateConv = async () => {
+        setConversationData(null);
+    }
 
 
     return (
@@ -66,7 +87,7 @@ export default function SideBar({ open, onClose, conversations, username }: { op
             <div className="flex flex-col h-full text-white">
                 <div className="mb-2 px-4">
                     <LogoIcon className="w-15 h-15 mb-8 text-lime-300" />
-                    <SideBarItem name="New conversation" onClick={() => { }} icon={<FontAwesomeIcon icon={faSquarePlus} />} />
+                    <SideBarItem name="New conversation" onClick={onCreateConv} icon={<FontAwesomeIcon icon={faSquarePlus} />} />
                     <SideBarItem name="Notes" onClick={() => { }} icon={<FontAwesomeIcon icon={faNoteSticky} />} />
                 </div>
 
@@ -77,7 +98,7 @@ export default function SideBar({ open, onClose, conversations, username }: { op
                             <div key={label}>
                                 <div className="text-gray-400 text-xs font-bold my-2">{label}</div>
                                 {list.map((conv) => (
-                                    <SideBarConvItem key={conv.id} {...conv} />
+                                    <SideBarConvItem key={conv.convId} name={conv.convName} id={conv.convId} onClick={(openConv)} />
                                 ))}
                             </div>
                         ) : null
@@ -93,7 +114,7 @@ export default function SideBar({ open, onClose, conversations, username }: { op
                         <FontAwesomeIcon icon={faCircleUser} className="text-2xl" />
                         <span>{username}</span>
                     </div> */}
-                    <SideBarItem name={username} onClick={() => { }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
+                    <SideBarItem name={UserData && UserData.name ? UserData.name : 'No name found'} onClick={() => { }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
                 </div>
             </div>
         </div>

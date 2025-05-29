@@ -51,6 +51,17 @@ function getUserById(userId) {
     return db.users.find(u => u.userId === userId);
 }
 
+function getUserInfo(userId) {
+    const db = readDB();
+    const user = db.users.find(u => u.userId === userId);
+    if (!user) throw new Error("Utilisateur non trouvé");
+    return {
+        name: user.userInfo.name,
+        email: user.userInfo.email,
+        preferences: user.userInfo.preferences
+    };
+}
+
 /**
  * 
  * @param {string} email 
@@ -300,6 +311,7 @@ function deleteMessage(userId, convId, msgId) {
 
 module.exports = {
     getUserById,
+    getUserInfo,
     getUserByMail,
     addUser,
     updateUser,
