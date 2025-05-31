@@ -2,7 +2,7 @@ import Button from './button';
 import { useEffect, useState, useRef } from "react";
 
 
-export function EditableMessage({ message, onEdit, }: { message: string; onEdit: (newMessage: string) => void; }) {
+export function EditableMessage({ message, onEdit, }: { message: string | null; onEdit: (newMessage: string | null) => void; }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedMessage, setEditedMessage] = useState(message)
     const [displayMessage, setDisplayMessage] = useState(message)
@@ -29,7 +29,7 @@ export function EditableMessage({ message, onEdit, }: { message: string; onEdit:
                     <textarea
                         ref={textareaRef}
                         className="w-auto p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-200 resize-none text-gray-200 min-h-[48px] overflow-auto"
-                        value={editedMessage}
+                        value={editedMessage ? editedMessage : ""}
                         onChange={(e) => {
                             setEditedMessage(e.target.value)
                             if (textareaRef.current) {

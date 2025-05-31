@@ -28,7 +28,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
     try {
         const { conv, userMessage, newMessage } = await chatAPI.createConversation(userId, messageContent);
-        console.log(conv, userMessage, newMessage)
         res.status(200).json({ conv, userMessage, newMessage });
     } catch (error) {
         console.error('Error handling message:', error);

@@ -151,3 +151,25 @@ export const createConversation = async (message: string) => {
     const data = await response.json();
     return data;
 };
+
+export const sendMessage = async (conversationId: string, message: string) => {
+    const token = getToken();
+    const response = await fetch(`${serverUrl}/message/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            convId: conversationId,
+            messageContent: message
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to send message');
+    }
+
+    const data = await response.json();
+    return data;
+}

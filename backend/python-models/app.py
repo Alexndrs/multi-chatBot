@@ -8,7 +8,8 @@ app = FastAPI()
 generator = pipeline("text-generation", model="gpt2")
 
 
-# Start the FastAPI server with : $ uvicorn app:app --reload
+# Start the FastAPI server on port 8001 : 
+# $ uvicorn app:app --reload --port 8001
 
 @app.get("/")
 def read_root():
@@ -25,8 +26,12 @@ class ChatInput(BaseModel):
 
 @app.post("/chat")
 def chat(req: ChatInput):
+    print("Received chat request :", req)
+
+
     hist = [{"role": msg["role"], "content": msg["content"]} for msg in req.message]
     chatbot = QwenChatbot(history=hist[:-1])
     lastMessage = hist[-1]["content"]
     result = chatbot.generate_response(lastMessage)
+    print(lastMessage, result)
     return {"response": result}

@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight } from '@fortawesome/free-solid-svg-icons';
 
 
-export function BotMessage({ message, onReload }: { message: string; onReload: () => void; }) {
+export function BotMessage({ message, onReload }: { message: string | null; onReload: () => void; }) {
     return (
         <div className="flex flex-col">
             <div className="self-start mr-15 ml-15 mt-5 p-4 border-b-2 border-gray-800 text-gray-500">

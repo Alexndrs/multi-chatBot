@@ -1,38 +1,10 @@
-import { useState } from "react";
 import Input from "../components/input/input";
 import { UserMessage } from "../components/message/userMessage";
 import { BotMessage } from "../components/message/botMessage";
 import { useConv } from "../hooks/useConv";
-import { createConversation } from "../api";
+import { createConversation, sendMessage } from "../api";
 import { useUser } from "../hooks/useUser";
-
-// const messages = [
-//     {
-//         msgId: "c2b36a4d-b2bb-4f5d-8bdc-17f0b5e913b3",
-//         role: "user",
-//         content: "Bonjour, comment tu vas ?",
-//         timestamp: "2025-05-18T00:31:26.108Z"
-//     },
-//     {
-//         msgId: "571800e9-2b7c-4f80-b9e3-5c02b98c2837",
-//         role: "assistant",
-//         content: "[Réponse IA simulée], cela est une réponse longue pour tester comment le message va s'afficher dans la boîte de dialogue. Il est important de s'assurer que le texte est bien formaté et que l'interface utilisateur gère correctement les messages longs. Cela inclut le défilement, la mise en forme et la lisibilité générale du texte. En outre, il est essentiel de tester comment les messages sont envoyés et reçus dans différentes langues et formats. Cela garantit que l'application est robuste et prête à être utilisée par un large éventail d'utilisateurs.",
-//         timestamp: "2025-05-18T00:31:26.116Z"
-//     },
-//     {
-//         msgId: "c2be6a4d-b2bb-4f5d-8bdc-17f0b5e913b3",
-//         role: "user",
-//         content: "Bonjour, comment tu vas ?",
-//         timestamp: "2025-05-18T00:31:26.108Z"
-//     },
-//     {
-//         msgId: "571800e9-2b7c-4f83-b9e3-5c02b98c2837",
-//         role: "assistant",
-//         content: "[Réponse IA simulée]",
-//         timestamp: "2025-05-18T00:31:26.116Z"
-//     }
-// ]
-
+import { useRef, useEffect } from "react";
 
 
 const ChatPage: React.FC = () => {
@@ -40,10 +12,21 @@ const ChatPage: React.FC = () => {
     const { setUserData } = useUser();
     // console.log("ConversationData: ", ConversationData);
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const onSendMessage = (message: string) => {
-        if (ConversationData) {
-            console.log("Message sent: ", message, ConversationData);
+        if (ConversationData && ConversationData.convId) {
+            // If conversation exists, send the message to the existing conversation
+            sendMessage(ConversationData.convId, message).then((data) => {
+                // Update the conv
+                console.log(data.userMsg, data.newMsg)
+                setConversationData({
+                    convId: ConversationData.convId,
+                    convName: ConversationData.convName,
+                    date: data.userMsg.timestamp,
+                    msgList: [...(ConversationData.msgList || []), data.userMsg, data.newMsg]
+                });
+            });
         }
         else {
             // Create a new conversation with the first message
@@ -74,6 +57,14 @@ const ChatPage: React.FC = () => {
 
         }
     }
+
+
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [ConversationData?.msgList]);
 
 
     return (
@@ -108,6 +99,7 @@ const ChatPage: React.FC = () => {
                         }
                     })
                 ) : null}
+                <div ref={messagesEndRef} />
             </div>
 
             {/* Input container div for user to type their message */}

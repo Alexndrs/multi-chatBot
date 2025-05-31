@@ -10,11 +10,17 @@
 
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 class QwenChatbot:
     def __init__(self, model_name="Qwen/Qwen3-0.6B", history = []):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float32,  # éviter le bfloat16/meta par défaut
+            device_map=None  # <== important pour éviter "meta"
+        )
+        self.model.to("cuda")
         self.history = history
 
     def generate_response(self, user_input):
@@ -27,7 +33,9 @@ class QwenChatbot:
         )
 
         inputs = self.tokenizer(text, return_tensors="pt")
-        response_ids = self.model.generate(**inputs, max_new_tokens=32768)[0][len(inputs.input_ids[0]):].tolist()
+        inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
+        outputs = self.model.generate(**inputs, max_new_tokens=512)
+        response_ids = outputs[0][len(inputs["input_ids"][0]):].tolist()
         response = self.tokenizer.decode(response_ids, skip_special_tokens=True)
 
         # Update history

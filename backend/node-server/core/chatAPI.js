@@ -60,7 +60,7 @@ async function createConversation(userId, messageContent) {
         msgList: [],
         date: new Date().toISOString()
     }
-    const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title' + messageContent + '/no_think' }]);
+    const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title. The message : "' + messageContent + '"/no_think' }]);
     newConv.convName = convName;
     db.addConversation(userId, newConv);
 

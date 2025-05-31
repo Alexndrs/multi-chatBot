@@ -11,8 +11,8 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
-        const response = await chatAPI.handleMessage(userId, convId, messageContent);
-        res.status(200).json({ response });
+        const { userMsg, newMsg } = await chatAPI.handleMessage(userId, convId, messageContent);
+        res.status(200).json({ userMsg, newMsg });
     } catch (error) {
         console.error('Error handling message:', error);
         res.status(500).json({ error: 'Internal server error' });
