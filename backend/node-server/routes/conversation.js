@@ -27,8 +27,19 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
-        const { conv, userMessage, newMessage } = await chatAPI.createConversation(userId, messageContent);
-        res.status(200).json({ conv, userMessage, newMessage });
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        const onIdGenerated = (conv) => {
+            res.write(`<<convContainer>>${JSON.stringify({ conv })}\n`);
+        };
+
+        const onToken = (chunk) => {
+            res.write(chunk); // stream vers le client
+        };
+
+        await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated);
+        res.end();
     } catch (error) {
         console.error('Error handling message:', error);
         res.status(500).json({ error: 'Internal server error' });

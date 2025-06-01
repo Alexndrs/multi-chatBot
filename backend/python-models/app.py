@@ -1,4 +1,7 @@
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from transformers import TextIteratorStreamer
+import threading
 from pydantic import BaseModel
 from transformers import pipeline
 from typing import List, Dict
@@ -26,12 +29,32 @@ class ChatInput(BaseModel):
 
 @app.post("/chat")
 def chat(req: ChatInput):
-    print("Received chat request :", req)
+    # print("Received chat request :", req)
 
 
     hist = [{"role": msg["role"], "content": msg["content"]} for msg in req.message]
     chatbot = QwenChatbot(history=hist[:-1])
     lastMessage = hist[-1]["content"]
-    result = chatbot.generate_response(lastMessage)
-    print(lastMessage, result)
-    return {"response": result}
+
+    def token_stream():
+        # Prépare le prompt
+        messages = chatbot.history + [{"role": "user", "content": lastMessage}]
+        print("Messages for generation:", messages)
+        text = chatbot.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        inputs = chatbot.tokenizer(text, return_tensors="pt")
+        inputs = {k: v.to(chatbot.model.device) for k, v in inputs.items()}
+
+        streamer = TextIteratorStreamer(chatbot.tokenizer, skip_prompt=True, skip_special_tokens=True)
+        generation_kwargs = dict(**inputs, streamer=streamer, max_new_tokens=1024)
+
+        thread = threading.Thread(target=chatbot.model.generate, kwargs=generation_kwargs)
+        thread.start()
+        for new_text in streamer:
+            print(new_text, end='', flush=True)
+            yield new_text
+
+    return StreamingResponse(token_stream(), media_type="text/plain")

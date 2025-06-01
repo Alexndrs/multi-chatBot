@@ -5,6 +5,8 @@ export interface Message {
     role: string | null;
     content: string | null;
     timestamp: string | null;
+    convId?: string;
+    convName?: string;
 }
 
 export interface ConversationData {

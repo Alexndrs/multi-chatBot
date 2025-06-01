@@ -18,31 +18,41 @@ async function getAllConvIdsAndNameAndDate(userId) {
  * @param {string} userId 
  * @param {string} convId 
  * @param {string} messageContent
- * @returns {Promise<string>}
+ * @param {(chunk: string) => void} onToken
+ * @param {(userMsg: object, newMsg : object) => void} [onIdGeneratied]
+ * @returns {Promise<{userMsg, newMsg}>}
  */
-async function handleMessage(userId, convId, messageContent) {
+async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated) {
     // Ajouter le message à la conversation
+
+    const convName = db.getConversationById(userId, convId).convName;
 
     const userMsg = {
         msgId: uuidv4(),
         role: 'user',
         content: messageContent,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        convName: convName,
+        convId: convId
     }
 
+    const newMsg = {
+        msgId: uuidv4(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        convName: convName,
+        convId: convId
+    }
     db.addMessage(userId, convId, userMsg)
+    if (onIdGenerated) onIdGenerated(userMsg, newMsg);
     // Récupérer l'historique de la conversation
     const conv = db.getAllMessages(userId, convId);
 
     // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
-    const reply = await chatWithPython(conv);
+    const reply = await chatWithPython(conv, onToken);
+    newMsg.content = reply;
     // Ajouter la réponse de l'IA à la conversation
-    const newMsg = {
-        msgId: uuidv4(),
-        role: 'assistant',
-        content: reply,
-        timestamp: new Date().toISOString()
-    }
 
     db.addMessage(userId, convId, newMsg)
     return { userMsg, newMsg };
@@ -53,19 +63,19 @@ async function handleMessage(userId, convId, messageContent) {
  * @param {string} userId 
  * @param {string} messageContent 
  */
-async function createConversation(userId, messageContent) {
+async function createConversation(userId, messageContent, onToken, onIdGenerated) {
     const newConv = {
         convId: uuidv4(),
         convName: '',
         msgList: [],
         date: new Date().toISOString()
     }
-    const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title. The message : "' + messageContent + '"/no_think' }]);
+    onIdGenerated(newConv);
+    const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"/no_think' }], onToken);
     newConv.convName = convName;
     db.addConversation(userId, newConv);
 
-    const { userMsg, newMsg } = await handleMessage(userId, newConv.convId, messageContent);
-    return { conv: newConv, userMessage: userMsg, newMessage: newMsg };
+    return { conv: newConv };
 }
 
 /**

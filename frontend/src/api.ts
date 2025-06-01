@@ -131,7 +131,7 @@ export const getConversation = async (conversationId: string) => {
     return data.response;
 }
 
-export const createConversation = async (message: string) => {
+export const createConversation = async (message: string, onConvGenerated: (conv: any) => any, onTitleToken: (token: string, currentConvId: string | null) => any) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/conversation`, {
         method: 'POST',
@@ -148,11 +148,40 @@ export const createConversation = async (message: string) => {
         throw new Error('Failed to create conversation');
     }
 
-    const data = await response.json();
-    return data;
+    if (!response.body) {
+        throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let currentConvId: string | null = null;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+
+        if (chunk.startsWith('<<convContainer>>')) {
+            const jsonStr = chunk.slice('<<convContainer>>'.length).trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                const conv = data.conv;
+
+                onConvGenerated(conv);
+                console.log('🌳 Conversation generated:', conv);
+                currentConvId = conv.convId;
+
+            } catch (err) {
+                console.error('Erreur de parsing du ConvContainer:', err);
+            }
+            continue;
+        }
+
+        onTitleToken(chunk, currentConvId);
+    }
+    return currentConvId;
 };
 
-export const sendMessage = async (conversationId: string, message: string) => {
+export const sendMessage = async (conversationId: string, message: string, onContainerGenerated: (userMsg: any, newMsg: any) => any, onToken: (token: string) => any) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/message/`, {
         method: 'POST',
@@ -166,10 +195,44 @@ export const sendMessage = async (conversationId: string, message: string) => {
         })
     });
 
-    if (!response.ok) {
-        throw new Error('Failed to send message');
+    if (!response.body) {
+        throw new Error('Response body is null');
     }
 
-    const data = await response.json();
-    return data;
-}
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let fullText = '';
+    let userMsg = null;
+    let newMsg = null;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+
+        if (chunk.startsWith('<<MsgCONTAINER>>')) {
+            const jsonStr = chunk.slice('<<MsgCONTAINER>>'.length).trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                userMsg = data.userMsg;
+                newMsg = data.newMsg;
+                onContainerGenerated(userMsg, newMsg);
+
+            } catch (err) {
+                console.error('Erreur de parsing du MsgCONTAINER:', err);
+            }
+            continue;
+        }
+
+        fullText += chunk;
+        onToken(chunk);
+
+    }
+
+    if (newMsg) {
+        newMsg.content = fullText;
+    }
+
+    return { userMsg, newMsg };
+};
