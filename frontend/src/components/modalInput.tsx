@@ -66,7 +66,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
 
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-xl">
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
             <div className="w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative overflow-hidden">
                 {isGlowingLoop && (
