@@ -27,7 +27,7 @@ export default function FloatingMenu({ items, onSelect, onClose }: FloatingMenuP
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 gray-900 text-gray-400 shadow-lg rounded-lg py-2 text-sm w-40 border-2 border-gray-800 backdrop-blur-xs">
+            className="absolute bottom-full mb-4 left-0 z-50 gray-900 text-gray-400 shadow-lg rounded-lg py-2 text-sm w-40 border-2 border-gray-800 backdrop-blur-md">
             {items.map((item, index) => (
                 <div
                     key={index}

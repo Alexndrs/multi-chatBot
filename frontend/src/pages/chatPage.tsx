@@ -7,9 +7,10 @@ import { useUser } from "../hooks/useUser";
 import { createConversation, sendMessage } from "../api";
 import type { Message } from "../contexts/convContext";
 import type { ConversationItem } from "../components/sidebar/sideBar";
+import ModalInput from "../components/modalInput";
 
 const ChatPage: React.FC = () => {
-    const { ConversationData, setConversationData } = useConv();
+    const { ConversationData, setConversationData, modalOpen, setModalOpen } = useConv();
     const { setUserData } = useUser();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -19,7 +20,22 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    useEffect(scrollToBottom, [ConversationData?.msgList]);
+    useEffect(() => {
+        scrollToBottom();
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setModalOpen(false);
+            }
+        };
+
+        if (modalOpen) {
+            window.addEventListener("keydown", handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [ConversationData?.msgList, modalOpen, setModalOpen]);
 
     const appendMessage = (userMsg: Message, newMsg: Message) => {
         setConversationData((prev) => {
@@ -79,7 +95,6 @@ const ChatPage: React.FC = () => {
                 convName: (prev.convName || "") + token,
             };
         });
-        console.log("Conv title received :", token, convId);
 
         setUserData((prev) => {
             if (!prev) return prev;
@@ -102,6 +117,10 @@ const ChatPage: React.FC = () => {
             console.log("Creating new conversation with message:", message);
             convId = await createConversation(message, createConvHandler, updateConvTitle);
             console.log("New conversation created with ID:", convId);
+            // Timeout to ensure the generation of the message as started :
+            setTimeout(() => {
+                setModalOpen(false);
+            }, 3000);
             if (!convId) return;
         }
 
@@ -117,7 +136,7 @@ const ChatPage: React.FC = () => {
                     {ConversationData?.convName || "Hello, ask me anything!"}
                 </h1>
             </div>
-
+            <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleSendMessage} />
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
                 {ConversationData?.msgList?.map((msg) =>
                     msg.role === "user" ? (

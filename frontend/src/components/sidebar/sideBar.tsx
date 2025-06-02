@@ -18,7 +18,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
 
 
     const { UserData } = useUser();
-    const { setConversationData } = useConv();
+    const { setConversationData, setModalOpen } = useConv();
 
 
     // Group conversations by Today, Yesterday, Last 7 days, Preceding conversations
@@ -64,11 +64,13 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
     const openConv = async (convId: string) => {
         const convData = await getConversation(convId);
         setConversationData(convData);
+        setModalOpen(false);
     };
 
 
     const onCreateConv = async () => {
         setConversationData(null);
+        setModalOpen(true);
     }
 
 
