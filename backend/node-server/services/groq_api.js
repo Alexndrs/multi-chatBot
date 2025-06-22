@@ -1,8 +1,7 @@
-// Here is an example from the Groq API documentation: 
+require('dotenv').config();
 const Groq = require("groq-sdk");
 const { LlamaTokenizer } = require("llama-tokenizer-js");
-// KEY = gsk_e4vviMzlwq2cBCzCFwtgWGdyb3FYzi1zW72gKmDMuRfXUi7bwySMc
-const groq = new Groq({ apiKey: "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" }); // Key should be hidden later or provided by the user
+const groq = new Groq({ apiKey: process.env.GROQ_API });
 const tokenizer = new LlamaTokenizer();
 
 
