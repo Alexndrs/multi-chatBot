@@ -4,9 +4,9 @@ const chatAPI = require('../core/chatAPI');
 const authenticateToken = require('../middleware/auth');
 
 router.post('/', authenticateToken, async (req, res) => {
-    const { convId, messageContent } = req.body;
+    const { convId, messageContent, model_name } = req.body;
     const userId = req.user.userId;
-    if (!userId || !convId || !messageContent) {
+    if (!userId || !convId || !messageContent || !model_name) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -25,7 +25,7 @@ router.post('/', authenticateToken, async (req, res) => {
         };
 
 
-        await chatAPI.handleMessage(userId, convId, messageContent, onToken, onIdGenerated);
+        await chatAPI.handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);

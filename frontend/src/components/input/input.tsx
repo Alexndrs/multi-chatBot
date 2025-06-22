@@ -1,12 +1,14 @@
 import ButtonIcon from "../buttonIcon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faEllipsisVertical, faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisVertical, faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
+// import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import FloatingMenu from "./floatingMenu";
 import { useState } from "react";
+import { useConv } from "../../hooks/useConv";
 
 
 export default function Input({ onSend, }: { onSend: (message: string) => void; }) {
-
+    const { task, modelName } = useConv();
     const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
 
@@ -44,23 +46,20 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
                     />
                     {openMenu === "task" && (
                         <FloatingMenu
-                            items={["Text-to-Text", "Text-to-Image", "Audio-to-Text"]}
                             onSelect={(v) => {
-                                alert(`Selected task: ${v}`);
                                 setOpenMenu(null);
                             }}
                             onClose={() => setOpenMenu(null)}
                         />
                     )}
                 </div>
-                <div className="relative">
+                {/* <div className="relative">
                     <ButtonIcon
                         icon={<FontAwesomeIcon icon={faPlus} />}
                         onClick={() => setOpenMenu(openMenu === "upload" ? null : "upload")}
                         type="transparent" />
                     {openMenu === "upload" && (
                         <FloatingMenu
-                            items={["Upload image", "Upload document"]}
                             onSelect={(v) => {
                                 alert(`Selected upload: ${v}`);
                                 setOpenMenu(null);
@@ -68,7 +67,7 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
                             onClose={() => setOpenMenu(null)}
                         />
                     )}
-                </div>
+                </div> */}
                 <input
                     type="text"
                     placeholder="Type your message here..."
@@ -94,8 +93,8 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
             </div>
             {/* Infos */}
             <div className="flex items-center gap-2 mt-2">
-                <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">Text-2-Text</div>
-                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">Qwen-0.6B</div>
+                <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
+                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{modelName}</div>
             </div>
         </div>
     );

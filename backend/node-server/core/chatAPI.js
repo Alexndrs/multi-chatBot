@@ -1,4 +1,5 @@
 const { chatWithPython } = require('../services/python_api');
+const { chatWithGroq } = require('../services/groq_api');
 const db = require('../db/interface');
 const uuidv4 = require('uuid').v4;
 
@@ -22,8 +23,9 @@ async function getAllConvIdsAndNameAndDate(userId) {
  * @param {(userMsg: object, newMsg : object) => void} [onIdGeneratied]
  * @returns {Promise<{userMsg, newMsg}>}
  */
-async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated) {
+async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
     // Ajouter le message à la conversation
+    console.log('send msg with model :', model_name);
 
     const convName = db.getConversationById(userId, convId).convName;
 
@@ -44,16 +46,44 @@ async function handleMessage(userId, convId, messageContent, onToken, onIdGenera
         convName: convName,
         convId: convId
     }
-    db.addMessage(userId, convId, userMsg)
     if (onIdGenerated) onIdGenerated(userMsg, newMsg);
     // Récupérer l'historique de la conversation
     const conv = db.getAllMessages(userId, convId);
 
-    // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
-    const reply = await chatWithPython(conv, onToken);
-    newMsg.content = reply;
-    // Ajouter la réponse de l'IA à la conversation
+    // Filter the id from the messages in the conv
+    const filteredConv = conv.map(msg => {
+        return {
+            role: msg.role,
+            content: msg.content,
+        }
+    })
+    // Append the new user message to the conversation
+    filteredConv.push({
+        role: userMsg.role,
+        content: userMsg.content,
+    });
 
+
+    // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
+    let generatedText, promptTokens, completionTokens;
+
+
+    if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
+        console.log('Using Groq API for model:', model_name);
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
+    } else {
+        ({ generatedText, promptTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
+    }
+
+
+    console.log('Generated text:', generatedText);
+    newMsg.content = generatedText;
+    newMsg.token = completionTokens;
+    console.log('newMsg:', newMsg);
+    userMsg.token = promptTokens;
+    // Ajouter la réponse de l'IA à la conversation et update le nombre de tokens
+    db.addToken(userId, convId, promptTokens + completionTokens);
+    db.addMessage(userId, convId, userMsg)
     db.addMessage(userId, convId, newMsg)
     return { userMsg, newMsg };
 }
@@ -63,18 +93,31 @@ async function handleMessage(userId, convId, messageContent, onToken, onIdGenera
  * @param {string} userId 
  * @param {string} messageContent 
  */
-async function createConversation(userId, messageContent, onToken, onIdGenerated) {
+async function createConversation(userId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
+
     const newConv = {
         convId: uuidv4(),
         convName: '',
-        msgList: [],
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        token: 0,
+        msgList: []
     }
     onIdGenerated(newConv);
-    const convName = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"/no_think' }], onToken);
-    newConv.convName = convName;
-    db.addConversation(userId, newConv);
 
+    if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
+        console.log('Using Groq API for model:', model_name);
+        const { generatedText, promptTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent }], onToken, model_name);
+    }
+    else {
+        // By default use the python API when the model is not supported by Groq
+        const { generatedText, promptTokens, completionTokens } = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '/no_think' }], onToken);
+    }
+
+
+    const { generatedText, promptTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"/no_think' }], onToken);
+    newConv.convName = generatedText;
+    db.addConversation(userId, newConv);
+    db.addToken(userId, newConv.convId, promptTokens + completionTokens);
     return { conv: newConv };
 }
 

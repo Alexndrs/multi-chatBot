@@ -21,6 +21,10 @@ export interface ConversationContextType {
     setConversationData: React.Dispatch<React.SetStateAction<ConversationData | null>>;
     modalOpen: boolean;
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    modelName: string;
+    setModelName: React.Dispatch<React.SetStateAction<string>>;
+    task: string;
+    setTask: React.Dispatch<React.SetStateAction<string>>;
 }
 
 

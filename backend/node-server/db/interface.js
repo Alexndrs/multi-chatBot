@@ -28,7 +28,7 @@ function writeDB(data) {
  * @property {string} convId
  * @property {string} convName
  * @property {string} date
- * @property {Array<messageObject>} msgList
+ * @property {number} token
  */
 
 /**
@@ -37,6 +37,7 @@ function writeDB(data) {
  * @property {string} role
  * @property {string} content
  * @property {string} timestamp
+ * @property {number} token
  */
 
 
@@ -197,6 +198,24 @@ function changeConversationName(userId, convId, newName) {
  * 
  * @param {string} userId 
  * @param {string} convId 
+ * @param {string} token 
+ */
+function addToken(userId, convId, token) {
+    const db = readDB();
+    const user = db.users.find(u => u.userId === userId);
+    if (!user) throw new Error("Utilisateur non trouvé");
+
+    const conv = user.conversations.find(c => c.convId === convId);
+    if (!conv) throw new Error("Conversation non trouvée");
+
+    conv.token = conv.token + token;
+    writeDB(db);
+}
+
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
  * @param {string} msgId 
  * @returns {messageObject | undefined}
  */
@@ -321,6 +340,7 @@ module.exports = {
     addConversation,
     deleteConversation,
     changeConversationName,
+    addToken,
     getAllMessages,
     getMessageById,
     addMessage,

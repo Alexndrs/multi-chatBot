@@ -21,15 +21,15 @@ async function chatWithPython(message, onToken) {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let result = '';
+    let generatedText = '';
     while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
-        result += chunk;
+        generatedText += chunk;
         if (onToken) onToken(chunk);
     }
-    return result;
+    return { generatedText, promptTokens: 0, completionTokens: 0 }
 }
 module.exports = { chatWithPython };
 

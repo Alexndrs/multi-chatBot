@@ -131,7 +131,7 @@ export const getConversation = async (conversationId: string) => {
     return data.response;
 }
 
-export const createConversation = async (message: string, onConvGenerated: (conv: any) => any, onTitleToken: (token: string, currentConvId: string | null) => any) => {
+export const createConversation = async (message: string, model_name: string, onConvGenerated: (conv: any) => any, onTitleToken: (token: string, currentConvId: string | null) => any) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/conversation`, {
         method: 'POST',
@@ -140,7 +140,8 @@ export const createConversation = async (message: string, onConvGenerated: (conv
             'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-            messageContent: message
+            messageContent: message,
+            model_name: model_name
         })
     });
 
@@ -181,7 +182,7 @@ export const createConversation = async (message: string, onConvGenerated: (conv
     return currentConvId;
 };
 
-export const sendMessage = async (conversationId: string, message: string, onContainerGenerated: (userMsg: any, newMsg: any) => any, onToken: (token: string) => any) => {
+export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: any, newMsg: any) => any, onToken: (token: string) => any) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/message/`, {
         method: 'POST',
@@ -191,7 +192,8 @@ export const sendMessage = async (conversationId: string, message: string, onCon
         },
         body: JSON.stringify({
             convId: conversationId,
-            messageContent: message
+            messageContent: message,
+            model_name: model_name
         })
     });
 

@@ -1,17 +1,20 @@
 import ButtonIcon from "./buttonIcon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faEllipsisVertical, faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisVertical, faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
+// import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import FloatingMenu from "./input/floatingMenu";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useConv } from "../hooks/useConv";
 
 
 
 export default function ModalInput({ open, onClose, onSend }: { open: boolean; onClose: () => void, onSend: (message: string) => void; }) {
+    const { task, modelName } = useConv();
     const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
     const taskButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
-    const uploadButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+    // const uploadButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
 
     useEffect(() => {
@@ -110,12 +113,12 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                                 />
                             </div>
 
-                            <div ref={uploadButtonRef}>
+                            {/* <div ref={uploadButtonRef}>
                                 <ButtonIcon
                                     icon={<FontAwesomeIcon icon={faPlus} />}
                                     onClick={() => handleMenuOpen("upload", uploadButtonRef)}
                                     type="transparent" />
-                            </div>
+                            </div> */}
 
                             <input
                                 type="text"
@@ -141,8 +144,8 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                         {/* Infos */}
                         <div className="flex flex-wrap justify-between mt-2 pt-5 border-t-1 border-[#ffffff16]">
                             <div className="flex items-center gap-2 flex-wrap flex-1">
-                                <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">Text-2-Text</div>
-                                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">Qwen-0.6B</div>
+                                <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
+                                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{modelName}</div>
                             </div>
                             <div className="flex items-center gap-2 max-w-[50%] flex-shrink-0">
                                 <div
@@ -171,9 +174,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                     }}
                 >
                     <FloatingMenu
-                        items={["Text-to-Text", "Text-to-Image", "Audio-to-Text"]}
                         onSelect={(v) => {
-                            alert(`Selected task: ${v}`);
                             setOpenMenu(null);
                         }}
                         onClose={() => setOpenMenu(null)}
@@ -182,7 +183,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                 document.body
             )}
 
-            {openMenu === "upload" && createPortal(
+            {/* {openMenu === "upload" && createPortal(
                 <div
                     style={{
                         position: 'fixed',
@@ -202,7 +203,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                     />
                 </div>,
                 document.body
-            )}
+            )} */}
         </div>
     );
 }

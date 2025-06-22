@@ -20,9 +20,9 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 router.post('/', authenticateToken, async (req, res) => {
-    const { messageContent } = req.body;
+    const { messageContent, model_name } = req.body;
     const userId = req.user.userId;
-    if (!userId || !messageContent) {
+    if (!userId || !messageContent || !model_name) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -38,7 +38,7 @@ router.post('/', authenticateToken, async (req, res) => {
             res.write(chunk); // stream vers le client
         };
 
-        await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated);
+        await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated, model_name);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);

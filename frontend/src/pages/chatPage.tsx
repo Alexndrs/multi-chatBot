@@ -10,7 +10,7 @@ import type { ConversationItem } from "../components/sidebar/sideBar";
 import ModalInput from "../components/modalInput";
 
 const ChatPage: React.FC = () => {
-    const { ConversationData, setConversationData, modalOpen, setModalOpen } = useConv();
+    const { ConversationData, setConversationData, modalOpen, setModalOpen, modelName } = useConv();
     const { setUserData } = useUser();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -110,12 +110,11 @@ const ChatPage: React.FC = () => {
     };
 
     const handleSendMessage = async (message: string) => {
-        console.log(ConversationData)
+        console.log("ConversationData :", ConversationData)
         let convId = ConversationData?.convId;
 
         if (!convId) {
-            console.log("Creating new conversation with message:", message);
-            convId = await createConversation(message, createConvHandler, updateConvTitle);
+            convId = await createConversation(message, modelName, createConvHandler, updateConvTitle);
             console.log("New conversation created with ID:", convId);
             // Timeout to ensure the generation of the message as started :
             setTimeout(() => {
@@ -123,9 +122,7 @@ const ChatPage: React.FC = () => {
             }, 3000);
             if (!convId) return;
         }
-
-        console.log("Sending message to conversation:", convId);
-        await sendMessage(convId, message, appendMessage, updateAssistantReply);
+        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply);
     };
 
 
