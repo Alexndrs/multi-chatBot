@@ -128,6 +128,7 @@ export const getConversation = async (conversationId: string) => {
     }
 
     const data = await response.json();
+    console.log('Conversation data:', data);
     return data.response;
 }
 
@@ -177,12 +178,23 @@ export const createConversation = async (message: string, model_name: string, on
             continue;
         }
 
+        if (chunk.startsWith('<<tokenUsage>>')) {
+            const jsonStr = chunk.slice('<<tokenUsage>>'.length).trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                console.log('Token usage:', data);
+            } catch (err) {
+                console.error('Erreur de parsing du TokenUsage:', err);
+            }
+            continue;
+        }
+
         onTitleToken(chunk, currentConvId);
     }
     return currentConvId;
 };
 
-export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: any, newMsg: any) => any, onToken: (token: string) => any) => {
+export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: any, newMsg: any) => void, onToken: (token: string) => void, onTokenUsage: (promptToken: number, responseToken: number) => void) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/message/`, {
         method: 'POST',
@@ -223,6 +235,18 @@ export const sendMessage = async (conversationId: string, message: string, model
 
             } catch (err) {
                 console.error('Erreur de parsing du MsgCONTAINER:', err);
+            }
+            continue;
+        }
+
+        if (chunk.startsWith('<<tokenUsage>>')) {
+            const jsonStr = chunk.slice('<<tokenUsage>>'.length).trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                console.log('Token usage:', data);
+                onTokenUsage(data.promptToken, data.responseToken);
+            } catch (err) {
+                console.error('Erreur de parsing du TokenUsage:', err);
             }
             continue;
         }

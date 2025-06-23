@@ -272,6 +272,7 @@ function addMessage(userId, convId, message) {
         role: message.role,
         content: message.content,
         timestamp: message.timestamp,
+        token: message.token || 0
     });
 
     conv.date = new Date().toISOString();

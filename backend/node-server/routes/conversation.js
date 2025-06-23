@@ -38,7 +38,8 @@ router.post('/', authenticateToken, async (req, res) => {
             res.write(chunk); // stream vers le client
         };
 
-        await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated, model_name);
+        const { conv } = await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated, model_name);
+        res.write(`<<tokenUsage>>${JSON.stringify({ tokenUsage: conv.token })}\n`);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);

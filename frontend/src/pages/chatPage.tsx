@@ -39,7 +39,6 @@ const ChatPage: React.FC = () => {
 
     const appendMessage = (userMsg: Message, newMsg: Message) => {
         setConversationData((prev) => {
-            console.log("prev :", prev, userMsg, newMsg);
             if (prev && prev.convId === newMsg.convId) {
                 return {
                     ...prev,
@@ -109,6 +108,31 @@ const ChatPage: React.FC = () => {
         });
     };
 
+    const updateTokenCount = (promptToken: number, responseToken: number) => {
+        // Should update the last two message in conversationData
+        setConversationData((prev) => {
+            if (!prev || !prev.msgList) return prev;
+            const updated = [...prev.msgList];
+            const userMsg = updated[updated.length - 2];
+            const assistantMsg = updated[updated.length - 1];
+
+            if (userMsg && userMsg.role === "user") {
+                updated[updated.length - 2] = {
+                    ...userMsg,
+                    token: promptToken,
+                };
+                console.log("test", userMsg, promptToken)
+            }
+            if (assistantMsg && assistantMsg.role === "assistant") {
+                updated[updated.length - 1] = {
+                    ...assistantMsg,
+                    token: responseToken,
+                };
+            }
+            return { ...prev, msgList: updated };
+        });
+    }
+
     const handleSendMessage = async (message: string) => {
         console.log("ConversationData :", ConversationData)
         let convId = ConversationData?.convId;
@@ -122,24 +146,32 @@ const ChatPage: React.FC = () => {
             }, 3000);
             if (!convId) return;
         }
-        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply);
+        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply, updateTokenCount);
     };
 
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
-            <div className="flex justify-center items-center h-16">
+            <div className="relative h-16 flex justify-center items-center">
                 <h1 className="text-3xl font-medium text-white font-playfair">
                     {ConversationData?.convName || "Hello, ask me anything!"}
                 </h1>
+                {ConversationData && (
+                    <span className="absolute right-6 top-4 text-sm text-gray-400 font-normal">
+                        {
+                            // Sum of the tokens of the messages in the conversation
+                            ConversationData.msgList?.reduce((acc, msg) => acc + (msg.token || 0), 0)
+                        } tokens used
+                    </span>
+                )}
             </div>
             <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleSendMessage} />
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
                 {ConversationData?.msgList?.map((msg) =>
                     msg.role === "user" ? (
-                        <UserMessage key={msg.msgId} message={msg.content} onEdit={() => { }} />
+                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={() => { }} />
                     ) : (
-                        <BotMessage key={msg.msgId} message={msg.content} onReload={() => { }} />
+                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} onReload={() => { }} />
                     )
                 )}
                 <div ref={messagesEndRef} />

@@ -7,6 +7,7 @@ export interface Message {
     timestamp: string | null;
     convId?: string;
     convName?: string;
+    token: number;
 }
 
 export interface ConversationData {
