@@ -1,19 +1,41 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import ReactMarkdown from 'react-markdown';
+import { CodeBlock } from '../codeBlock';
+import remarkGfm from 'remark-gfm';
+
 
 
 export function BotMessage({ message, onReload, token }: { message: string | null; onReload: () => void; token: number }) {
+
     return (
 
         <div className="self-start ml-15 mt-5 w-fit max-w-[90%]">
-            <div className="p-4 text-gray-500">
-                {message}
+            <div className="prose prose-invert max-w-none text-gray-300 text-sm p-4">
+                <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        code({ node, inline, className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            if (!inline && match) {
+                                return (
+                                    <CodeBlock
+                                        language={match[1]}
+                                        value={String(children).replace(/\n$/, '')}
+                                    />
+                                );
+                            }
+                            return <code className="bg-gray-800 px-1 rounded">{children}</code>;
+                        },
+                    }}
+                >
+                    {message || ''}
+                </ReactMarkdown>
+
             </div>
 
-            {/* Ligne de séparation */}
             <div className="border-t-2 border-gray-800 mb-2 w-full" />
 
-            {/* Footer : token à gauche, reload à droite */}
             {token > 0 ? (
                 <div className="flex justify-between items-center text-[10px] text-gray-500 italic w-full px-1">
 

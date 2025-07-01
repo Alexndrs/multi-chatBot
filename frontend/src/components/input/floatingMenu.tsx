@@ -76,11 +76,6 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
                             No models available
                         </div>
                     )}
-
-                    {/* Séparateur visuel */}
-                    {idx !== items.length - 1 && (
-                        <div className="my-2 border-t border-gray-700 opacity-50" />
-                    )}
                 </div>
             ))}
         </div>
