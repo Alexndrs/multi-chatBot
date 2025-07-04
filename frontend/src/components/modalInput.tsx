@@ -157,6 +157,10 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                                     className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
                                     onClick={() => { sendMessage("Tell me the taylor formula with integral remainder") }}
                                 >Tell me the taylor formula with integral rest</div>
+                                <div
+                                    className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
+                                    onClick={() => { sendMessage("what's DP algorithm") }}
+                                >what's DP algorithm</div>
                             </div>
                         </div>
                     </div>
@@ -174,7 +178,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                     }}
                 >
                     <FloatingMenu
-                        onSelect={(v) => {
+                        onSelect={() => {
                             setOpenMenu(null);
                         }}
                         onClose={() => setOpenMenu(null)}

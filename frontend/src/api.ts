@@ -1,4 +1,7 @@
+import type { ConversationItem } from "./components/sidebar/sideBar";
+import type { Message } from "./contexts/convContext";
 const serverUrl = 'http://localhost:8000';
+
 
 // The following test user is used for testing purposes only
 //  {
@@ -132,7 +135,7 @@ export const getConversation = async (conversationId: string) => {
     return data.response;
 }
 
-export const createConversation = async (message: string, model_name: string, onConvGenerated: (conv: any) => any, onTitleToken: (token: string, currentConvId: string | null) => any) => {
+export const createConversation = async (message: string, model_name: string, onConvGenerated: (conv: ConversationItem) => void, onTitleToken: (token: string, currentConvId: string | null) => void) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/conversation`, {
         method: 'POST',
@@ -162,8 +165,8 @@ export const createConversation = async (message: string, model_name: string, on
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
 
-        if (chunk.startsWith('<<convContainer>>')) {
-            const jsonStr = chunk.slice('<<convContainer>>'.length).trim();
+        if (chunk.includes('<<convContainer>>')) {
+            const jsonStr = chunk.split('<<convContainer>>')[1].trim();
             try {
                 const data = JSON.parse(jsonStr);
                 const conv = data.conv;
@@ -178,8 +181,8 @@ export const createConversation = async (message: string, model_name: string, on
             continue;
         }
 
-        if (chunk.startsWith('<<tokenUsage>>')) {
-            const jsonStr = chunk.slice('<<tokenUsage>>'.length).trim();
+        if (chunk.includes('<<tokenUsage>>')) {
+            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
             try {
                 const data = JSON.parse(jsonStr);
                 console.log('Token usage:', data);
@@ -194,7 +197,7 @@ export const createConversation = async (message: string, model_name: string, on
     return currentConvId;
 };
 
-export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: any, newMsg: any) => void, onToken: (token: string) => void, onTokenUsage: (promptToken: number, responseToken: number) => void) => {
+export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: Message, newMsg: Message) => void, onToken: (token: string) => void, onTokenUsage: (promptToken: number, responseToken: number) => void) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/message/`, {
         method: 'POST',
@@ -225,8 +228,8 @@ export const sendMessage = async (conversationId: string, message: string, model
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
 
-        if (chunk.startsWith('<<MsgCONTAINER>>')) {
-            const jsonStr = chunk.slice('<<MsgCONTAINER>>'.length).trim();
+        if (chunk.includes('<<MsgCONTAINER>>')) {
+            const jsonStr = chunk.split('<<MsgCONTAINER>>')[1].trim();
             try {
                 const data = JSON.parse(jsonStr);
                 userMsg = data.userMsg;
@@ -239,8 +242,8 @@ export const sendMessage = async (conversationId: string, message: string, model
             continue;
         }
 
-        if (chunk.startsWith('<<tokenUsage>>')) {
-            const jsonStr = chunk.slice('<<tokenUsage>>'.length).trim();
+        if (chunk.includes('<<tokenUsage>>')) {
+            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
             try {
                 const data = JSON.parse(jsonStr);
                 console.log('Token usage:', data);

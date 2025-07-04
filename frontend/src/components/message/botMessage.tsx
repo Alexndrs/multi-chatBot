@@ -4,6 +4,13 @@ import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../codeBlock';
 import remarkGfm from 'remark-gfm';
 
+import type { ComponentPropsWithoutRef } from 'react';
+
+type CodeComponentProps = ComponentPropsWithoutRef<'code'> & {
+    inline?: boolean;
+};
+
+
 
 
 export function BotMessage({ message, onReload, token }: { message: string | null; onReload: () => void; token: number }) {
@@ -15,19 +22,19 @@ export function BotMessage({ message, onReload, token }: { message: string | nul
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        code({ node, inline, className, children, ...props }) {
+                        code({ className, children, inline }: CodeComponentProps) {
+
                             const match = /language-(\w+)/.exec(className || '');
+                            const codeContent = String(children).replace(/\n$/, '');
+
                             if (!inline && match) {
-                                return (
-                                    <CodeBlock
-                                        language={match[1]}
-                                        value={String(children).replace(/\n$/, '')}
-                                    />
-                                );
+                                return <CodeBlock language={match[1]} value={codeContent} />;
                             }
+
                             return <code className="bg-gray-800 px-1 rounded">{children}</code>;
                         },
                     }}
+
                 >
                     {message || ''}
                 </ReactMarkdown>

@@ -31,7 +31,7 @@ router.post('/', authenticateToken, async (req, res) => {
         res.setHeader('Transfer-Encoding', 'chunked');
 
         const onIdGenerated = (conv) => {
-            res.write(`<<convContainer>>${JSON.stringify({ conv })}\n`);
+            res.write(`\n<<convContainer>>${JSON.stringify({ conv })}\n`);
         };
 
         const onToken = (chunk) => {
@@ -39,7 +39,7 @@ router.post('/', authenticateToken, async (req, res) => {
         };
 
         const { conv } = await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated, model_name);
-        res.write(`<<tokenUsage>>${JSON.stringify({ tokenUsage: conv.token })}\n`);
+        res.write(`\n<<tokenUsage>>${JSON.stringify({ tokenUsage: conv.token })}\n`);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);

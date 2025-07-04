@@ -46,7 +46,7 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
                     />
                     {openMenu === "task" && (
                         <FloatingMenu
-                            onSelect={(v) => {
+                            onSelect={() => {
                                 setOpenMenu(null);
                             }}
                             onClose={() => setOpenMenu(null)}

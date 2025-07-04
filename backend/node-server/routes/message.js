@@ -21,12 +21,12 @@ router.post('/', authenticateToken, async (req, res) => {
         };
 
         const onIdGenerated = (userMsg, newMsg) => {
-            res.write(`<<MsgCONTAINER>>${JSON.stringify({ userMsg, newMsg })}\n`);
+            res.write(`\n<<MsgCONTAINER>>${JSON.stringify({ userMsg, newMsg })}\n`);
         };
 
 
         const { userMsg, newMsg } = await chatAPI.handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name);
-        res.write(`<<tokenUsage>>${JSON.stringify({ promptToken: userMsg.token, responseToken: newMsg.token })}\n`);
+        res.write(`\n<<tokenUsage>>${JSON.stringify({ promptToken: userMsg.token, responseToken: newMsg.token })}\n`);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { loginUser, getUserInfo, getUserConversations, getConversation, getToken } from './api';
+import { loginUser, getUserInfo, getUserConversations, getToken } from './api';
 import { useUser } from './hooks/useUser';
 import ChatPage from './pages/chatPage';
 
