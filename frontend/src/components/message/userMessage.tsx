@@ -1,6 +1,13 @@
 import { EditableMessage } from "../editableMessage";
 
-export function UserMessage({ message, onEdit, token }: { message: string | null; onEdit: (newMessage: string | null) => void; token: number }) {
+export function UserMessage({
+    message,
+    onEdit,
+    token }: {
+        message: string | null;
+        onEdit: (newMessage: string | null) => void;
+        token: number
+    }) {
     return (
         <div className="self-end mr-15 mt-5">
             <EditableMessage

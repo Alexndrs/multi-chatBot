@@ -169,27 +169,89 @@ export function getConversationById(userId, convId) {
  * @param {string} msgId 
  * @param {string} newContent 
  */
-export async function editMessage(userId, convId, msgId, newContent) {
-    try {
-        // We need to delete all messages after the message to edit
-        const conv = db.getConversationById(userId, convId);
-        if (!conv) {
-            throw new Error('Conversation not found');
-        }
-        const msg = conv.msgList.find(m => m.msgId === msgId);
-
-        if (!msg) {
-            throw new Error('Message not found');
-        }
-        const index = conv.msgList.indexOf(msg);
-        conv.msgList.slice(index, conv.msgList.length).forEach(m => {
-            db.deleteMessage(userId, convId, m.msgId);
-        })
-
-        const { userMsg, newMessage } = await handleMessage(userId, convId, newContent);
-        return { userMessage: userMsg, newMessage: newMessage };
+export async function editMessage(userId, convId, msgId, newContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
+    const conv = db.getConversationById(userId, convId);
+    if (!conv) {
+        throw new Error('Conversation not found');
     }
-    catch (err) {
+    const convName = conv.convName;
+    console.log("Searching for message with id:", msgId, "in the conversation:", conv.msgList);
+    const msg = conv.msgList.find(m => m.msgId === msgId);
+
+    if (!msg) {
         throw new Error('Message not found');
     }
+
+    console.log("Found message:");
+
+    // Deleting the message and all the messages after it
+    const index = conv.msgList.indexOf(msg);
+    conv.msgList.slice(index, conv.msgList.length).forEach(m => {
+        db.deleteMessage(userId, convId, m.msgId);
+    })
+    conv.msgList = conv.msgList.slice(0, index);
+
+    console.log("conv after slicing:", conv.msgList);
+
+    // Creating a new message
+    const userMsg = {
+        msgId: msgId,
+        role: 'user',
+        content: newContent,
+        timestamp: new Date().toISOString(),
+        convName: conv.convName,
+        convId: convId,
+        token: 0
+    }
+    conv.msgList.push(userMsg);
+    console.log("conv after adding user message:", conv.msgList);
+
+    // Creating a clean history for the AI (keeping only the role and content)
+    const filteredConv = conv.msgList.map(msg => {
+        return {
+            role: msg.role,
+            content: msg.content,
+        }
+    })
+
+    console.log("Filtered conversation for AI:", filteredConv);
+
+    // Creating a container for the new message from the AI
+    const newMsg = {
+        msgId: uuidv4(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        convName: convName,
+        convId: convId,
+        token: 0
+    }
+    if (onIdGenerated) onIdGenerated(userMsg, newMsg);
+
+    // Now we can ask the AI to generate a new answer
+    let generatedText, promptTokens, completionTokens;
+
+    if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
+        console.log('Using Groq API for model:', model_name);
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
+    } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
+        console.log('Using Gemini API for model:', model_name);
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
+    } else {
+        ({ generatedText, promptTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
+    }
+
+    // Post-processing the generated text
+    console.log('Generated text:', generatedText);
+    newMsg.content = generatedText;
+    newMsg.token = completionTokens;
+    console.log('newMsg:', newMsg);
+    userMsg.token = promptTokens;
+    // Ajouter la réponse de l'IA à la conversation et update le nombre de tokens
+    db.addToken(userId, convId, promptTokens + completionTokens);
+
+    console.log("Adding to db : ", userMsg, newMsg);
+    db.addMessage(userId, convId, userMsg)
+    db.addMessage(userId, convId, newMsg)
+    return { userMsg, newMsg };
 }

@@ -36,14 +36,26 @@ router.post('/', authenticateToken, async (req, res) => {
 
 
 router.put('/', authenticateToken, async (req, res) => {
-    const { convId, msgId, newContent } = req.body;
+    const { convId, msgId, newContent, model_name } = req.body;
     const userId = req.user.userId;
-    if (!userId || !convId || !msgId || !newContent) {
+    if (!userId || !convId || !msgId || !newContent || !model_name) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     try {
-        const response = await chatAPI.editMessage(userId, convId, msgId, newContent);
-        res.status(200).json({ response });
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        const onToken = (chunk) => {
+            res.write(chunk);
+        };
+
+        const onIdGenerated = (userMsg, newMsg) => {
+            res.write(`\n<<MsgCONTAINER>>${JSON.stringify({ userMsg, newMsg })}\n`);
+        };
+
+        const { userMsg, newMsg } = await chatAPI.editMessage(userId, convId, msgId, newContent, onToken, onIdGenerated, model_name);
+        res.write(`\n<<tokenUsage>>${JSON.stringify({ promptToken: userMsg.token, responseToken: newMsg.token })}\n`);
+        res.end();
     } catch (error) {
         console.error('Error editing message:', error);
         res.status(500).json({ error: 'Internal server error' });

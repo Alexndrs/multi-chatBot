@@ -371,3 +371,131 @@ export const sendMessage = async (
 
     return { userMsg, newMsg };
 };
+
+export const updateMessage = async (
+    conversationId: string,
+    messageId: string,
+    newMessage: string,
+    model_name: string,
+    onContainerGenerated: (newMsg: Message) => void,
+    onToken: (token: string) => void,
+    onTokenUsage: (promptToken: number, responseToken: number) => void,
+    onThink: (thinkContent: string) => void
+) => {
+    const token = getToken();
+    const response = await fetch(`${serverUrl}/message/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            convId: conversationId,
+            msgId: messageId,
+            newContent: newMessage,
+            model_name: model_name
+        })
+    });
+
+
+    if (!response.body) {
+        throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let fullText = '';
+    let userMsg = null;
+    let newMsg = null;
+
+    let buffer = ''; // accumulateur global
+    let isThinking = false;
+    let thinkBuffer = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
+
+        if (chunk.includes('<<MsgCONTAINER>>')) {
+            const jsonStr = chunk.split('<<MsgCONTAINER>>')[1].trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                userMsg = data.userMsg;
+                newMsg = data.newMsg;
+                onContainerGenerated(newMsg);
+            } catch (err) {
+                console.error('Erreur de parsing du MsgCONTAINER:', err);
+            }
+            continue;
+        }
+
+        if (chunk.includes('<<tokenUsage>>')) {
+            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
+            try {
+                const data = JSON.parse(jsonStr);
+                onTokenUsage(data.promptToken, data.responseToken);
+            } catch (err) {
+                console.error('Erreur de parsing du TokenUsage:', err);
+            }
+            continue;
+        }
+
+        buffer += chunk;
+
+        while (buffer.length > 0) {
+            if (!isThinking) {
+                const startIdx = buffer.indexOf('<think>');
+                if (startIdx !== -1) {
+                    // On a trouvé un début de <think>
+                    const before = buffer.slice(0, startIdx);
+                    if (before) {
+                        fullText += before;
+                        onToken(before);
+                    }
+                    buffer = buffer.slice(startIdx + '<think>'.length);
+                    isThinking = true;
+                    thinkBuffer = '';
+                } else {
+                    // Aucun <think> pour l'instant, on flush tout
+                    fullText += buffer;
+                    onToken(buffer);
+                    buffer = '';
+                    break;
+                }
+            } else {
+                const endIdx = buffer.indexOf('</think>');
+                if (endIdx !== -1) {
+                    // Fin trouvée
+                    thinkBuffer += buffer.slice(0, endIdx);
+                    onThink(thinkBuffer.trim());
+                    buffer = buffer.slice(endIdx + '</think>'.length);
+                    isThinking = false;
+                } else {
+                    // Pas encore de fin → on accumule et attend
+                    thinkBuffer += buffer;
+                    onThink(thinkBuffer);
+                    buffer = '';
+                    break;
+                }
+            }
+
+
+        }
+
+        if (done) {
+            break;
+        }
+    }
+
+    // Si le modèle n’a jamais fermé le <think>, on le flush quand même à la fin
+    if (isThinking && thinkBuffer.trim()) {
+        onThink(thinkBuffer.trim() + '...');
+    }
+
+    if (newMsg) {
+        newMsg.content = fullText;
+    }
+
+    return { userMsg, newMsg };
+}

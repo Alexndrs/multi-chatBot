@@ -10,6 +10,10 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
 
     const handleEdit = () => {
         // TODO : Forbid empty messages
+        if (editedMessage === null || editedMessage.trim() === "") {
+            setEditedMessage(displayMessage);
+            return;
+        }
         onEdit(editedMessage);
         setDisplayMessage(editedMessage);
         setIsEditing(false);

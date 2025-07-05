@@ -4,7 +4,7 @@ import { UserMessage } from "../components/message/userMessage";
 import { BotMessage } from "../components/message/botMessage";
 import { useConv } from "../hooks/useConv";
 import { useUser } from "../hooks/useUser";
-import { createConversation, sendMessage } from "../api";
+import { createConversation, sendMessage, updateMessage } from "../api";
 import type { Message } from "../contexts/convContext";
 import type { ConversationItem } from "../components/sidebar/sideBar";
 import ModalInput from "../components/modalInput";
@@ -49,6 +49,25 @@ const ChatPage: React.FC = () => {
             }
         });
     };
+    const appendAnswer = (ansMessage: Message) => {
+        // Same as appendMessage but only for the assistant's message
+        setConversationData((prev) => {
+            if (prev && prev.convId === ansMessage.convId) {
+                return {
+                    ...prev,
+                    date: ansMessage.timestamp,
+                    msgList: [...(prev.msgList || []), ansMessage],
+                };
+            } else {
+                return {
+                    convId: ansMessage.convId ?? null,
+                    convName: ansMessage.convName ?? null,
+                    date: ansMessage.timestamp,
+                    msgList: [ansMessage],
+                };
+            }
+        });
+    }
 
     const updateAssistantReply = (chunk: string) => {
         setConversationData((prev) => {
@@ -161,6 +180,33 @@ const ChatPage: React.FC = () => {
         await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply, updateTokenCount, onThink);
     };
 
+    const handleEditMessage = async (newContent: string | null, msgId: string | null) => {
+        if (!newContent || newContent.trim() === "") {
+            console.warn("Empty message, not sending.");
+            return;
+        }
+        if (!msgId) {
+            handleSendMessage(newContent);
+            return;
+        }
+        if (!ConversationData || !ConversationData.convId) return;
+
+        // We need to remove the message after the one we are editing from the conversation data
+        setConversationData((prev) => {
+            if (!prev || !prev.msgList) return prev;
+            // Get index of the current message
+            const msgIndex = prev.msgList.findIndex(msg => msg.msgId === msgId);
+            if (msgIndex === -1) return prev;
+            // Filter out the message with index > msgIndex
+            const updatedMsgList = prev.msgList.filter((_, index) => index <= msgIndex);
+            return {
+                ...prev,
+                msgList: updatedMsgList,
+            };
+        });
+        const convId = ConversationData.convId;
+        await updateMessage(convId, msgId, newContent, modelName, appendAnswer, updateAssistantReply, updateTokenCount, onThink);
+    }
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
@@ -181,7 +227,7 @@ const ChatPage: React.FC = () => {
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
                 {ConversationData?.msgList?.map((msg) =>
                     msg.role === "user" ? (
-                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={() => { }} />
+                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={(newContent: string | null) => { handleEditMessage(newContent, msg.msgId) }} />
                     ) : (
                         <BotMessage key={msg.msgId} message={msg.content} token={msg.token} think={msg.thinkContent} onReload={() => { }} />
                     )
