@@ -8,6 +8,7 @@ import { createConversation, sendMessage } from "../api";
 import type { Message } from "../contexts/convContext";
 import type { ConversationItem } from "../components/sidebar/sideBar";
 import ModalInput from "../components/modalInput";
+import { stripThinkTags } from "../utils";
 
 const ChatPage: React.FC = () => {
     const { ConversationData, setConversationData, modalOpen, setModalOpen, modelName } = useConv();
@@ -72,6 +73,24 @@ const ChatPage: React.FC = () => {
             return prev;
         });
     };
+
+    const onThink = (thinkChunk: string) => {
+        // console.log("Thinking content:", thinkChunk);
+        setConversationData((prev) => {
+            if (!prev || !prev.msgList) return prev;
+            const updated = [...prev.msgList];
+            const last = updated[updated.length - 1];
+
+            if (last && last.role === "assistant") {
+                updated[updated.length - 1] = {
+                    ...last,
+                    thinkContent: thinkChunk,
+                };
+                return { ...prev, msgList: updated };
+            }
+            return prev;
+        });
+    }
 
     const createConvHandler = (conv: ConversationItem) => {
         setConversationData({ ...conv, msgList: [] });
@@ -146,7 +165,7 @@ const ChatPage: React.FC = () => {
             }, 3000);
             if (!convId) return;
         }
-        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply, updateTokenCount);
+        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply, updateTokenCount, onThink);
     };
 
 
@@ -154,7 +173,7 @@ const ChatPage: React.FC = () => {
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
             <div className="relative h-16 flex justify-center items-center">
                 <h1 className="text-3xl font-medium text-white font-playfair">
-                    {ConversationData?.convName || "Hello, ask me anything!"}
+                    {ConversationData ? stripThinkTags(ConversationData.convName || "") : "Hello, ask me anything!"}
                 </h1>
                 {ConversationData && (
                     <span className="absolute right-6 top-4 text-sm text-gray-400 font-normal">
@@ -171,7 +190,7 @@ const ChatPage: React.FC = () => {
                     msg.role === "user" ? (
                         <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={() => { }} />
                     ) : (
-                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} onReload={() => { }} />
+                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} think={msg.thinkContent} onReload={() => { }} />
                     )
                 )}
                 <div ref={messagesEndRef} />

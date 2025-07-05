@@ -4,6 +4,7 @@ export interface Message {
     msgId: string | null;
     role: string | null;
     content: string | null;
+    thinkContent?: string;
     timestamp: string | null;
     convId?: string;
     convName?: string;

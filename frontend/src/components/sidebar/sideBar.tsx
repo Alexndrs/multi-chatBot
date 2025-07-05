@@ -7,6 +7,9 @@ import { SideBarItem } from "./sideBarItem";
 import { useUser } from '../../hooks/useUser';
 import { useConv } from "../../hooks/useConv";
 import { getConversation } from "../../api";
+import { stripThinkTags } from "../../utils";
+import { splitThinkContent } from "../../utils";
+import type { Message } from "../../contexts/convContext";
 
 export type ConversationItem = {
     convId: string;
@@ -63,9 +66,23 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
     // Function to open a conversation
     const openConv = async (convId: string) => {
         const convData = await getConversation(convId);
-        setConversationData(convData);
+        const cleanedMsgList = convData.msgList?.map((msg: Message) => {
+            const { content, thinkContent } = splitThinkContent(msg.content);
+            return {
+                ...msg,
+                content,
+                thinkContent,
+            };
+        }) || [];
+
+        setConversationData({
+            ...convData,
+            msgList: cleanedMsgList,
+        });
+
         setModalOpen(false);
     };
+
 
 
     const onCreateConv = async () => {
@@ -100,7 +117,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
                             <div key={label}>
                                 <div className="text-gray-400 text-xs font-bold my-2">{label}</div>
                                 {list.map((conv) => (
-                                    <SideBarConvItem key={conv.convId} name={conv.convName} id={conv.convId} onClick={(openConv)} />
+                                    <SideBarConvItem key={conv.convId} name={stripThinkTags(conv.convName)} id={conv.convId} onClick={(openConv)} />
                                 ))}
                             </div>
                         ) : null

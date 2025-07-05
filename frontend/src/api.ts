@@ -134,8 +134,12 @@ export const getConversation = async (conversationId: string) => {
     console.log('Conversation data:', data);
     return data.response;
 }
-
-export const createConversation = async (message: string, model_name: string, onConvGenerated: (conv: ConversationItem) => void, onTitleToken: (token: string, currentConvId: string | null) => void) => {
+export const createConversation = async (
+    message: string,
+    model_name: string,
+    onConvGenerated: (conv: ConversationItem) => void,
+    onTitleToken: (token: string, currentConvId: string | null) => void
+) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/conversation`, {
         method: 'POST',
@@ -160,44 +164,82 @@ export const createConversation = async (message: string, model_name: string, on
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let currentConvId: string | null = null;
+
+    let buffer = ''; // stocke les morceaux partiels
+
     while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
 
-        if (chunk.includes('<<convContainer>>')) {
-            const jsonStr = chunk.split('<<convContainer>>')[1].trim();
+        buffer += decoder.decode(value, { stream: true });
+
+        // Traitement des balises spéciales
+        if (buffer.includes('<<convContainer>>')) {
+            const parts = buffer.split('<<convContainer>>');
+            const jsonStr = parts[1].trim();
+            buffer = parts[0]; // on garde ce qu’il y avait avant, potentiellement du texte utile
+
             try {
                 const data = JSON.parse(jsonStr);
                 const conv = data.conv;
-
                 onConvGenerated(conv);
-                console.log('🌳 Conversation generated:', conv);
                 currentConvId = conv.convId;
-
             } catch (err) {
                 console.error('Erreur de parsing du ConvContainer:', err);
             }
-            continue;
         }
 
-        if (chunk.includes('<<tokenUsage>>')) {
-            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
+        if (buffer.includes('<<tokenUsage>>')) {
+            const parts = buffer.split('<<tokenUsage>>');
+            const jsonStr = parts[1].trim();
+            buffer = parts[0];
             try {
                 const data = JSON.parse(jsonStr);
                 console.log('Token usage:', data);
             } catch (err) {
                 console.error('Erreur de parsing du TokenUsage:', err);
             }
-            continue;
         }
 
-        onTitleToken(chunk, currentConvId);
+        // Traitement du texte tout en ignorant <think>...</think>
+        let outputBuffer = '';
+        while (true) {
+            const startIdx = buffer.indexOf('<think>');
+            const endIdx = buffer.indexOf('</think>');
+
+            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+                // Garder tout avant <think>
+                outputBuffer += buffer.slice(0, startIdx);
+                // Retirer tout jusqu’après </think>
+                buffer = buffer.slice(endIdx + '</think>'.length);
+            } else if (startIdx !== -1 && endIdx === -1) {
+                // Début de <think> mais pas encore la fin → attendre chunk suivant
+                break;
+            } else {
+                // Aucun think ou terminé → tout est du texte normal
+                outputBuffer += buffer;
+                buffer = '';
+                break;
+            }
+        }
+
+        if (outputBuffer.length > 0) {
+            onTitleToken(outputBuffer, currentConvId);
+        }
     }
+
     return currentConvId;
 };
 
-export const sendMessage = async (conversationId: string, message: string, model_name: string, onContainerGenerated: (userMsg: Message, newMsg: Message) => void, onToken: (token: string) => void, onTokenUsage: (promptToken: number, responseToken: number) => void) => {
+export const sendMessage = async (
+    conversationId: string,
+    message: string,
+    model_name: string,
+    onContainerGenerated: (userMsg: Message, newMsg: Message) => void,
+    onToken: (token: string) => void,
+    onTokenUsage: (promptToken: number, responseToken: number) => void,
+    onThink: (thinkContent: string) => void
+) => {
     const token = getToken();
     const response = await fetch(`${serverUrl}/message/`, {
         method: 'POST',
@@ -223,10 +265,13 @@ export const sendMessage = async (conversationId: string, message: string, model
     let userMsg = null;
     let newMsg = null;
 
+    let buffer = ''; // accumulateur global
+    let isThinking = false;
+    let thinkBuffer = '';
+
     while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
 
         if (chunk.includes('<<MsgCONTAINER>>')) {
             const jsonStr = chunk.split('<<MsgCONTAINER>>')[1].trim();
@@ -235,7 +280,6 @@ export const sendMessage = async (conversationId: string, message: string, model
                 userMsg = data.userMsg;
                 newMsg = data.newMsg;
                 onContainerGenerated(userMsg, newMsg);
-
             } catch (err) {
                 console.error('Erreur de parsing du MsgCONTAINER:', err);
             }
@@ -246,7 +290,6 @@ export const sendMessage = async (conversationId: string, message: string, model
             const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
             try {
                 const data = JSON.parse(jsonStr);
-                console.log('Token usage:', data);
                 onTokenUsage(data.promptToken, data.responseToken);
             } catch (err) {
                 console.error('Erreur de parsing du TokenUsage:', err);
@@ -254,9 +297,54 @@ export const sendMessage = async (conversationId: string, message: string, model
             continue;
         }
 
-        fullText += chunk;
-        onToken(chunk);
+        buffer += chunk;
 
+        while (buffer.length > 0) {
+            if (!isThinking) {
+                const startIdx = buffer.indexOf('<think>');
+                if (startIdx !== -1) {
+                    // On a trouvé un début de <think>
+                    const before = buffer.slice(0, startIdx);
+                    if (before) {
+                        fullText += before;
+                        onToken(before);
+                    }
+                    buffer = buffer.slice(startIdx + '<think>'.length);
+                    isThinking = true;
+                    thinkBuffer = '';
+                } else {
+                    // Aucun <think> pour l'instant, on flush tout
+                    fullText += buffer;
+                    onToken(buffer);
+                    buffer = '';
+                    break;
+                }
+            } else {
+                const endIdx = buffer.indexOf('</think>');
+                if (endIdx !== -1) {
+                    // Fin trouvée
+                    thinkBuffer += buffer.slice(0, endIdx);
+                    onThink(thinkBuffer.trim());
+                    buffer = buffer.slice(endIdx + '</think>'.length);
+                    isThinking = false;
+                } else {
+                    // Pas encore de fin → on accumule et attend
+                    thinkBuffer += buffer;
+                    onThink(thinkBuffer);
+                    buffer = '';
+                    break;
+                }
+            }
+        }
+
+        if (done) {
+            break;
+        }
+    }
+
+    // 🔥 Si le modèle n’a jamais fermé le <think>, on le flush quand même à la fin
+    if (isThinking && thinkBuffer.trim()) {
+        onThink(thinkBuffer.trim() + '...');
     }
 
     if (newMsg) {

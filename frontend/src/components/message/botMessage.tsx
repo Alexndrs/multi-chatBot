@@ -1,23 +1,55 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRotateRight } from '@fortawesome/free-solid-svg-icons';
+import { faRotateRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../codeBlock';
 import remarkGfm from 'remark-gfm';
-
+import { useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 
 type CodeComponentProps = ComponentPropsWithoutRef<'code'> & {
     inline?: boolean;
 };
 
+export function BotMessage({
+    message,
+    onReload,
+    token,
+    think }: {
+        message: string | null;
+        onReload: () => void;
+        token: number,
+        think?: string
+    }) {
 
+    const [showThinking, setShowThinking] = useState(false);
+    const isLoading = !message;
 
-
-export function BotMessage({ message, onReload, token }: { message: string | null; onReload: () => void; token: number }) {
 
     return (
 
         <div className="self-start ml-15 mt-5 w-fit max-w-[90%]">
+            {think && (
+                <div className="mb-2 text-xs text-gray-100">
+                    <button
+                        className="flex items-center gap-1 hover:cursor-pointer focus:outline-none"
+                        onClick={() => setShowThinking(!showThinking)}
+                    >
+                        <span
+                            className={`font-semibold relative inline-block ${isLoading ? 'shimmer-text text-transparent bg-clip-text' : ''
+                                }`}
+                        >
+                            {isLoading ? 'Thinking...' : 'Thinking'}
+                        </span>
+                        <FontAwesomeIcon icon={showThinking ? faChevronUp : faChevronDown} size="xs" />
+                    </button>
+
+                    <div className={`transition-all duration-300 ease-in-out ${showThinking ? 'opacity-100 mt-1' : 'max-h-0 opacity-0'} overflow-hidden`}>
+                        <div className="p-2 rounded-md bg-blue-900/20 text-blue-300 text-sm whitespace-pre-wrap font-mono">
+                            {think}
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="prose prose-invert max-w-none text-gray-300 text-sm p-4">
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
