@@ -6,7 +6,7 @@ import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
 import { useUser } from '../../hooks/useUser';
 import { useConv } from "../../hooks/useConv";
-import { getConversation } from "../../api";
+import { getConversation, deleteConversation } from "../../api";
 import { stripThinkTags } from "../../utils";
 import { splitThinkContent } from "../../utils";
 import type { Message } from "../../contexts/convContext";
@@ -20,7 +20,7 @@ export type ConversationItem = {
 export default function SideBar({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 
-    const { UserData } = useUser();
+    const { UserData, setUserData } = useUser();
     const { setConversationData, setModalOpen } = useConv();
 
 
@@ -82,6 +82,19 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
 
         setModalOpen(false);
     };
+    const deleteConv = async (convId: string) => {
+        await deleteConversation(convId);
+        // We should remove the right conv from the UI i.e : remove the conv in userData.conversations:
+        setUserData((prevUserData) => {
+            if (!prevUserData || !prevUserData.conversations) return prevUserData;
+            return {
+                ...prevUserData,
+                conversations: prevUserData.conversations.filter(conv => conv.convId !== convId),
+            };
+        });
+
+        setModalOpen(false);
+    };
 
 
 
@@ -117,7 +130,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
                             <div key={label}>
                                 <div className="text-gray-400 text-xs font-bold my-2">{label}</div>
                                 {list.map((conv) => (
-                                    <SideBarConvItem key={conv.convId} name={stripThinkTags(conv.convName)} id={conv.convId} onClick={(openConv)} />
+                                    <SideBarConvItem key={conv.convId} name={stripThinkTags(conv.convName)} id={conv.convId} onClick={(openConv)} onDelete={(deleteConv)} />
                                 ))}
                             </div>
                         ) : null

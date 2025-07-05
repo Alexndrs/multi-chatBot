@@ -63,8 +63,8 @@ router.get(`/:convId`, authenticateToken, async (req, res) => {
     }
 });
 
-router.delete('/', authenticateToken, async (req, res) => {
-    const { convId } = req.body;
+router.delete('/:convId', authenticateToken, async (req, res) => {
+    const { convId } = req.params;
     const userId = req.user.userId;
     if (!userId || !convId) {
         return res.status(400).json({ error: 'Missing required fields' });

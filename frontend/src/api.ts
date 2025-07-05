@@ -134,6 +134,24 @@ export const getConversation = async (conversationId: string) => {
     console.log('Conversation data:', data);
     return data.response;
 }
+
+export const deleteConversation = async (conversationId: string) => {
+    const token = getToken();
+    const response = await fetch(`${serverUrl}/conversation/${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    if (!response.ok) {
+        throw new Error('Failed to delete conversation');
+    }
+}
+
+
+
+
 export const createConversation = async (
     message: string,
     model_name: string,
