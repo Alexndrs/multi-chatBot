@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/genai": "^1.8.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
@@ -19,6 +21,7 @@
     "express": "^5.1.0",
     "groq-sdk": "^0.25.0",
     "jsonwebtoken": "^9.0.2",
+    "llama-tokenizer-js": "^1.2.2",
     "mongoose": "^8.14.2",
     "uuid": "^11.1.0"
   }

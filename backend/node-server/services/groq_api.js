@@ -1,7 +1,7 @@
-require('dotenv').config();
+require('dotenv').config({ path: './../.env' });
 const Groq = require("groq-sdk");
-const { LlamaTokenizer } = require("llama-tokenizer-js");
 const groq = new Groq({ apiKey: process.env.GROQ_API });
+const { LlamaTokenizer } = require("llama-tokenizer-js");
 const tokenizer = new LlamaTokenizer();
 
 
@@ -42,5 +42,24 @@ async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b-instan
         completionTokens,
     };
 }
+
+if (require.main === module) {
+    (async () => {
+        const messages = [
+            { role: "user", content: "Explique-moi le concept de gravité en termes simples." }
+        ];
+
+        const result = await chatWithGroq(messages, (token) => {
+            process.stdout.write(token);
+        });
+
+        console.log("\n\n--- Résumé ---");
+        console.log("Texte généré :", result.generatedText);
+        console.log("Prompt tokens :", result.promptTokens);
+        console.log("Completion tokens :", result.completionTokens);
+    })();
+}
+
+
 
 module.exports = { chatWithGroq };
