@@ -1,12 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const dbPath = path.join(__dirname, 'db.json');
 
-function readDB() {
+export function readDB() {
     return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
 }
 
-function writeDB(data) {
+export function writeDB(data) {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
@@ -47,12 +50,12 @@ function writeDB(data) {
  * @param {string} userId 
  * @returns {userObject | undefined}
  */
-function getUserById(userId) {
+export function getUserById(userId) {
     const db = readDB();
     return db.users.find(u => u.userId === userId);
 }
 
-function getUserInfo(userId) {
+export function getUserInfo(userId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -68,7 +71,7 @@ function getUserInfo(userId) {
  * @param {string} email 
  * @returns {userObject | undefined}
  */
-function getUserByMail(email) {
+export function getUserByMail(email) {
     const db = readDB();
     return db.users.find(u => u.userInfo.email === email);
 }
@@ -78,7 +81,7 @@ function getUserByMail(email) {
  * 
  * @param {userObject} user
  */
-function addUser(user) {
+export function addUser(user) {
     const db = readDB();
     db.users.push(user);
     writeDB(db);
@@ -89,7 +92,7 @@ function addUser(user) {
  * @param {string} userId 
  * @param {Object} updatedInfo (.e.g. { name: "New Name", email: ")
  */
-function updateUser(userId, updatedInfo) {
+export function updateUser(userId, updatedInfo) {
     const db = readDB();
     const userIndex = db.users.findIndex(u => u.userId === userId);
     if (userIndex === -1) throw new Error("Utilisateur non trouvé");
@@ -103,7 +106,7 @@ function updateUser(userId, updatedInfo) {
  * @param {string} userId 
  * @returns Array<conversationObject>
  */
-function getUserConversations(userId) {
+export function getUserConversations(userId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -117,7 +120,7 @@ function getUserConversations(userId) {
  * @returns Array<string>
  */
 
-function getUserConversationsIdAndNameAndDate(userId) {
+export function getUserConversationsIdAndNameAndDate(userId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -134,7 +137,7 @@ function getUserConversationsIdAndNameAndDate(userId) {
  * @param {string} convId 
  * @returns 
  */
-function getConversationById(userId, convId) {
+export function getConversationById(userId, convId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -150,7 +153,7 @@ function getConversationById(userId, convId) {
  * @param {string} userId 
  * @param {conversationObject} conversation 
  */
-function addConversation(userId, conversation) {
+export function addConversation(userId, conversation) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -164,7 +167,7 @@ function addConversation(userId, conversation) {
  * @param {string} userId 
  * @param {string} convId 
  */
-function deleteConversation(userId, convId) {
+export function deleteConversation(userId, convId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -182,7 +185,7 @@ function deleteConversation(userId, convId) {
  * @param {string} convId 
  * @param {string} newName 
  */
-function changeConversationName(userId, convId, newName) {
+export function changeConversationName(userId, convId, newName) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -200,7 +203,7 @@ function changeConversationName(userId, convId, newName) {
  * @param {string} convId 
  * @param {string} token 
  */
-function addToken(userId, convId, token) {
+export function addToken(userId, convId, token) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -220,7 +223,7 @@ function addToken(userId, convId, token) {
  * @returns {messageObject | undefined}
  */
 
-function getMessageById(userId, convId, msgId) {
+export function getMessageById(userId, convId, msgId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -240,7 +243,7 @@ function getMessageById(userId, convId, msgId) {
  * @param {string} convId 
  * @returns {Array<messageObject>}
  */
-function getAllMessages(userId, convId) {
+export function getAllMessages(userId, convId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -258,7 +261,7 @@ function getAllMessages(userId, convId) {
  * @param {messageObject} message 
  * @returns {string} msgId
  */
-function addMessage(userId, convId, message) {
+export function addMessage(userId, convId, message) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -288,7 +291,7 @@ function addMessage(userId, convId, message) {
  * @param {string} msgId 
  * @param {string} newContent 
  */
-function editMessage(userId, convId, msgId, newContent) {
+export function editMessage(userId, convId, msgId, newContent) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -311,7 +314,7 @@ function editMessage(userId, convId, msgId, newContent) {
  * @param {string} convId 
  * @param {string} msgId 
  */
-function deleteMessage(userId, convId, msgId) {
+export function deleteMessage(userId, convId, msgId) {
     const db = readDB();
     const user = db.users.find(u => u.userId === userId);
     if (!user) throw new Error("Utilisateur non trouvé");
@@ -325,26 +328,3 @@ function deleteMessage(userId, convId, msgId) {
     conv.msgList.splice(messageIndex, 1);
     writeDB(db);
 }
-
-
-
-
-module.exports = {
-    getUserById,
-    getUserInfo,
-    getUserByMail,
-    addUser,
-    updateUser,
-    getUserConversations,
-    getUserConversationsIdAndNameAndDate,
-    getConversationById,
-    addConversation,
-    deleteConversation,
-    changeConversationName,
-    addToken,
-    getAllMessages,
-    getMessageById,
-    addMessage,
-    editMessage,
-    deleteMessage
-};

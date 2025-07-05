@@ -1,7 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-const chatAPI = require('../core/chatAPI');
-const db = require('../db/interface');
+import fs from 'fs';
+import path from 'path';
+import * as chatAPI from './chatAPI';
+import * as db from '../db/interface';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const dbPath = path.join(__dirname, '../db/db.json');
 
 // Reset de la base entre chaque test

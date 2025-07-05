@@ -15,14 +15,7 @@ const ChatPage: React.FC = () => {
     const { setUserData } = useUser();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const scrollToBottom = () => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-    };
-
     useEffect(() => {
-        scrollToBottom();
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 setModalOpen(false);
@@ -36,7 +29,7 @@ const ChatPage: React.FC = () => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [ConversationData?.msgList, modalOpen, setModalOpen]);
+    }, [modalOpen, setModalOpen]);
 
     const appendMessage = (userMsg: Message, newMsg: Message) => {
         setConversationData((prev) => {

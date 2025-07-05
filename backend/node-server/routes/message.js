@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const chatAPI = require('../core/chatAPI');
-const authenticateToken = require('../middleware/auth');
+import express from 'express';
+import * as chatAPI from '../core/chatAPI.js';
+import authenticateToken from '../middleware/auth.js';
 
+const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
     const { convId, messageContent, model_name } = req.body;
     const userId = req.user.userId;
@@ -52,4 +52,4 @@ router.put('/', authenticateToken, async (req, res) => {
 
 
 
-module.exports = router;
+export default router;

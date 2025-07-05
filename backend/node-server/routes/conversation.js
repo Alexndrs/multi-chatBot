@@ -1,9 +1,9 @@
-const express = require('express');
+import express from 'express';
+import * as chatAPI from '../core/chatAPI.js';
+import authenticateToken from '../middleware/auth.js';
+
+
 const router = express.Router();
-const chatAPI = require('../core/chatAPI');
-const authenticateToken = require('../middleware/auth');
-
-
 router.get('/', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     if (!userId) {
@@ -96,4 +96,4 @@ router.put('/', authenticateToken, async (req, res) => {
 });
 
 
-module.exports = router;
+export default router;

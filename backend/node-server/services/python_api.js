@@ -3,7 +3,7 @@
  * @param {Array<import('../db/interface').messageObject} message 
  * @returns {Promise<string>}
  */
-async function chatWithPython(message, onToken) {
+export async function chatWithPython(message, onToken) {
     console.log('Appel de chatWithPython avec le message:', message);
     // return "[Réponse IA simulée] [input data (history of conv) : " + JSON.stringify(message) + "]";
 
@@ -31,7 +31,6 @@ async function chatWithPython(message, onToken) {
     }
     return { generatedText, promptTokens: 0, completionTokens: 0 }
 }
-module.exports = { chatWithPython };
 
 
 

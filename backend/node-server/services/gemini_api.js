@@ -1,11 +1,11 @@
-const { GoogleGenAI, createUserContent, createPartFromUri } = require("@google/genai");
-require('dotenv').config({ path: './../.env' });
-const { LlamaTokenizer } = require("llama-tokenizer-js");
+import { GoogleGenAI, createUserContent, createPartFromUri } from "@google/genai";
+import 'dotenv/config';
+import { LlamaTokenizer } from "llama-tokenizer-js";
 const tokenizer = new LlamaTokenizer();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API });
 
-async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5-flash') {
+export async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5-flash') {
     console.log('Appel de chatWithGemini avec le(s) message(s):', messages);
 
     // const image = await ai.files.upload({
@@ -44,7 +44,7 @@ async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5-flash'
     };
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
     (async () => {
         const messages = [
             { role: "user", content: "Explain AI in a short phrase" }
@@ -60,6 +60,3 @@ if (require.main === module) {
         console.log("Completion tokens :", result.completionTokens);
     })();
 }
-
-
-module.exports = { chatWithGemini };

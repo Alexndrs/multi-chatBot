@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../core/auth');
-const authenticateToken = require('../middleware/auth');
+import express from 'express';
+import * as auth from '../core/auth.js';
+import authenticateToken from '../middleware/auth.js';
 
+const router = express.Router();
 router.post('/', async (req, res) => {
     const { mail, name, password } = req.body;
     if (!mail || !name || !password) {
@@ -47,4 +47,4 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

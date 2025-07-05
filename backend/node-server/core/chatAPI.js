@@ -1,10 +1,10 @@
-const { chatWithPython } = require('../services/python_api');
-const { chatWithGroq } = require('../services/groq_api');
-const { chatWithGemini } = require('../services/gemini_api');
-const db = require('../db/interface');
-const uuidv4 = require('uuid').v4;
+import { chatWithPython } from '../services/python_api.js';
+import { chatWithGroq } from '../services/groq_api.js';
+import { chatWithGemini } from '../services/gemini_api.js';
+import * as db from '../db/interface.js';
+import { v4 as uuidv4 } from 'uuid';
 
-async function getAllConvIdsAndNameAndDate(userId) {
+export async function getAllConvIdsAndNameAndDate(userId) {
     const convIdsAndName = db.getUserConversationsIdAndNameAndDate(userId);
     if (!convIdsAndName) {
         throw new Error('No conversations found');
@@ -24,7 +24,7 @@ async function getAllConvIdsAndNameAndDate(userId) {
  * @param {(userMsg: object, newMsg : object) => void} [onIdGeneratied]
  * @returns {Promise<{userMsg, newMsg}>}
  */
-async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
+export async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
     // Ajouter le message à la conversation
     console.log('send msg with model :', model_name);
 
@@ -100,7 +100,7 @@ async function handleMessage(userId, convId, messageContent, onToken, onIdGenera
  * @param {string} userId 
  * @param {string} messageContent 
  */
-async function createConversation(userId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
+export async function createConversation(userId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
 
     const newConv = {
         convId: uuidv4(),
@@ -136,7 +136,7 @@ async function createConversation(userId, messageContent, onToken, onIdGenerated
  * @param {string} convId 
  * @param {string} newName 
  */
-function changeConversationName(userId, convId, newName) {
+export function changeConversationName(userId, convId, newName) {
     db.changeConversationName(userId, convId, newName)
 }
 
@@ -145,7 +145,7 @@ function changeConversationName(userId, convId, newName) {
  * @param {string} userId 
  * @param {string} convId 
  */
-function deleteConversation(userId, convId) {
+export function deleteConversation(userId, convId) {
     try {
         db.deleteConversation(userId, convId);
     }
@@ -154,7 +154,7 @@ function deleteConversation(userId, convId) {
     }
 }
 
-function getConversationById(userId, convId) {
+export function getConversationById(userId, convId) {
     const conv = db.getConversationById(userId, convId);
     if (!conv) {
         throw new Error('Conversation not found');
@@ -169,7 +169,7 @@ function getConversationById(userId, convId) {
  * @param {string} msgId 
  * @param {string} newContent 
  */
-async function editMessage(userId, convId, msgId, newContent) {
+export async function editMessage(userId, convId, msgId, newContent) {
     try {
         // We need to delete all messages after the message to edit
         const conv = db.getConversationById(userId, convId);
@@ -193,14 +193,3 @@ async function editMessage(userId, convId, msgId, newContent) {
         throw new Error('Message not found');
     }
 }
-
-
-module.exports = {
-    handleMessage,
-    getConversationById,
-    getAllConvIdsAndNameAndDate,
-    createConversation,
-    changeConversationName,
-    deleteConversation,
-    editMessage
-};

@@ -1,9 +1,9 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const messageRouter = require('./routes/message');
-const authRouter = require('./routes/auth');
-const conversationRouter = require('./routes/conversation');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import messageRouter from './routes/message.js';
+import authRouter from './routes/auth.js';
+import conversationRouter from './routes/conversation.js';
 
 const app = express();
 app.use(cors());

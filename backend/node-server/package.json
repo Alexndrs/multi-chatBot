@@ -9,11 +9,12 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
     "@google/genai": "^1.8.0",
     "@google/generative-ai": "^0.24.1",
+    "@mistralai/mistralai": "^1.7.3",
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
@@ -24,6 +25,8 @@
     "jsonwebtoken": "^9.0.2",
     "llama-tokenizer-js": "^1.2.2",
     "mongoose": "^8.14.2",
+    "openai": "^5.8.2",
+    "tokenizers": "^0.13.3",
     "uuid": "^11.1.0"
   }
 }

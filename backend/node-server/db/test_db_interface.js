@@ -1,8 +1,10 @@
-
-const fs = require('fs');
-const path = require('path');
-const db = require('../db/interface'); // adapte le chemin selon ton projet
-const dbPath = path.join(__dirname, '../db/db.json');
+import fs from 'fs';
+import * as db from '../db/interface.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const dbPath = path.join(__dirname, 'db.json');
 
 function resetDB() {
     fs.writeFileSync(dbPath, JSON.stringify({ users: [] }, null, 2), 'utf-8');
