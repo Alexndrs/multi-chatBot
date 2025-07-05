@@ -1,5 +1,5 @@
-require('dotenv').config({ path: './../.env' });
 const { GoogleGenAI, createUserContent, createPartFromUri } = require("@google/genai");
+require('dotenv').config({ path: './../.env' });
 const { LlamaTokenizer } = require("llama-tokenizer-js");
 const tokenizer = new LlamaTokenizer();
 
@@ -8,22 +8,18 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API });
 async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5-flash') {
     console.log('Appel de chatWithGemini avec le(s) message(s):', messages);
 
-
-    const promptText = messages.map(m => `${m.role}: ${m.content}`).join("\n");
-    const promptTokens = tokenizer.encode(promptText).length
-    console.log(`\n[Prompt token estimation] for prompt : [${promptText}] ≈ ${promptTokens} tokens\n`);
-
     // const image = await ai.files.upload({
     // file: "./test_img.png",
     // });
     // const contents = createUserContent([promptText, createPartFromUri(image.uri, image.mimeType)]);
+    const promptText = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
     const contents = createUserContent([promptText]);
 
-    const { totalTokens } = await ai.models.countTokens({
+    const { promptTokens } = await ai.models.countTokens({
         model: model_name,
         contents: contents,
     });
-    console.log(`Total tokens for the request: ${totalTokens} tokens`);
+    console.log(`Total tokens for the request: ${promptTokens} tokens`);
 
 
     const response = await ai.models.generateContentStream({

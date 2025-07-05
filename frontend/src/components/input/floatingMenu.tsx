@@ -13,6 +13,10 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
 
     const items = [
         {
+            task: "multimodal-2-text",
+            models: ['gemini-2.5-flash', 'gemini-2.5-pro']
+        },
+        {
             task: "text-2-text",
             models: ['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it', 'qwen-0.6b (local)']
         },

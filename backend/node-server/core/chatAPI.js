@@ -1,5 +1,6 @@
 const { chatWithPython } = require('../services/python_api');
 const { chatWithGroq } = require('../services/groq_api');
+const { chatWithGemini } = require('../services/gemini_api');
 const db = require('../db/interface');
 const uuidv4 = require('uuid').v4;
 
@@ -69,10 +70,12 @@ async function handleMessage(userId, convId, messageContent, onToken, onIdGenera
     // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
     let generatedText, promptTokens, completionTokens;
 
-
     if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
         console.log('Using Groq API for model:', model_name);
         ({ generatedText, promptTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
+    } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
+        console.log('Using Gemini API for model:', model_name);
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
     } else {
         ({ generatedText, promptTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
     }
@@ -112,6 +115,9 @@ async function createConversation(userId, messageContent, onToken, onIdGenerated
     if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
         console.log('Using Groq API for model:', model_name);
         ({ generatedText, promptTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent }], onToken, model_name));
+    } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
+        console.log('Using Gemini API for model:', model_name);
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent }], onToken, model_name));
     }
     else {
         // By default use the python API when the model is not supported by Groq
