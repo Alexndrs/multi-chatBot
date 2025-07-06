@@ -14,8 +14,7 @@ const AppContent = () => {
                     console.log('Token déjà présent');
                 }
             } catch {
-                const loginData = await loginUser('alex@example.com', 'password123');
-                localStorage.setItem('token', loginData.token);
+                await loginUser('alex@example.com', 'password123');
             }
 
 

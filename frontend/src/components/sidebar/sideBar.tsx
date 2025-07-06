@@ -67,7 +67,11 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
     const openConv = async (convId: string) => {
         const convData = await getConversation(convId);
         const cleanedMsgList = convData.msgList?.map((msg: Message) => {
-            const { content, thinkContent } = splitThinkContent(msg.content);
+            const { content: initialContent, thinkContent } = splitThinkContent(msg.content);
+            let content = initialContent;
+            if ((content === null || content.trim() === "") && (thinkContent)) {
+                content = "should I continue thinking?";
+            }
             return {
                 ...msg,
                 content,

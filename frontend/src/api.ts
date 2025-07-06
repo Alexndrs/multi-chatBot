@@ -1,5 +1,6 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { ConversationData, Message } from "./contexts/convContext";
+import type { UserData } from "./contexts/userContext";
 // const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:8000';
 const serverUrl = 'http://localhost:8000';
 
@@ -140,8 +141,8 @@ export const loginUser = async (mail: string, password: string) => {
     localStorage.setItem('token', json.token);
 }
 
-export const getUserInfo = async () => {
-    const json = await jsonRequest(
+export const getUserInfo = async (): Promise<UserData> => {
+    const json = await jsonRequest<UserData>(
         `${serverUrl}/auth`,
         { headers: { 'Authorization': `Bearer ${getToken()}` } }
     );
@@ -252,15 +253,17 @@ export const sendMessage = (
     onToken: (tok: string) => void,
     onUsage: (p: number, r: number) => void,
     onThink: (think: string) => void
-) => convoStream(
-    `${serverUrl}/message/`,
-    { convId, messageContent: msg, model_name: model },
-    {
-        onContainer: (data: { userMsg: Message, newMsg: Message }) => onContainer(data.userMsg, data.newMsg),
-        onToken, onThink,
-        onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
-    }
-);
+) => {
+    return convoStream(
+        `${serverUrl}/message/`,
+        { convId, messageContent: msg, model_name: model },
+        {
+            onContainer: (data: { userMsg: Message, newMsg: Message }) => onContainer(data.userMsg, data.newMsg),
+            onToken, onThink,
+            onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+        }
+    );
+}
 
 export const updateMessage = (
     convId: string,
@@ -271,13 +274,15 @@ export const updateMessage = (
     onToken: (tok: string) => void,
     onUsage: (p: number, r: number) => void,
     onThink: (think: string) => void
-) => convoStream(
-    `${serverUrl}/message/`,
-    { convId, msgId, newContent, model_name: model },
-    {
-        onContainer: (data: { newMsg: Message }) => onContainer(data.newMsg),
-        onToken, onThink,
-        onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
-    },
-    'PUT'
-);
+) => {
+    return convoStream(
+        `${serverUrl}/message/`,
+        { convId, msgId, newContent, model_name: model },
+        {
+            onContainer: (data: { newMsg: Message }) => onContainer(data.newMsg),
+            onToken, onThink,
+            onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+        },
+        'PUT'
+    );
+}

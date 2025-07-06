@@ -176,15 +176,22 @@ const ChatPage: React.FC = () => {
         await sendMessageToAPI(convId, message);
     };
 
-    const keepMessagesUpTo = (msgId: string) => {
+    const keepMessagesUpTo = (msgId: string, editedMessageContent?: string | null) => {
         setConversation((prev) => {
             if (!prev || !prev.msgList) return prev;
             const msgIndex = prev.msgList.findIndex(msg => msg.msgId === msgId);
             if (msgIndex === -1) return prev;
 
+            const updated = [...prev.msgList];
+            updated[msgIndex] = {
+                ...updated[msgIndex],
+                content: editedMessageContent || updated[msgIndex].content,
+            };
+            const slicedMessage = updated.slice(0, msgIndex + 1);
+
             return {
                 ...prev,
-                msgList: prev.msgList.slice(0, msgIndex + 1),
+                msgList: slicedMessage
             };
         });
     };
@@ -204,9 +211,42 @@ const ChatPage: React.FC = () => {
         const convId = conversation?.convId;
         if (!convId) return;
 
-        keepMessagesUpTo(msgId);
+
+
+        keepMessagesUpTo(msgId, newContent);
         await updateMessage(convId, msgId, content, selectedModel, appendBotMessage, appendToBotContent, updateTokenCount, updateBotThinkingContent);
     };
+
+    const handleBotMessageReload = async (botMsgId: string | null) => {
+        if (!conversation?.msgList || !conversation.convId || !botMsgId) return;
+
+        const msgs = conversation.msgList;
+        const botIdx = msgs.findIndex(msg => msg.msgId === botMsgId);
+        if (botIdx <= 0 || msgs[botIdx].role !== "assistant") return;
+
+        const userMsg = msgs[botIdx - 1];
+        if (!userMsg || userMsg.role !== "user") return;
+
+        // Garde les messages jusqu’à userMsg
+        if (!userMsg.msgId || !userMsg.content) return;
+
+        keepMessagesUpTo(userMsg.msgId);
+
+        // Relance le pipeline comme une édition, mais avec le même contenu
+        await updateMessage(
+            conversation.convId,
+            userMsg.msgId,
+            userMsg.content,
+            selectedModel,
+            appendBotMessage,
+            appendToBotContent,
+            updateTokenCount,
+            updateBotThinkingContent
+        );
+    };
+
+
+
 
 
     return (
@@ -228,9 +268,19 @@ const ChatPage: React.FC = () => {
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
                 {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
-                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={(newContent: string | null) => { handleMessageEdit(newContent, msg.msgId) }} />
+                        <UserMessage
+                            key={msg.msgId}
+                            message={msg.content}
+                            token={msg.token}
+                            onEdit={(newContent: string | null) => { handleMessageEdit(newContent, msg.msgId) }} />
                     ) : (
-                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} think={msg.thinkContent ?? undefined} onReload={() => { }} />
+                        <BotMessage
+                            key={msg.msgId}
+                            message={msg.content}
+                            token={msg.token}
+                            think={msg.thinkContent ?? undefined}
+                            onReload={() => handleBotMessageReload(msg.msgId)}
+                        />
                     )
                 )}
                 <div ref={messagesEndRef} />
