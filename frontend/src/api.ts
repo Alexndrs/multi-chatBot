@@ -1,5 +1,6 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { Message } from "./contexts/convContext";
+// const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:8000';
 const serverUrl = 'http://localhost:8000';
 
 
@@ -15,49 +16,6 @@ const serverUrl = 'http://localhost:8000';
 //      "conversations": [...]
 // }
 
-export const createUser = async (name: string, mail: string, password: string) => {
-    const response = await fetch(`${serverUrl}/auth`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            mail,
-            name,
-            password,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to create user');
-    }
-
-    const data = await response.json();
-    localStorage.setItem('token', data.token);
-    return data;
-}
-
-export const loginUser = async (mail: string, password: string) => {
-    const response = await fetch(`${serverUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            mail,
-            password,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to login user');
-    }
-
-    const data = await response.json();
-    localStorage.setItem('token', data.token);
-    return data;
-}
-
 
 export const getToken = () => {
     const token = localStorage.getItem('token');
@@ -68,434 +26,242 @@ export const getToken = () => {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
             localStorage.removeItem('token');
-            throw new Error('Token expired, please login again');
+            throw new Error('Token expired');
         }
     } catch {
         localStorage.removeItem('token');
-        throw new Error('Invalid token, please login again');
+        throw new Error('Invalid token');
     }
     return token;
 }
 
-export const getUserInfo = async () => {
-    const token = getToken();
+async function jsonRequest<T>(input: RequestInfo, init: RequestInit): Promise<T> {
+    const res = await fetch(input, init);
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    return res.json();
+}
 
-    const response = await fetch(`${serverUrl}/auth`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to get user info');
+async function streamJson<T, R = void>(
+    response: Response,
+    handlers: {
+        onContainer?: (data: T) => R | void;
+        onToken?: (token: string) => void;
+        onThink?: (think: string) => void;
+        onUsage?: (usage: { promptToken: number; responseToken: number }) => void;
     }
+): Promise<R | void> {
+    if (!response.body) throw new Error('No body');
+    const reader = response.body.getReader();
+    const txt = new TextDecoder();
+    let buf = '', thinking = false, thinkBuf = '';
 
-    const data = await response.json();
-    return data;
+    while (true) {
+        const { done, value } = await reader.read();
+        const chunk = txt.decode(value || new Uint8Array(), { stream: true });
+        buf += chunk;
+
+
+        // parse JSON containers
+        const containerMatch = buf.match(/<<([A-Za-z]+)>>/);
+        if (containerMatch) {
+            const tag = containerMatch[1];
+            const [prefix, rest] = buf.split(new RegExp(`<<${tag}>>`));
+            buf = prefix;
+            try {
+                const data = JSON.parse(rest.trim());
+                switch (tag) {
+                    case 'MsgCONTAINER':
+                    case 'convContainer':
+                        handlers.onContainer?.(data as T);
+                        break;
+                    case 'tokenUsage':
+                        handlers.onUsage?.({ promptToken: data.tokenUsage, responseToken: 0 });
+                        break;
+                }
+            } catch { /*ignore*/ }
+        }
+
+        // parse think tags and tokens
+        while (buf) {
+            if (!thinking) {
+                const idx = buf.indexOf('<think>');
+                if (idx >= 0) {
+                    const before = buf.slice(0, idx);
+                    handlers.onToken?.(before);
+                    buf = buf.slice(idx + 7);
+                    thinking = true;
+                    thinkBuf = '';
+                } else {
+                    handlers.onToken?.(buf);
+                    buf = '';
+                }
+            } else {
+                const idx = buf.indexOf('</think>');
+                if (idx >= 0) {
+                    thinkBuf += buf.slice(0, idx);
+                    handlers.onThink?.(thinkBuf.trim());
+                    buf = buf.slice(idx + 8);
+                    thinking = false;
+                } else {
+                    thinkBuf += buf;
+                    handlers.onThink?.(thinkBuf);
+                    buf = '';
+                }
+            }
+        }
+
+        if (done) break;
+    }
+}
+
+export const createUser = async (name: string, mail: string, password: string) => {
+    const json = await jsonRequest<{ token: string }>(
+        `${serverUrl}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, mail, password })
+    })
+    localStorage.setItem('token', json.token);
+}
+
+export const loginUser = async (mail: string, password: string) => {
+
+    const json = await jsonRequest<{ token: string }>(
+        `${serverUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mail, password })
+    });
+    localStorage.setItem('token', json.token);
+}
+
+export const getUserInfo = async () => {
+    const json = await jsonRequest(
+        `${serverUrl}/auth`,
+        { headers: { 'Authorization': `Bearer ${getToken()}` } }
+    );
+    return json
 }
 
 
 export const getUserConversations = async () => {
-    const token = getToken();
-
-    const response = await fetch(`${serverUrl}/conversation`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to get user conversations');
-    }
-
-    const data = await response.json();
-    return data.conversationsIdsAndNameAndDate;
+    const json = await jsonRequest<{ conversationsIdsAndNameAndDate: ConversationItem[] }>(
+        `${serverUrl}/conversation`,
+        { headers: { 'Authorization': `Bearer ${getToken()}` } }
+    );
+    return json.conversationsIdsAndNameAndDate
 }
 
-export const getConversation = async (conversationId: string) => {
-    const token = getToken();
-    const response = await fetch(`${serverUrl}/conversation/${conversationId}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-    });
+export const getConversation = async (id: string) => {
 
-    if (!response.ok) {
-        throw new Error('Failed to get conversation');
-    }
-
-    const data = await response.json();
-    console.log('Conversation data:', data);
-    return data.response;
+    const json = await jsonRequest<{ response: Message[] }>(
+        `${serverUrl}/conversation/${id}`,
+        { headers: { 'Authorization': `Bearer ${getToken()}` } }
+    );
+    return json.response;
 }
 
-export const deleteConversation = async (conversationId: string) => {
-    const token = getToken();
-    const response = await fetch(`${serverUrl}/conversation/${conversationId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-    });
+export const deleteConversation = async (id: string) => {
+    const response = await fetch(
+        `${serverUrl}/conversation/${id}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }
+    );
     if (!response.ok) {
-        throw new Error('Failed to delete conversation');
+        throw new Error(`Failed to delete conversation: ${response.statusText}`);
     }
 }
 
+async function convoStream<T, R = void>(
+    path: string,
+    payload: object,
+    handlers: {
+        onContainer?: (data: T) => R | void;
+        onToken?: (token: string) => void;
+        onThink?: (think: string) => void;
+        onUsage?: (usage: { promptToken: number; responseToken: number }) => void;
+    }
 
+): Promise<R | void> {
+    const response = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+        body: JSON.stringify(payload)
+    })
 
+    if (!response.ok) {
+        throw new Error(`Failed to fetch: ${response.statusText}`);
+    }
+
+    let containerData: R | undefined;
+    await streamJson<T, R>(response, {
+        ...handlers,
+        onContainer: (data: T) => {
+            const result = handlers.onContainer?.(data);
+            if (typeof result !== "undefined") {
+                containerData = result;
+            }
+            return result as R;
+        }
+    });
+    return containerData;
+}
 
 export const createConversation = async (
-    message: string,
-    model_name: string,
-    onConvGenerated: (conv: ConversationItem) => void,
-    onTitleToken: (token: string, currentConvId: string | null) => void
+    msg: string,
+    model: string,
+    onConv: (conv: ConversationItem) => void,
+    onTitleTok: (tok: string, convId: string) => void
 ) => {
-    const token = getToken();
-    const response = await fetch(`${serverUrl}/conversation`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            messageContent: message,
-            model_name: model_name
-        })
-    });
-
-    if (!response.ok) {
+    let currentConvId = '';
+    const containerData = await convoStream<{ conv: ConversationItem }, ConversationItem>(
+        `${serverUrl}/conversation`,
+        { messageContent: msg, model_name: model },
+        {
+            onContainer: (data) => {
+                currentConvId = data.conv.convId;
+                onConv(data.conv);
+                return data.conv;
+            },
+            onToken: tok => {
+                if (currentConvId) {
+                    onTitleTok(tok, currentConvId);
+                }
+            },
+            onThink: () => { },
+            onUsage: () => { }
+        }
+    );
+    if (!containerData) {
         throw new Error('Failed to create conversation');
     }
-
-    if (!response.body) {
-        throw new Error('Response body is null');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let currentConvId: string | null = null;
-
-    let buffer = ''; // stocke les morceaux partiels
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-
-        // Traitement des balises spéciales
-        if (buffer.includes('<<convContainer>>')) {
-            const parts = buffer.split('<<convContainer>>');
-            const jsonStr = parts[1].trim();
-            buffer = parts[0]; // on garde ce qu’il y avait avant, potentiellement du texte utile
-
-            try {
-                const data = JSON.parse(jsonStr);
-                const conv = data.conv;
-                onConvGenerated(conv);
-                currentConvId = conv.convId;
-            } catch (err) {
-                console.error('Erreur de parsing du ConvContainer:', err);
-            }
-        }
-
-        if (buffer.includes('<<tokenUsage>>')) {
-            const parts = buffer.split('<<tokenUsage>>');
-            const jsonStr = parts[1].trim();
-            buffer = parts[0];
-            try {
-                const data = JSON.parse(jsonStr);
-                console.log('Token usage:', data);
-            } catch (err) {
-                console.error('Erreur de parsing du TokenUsage:', err);
-            }
-        }
-
-        // Traitement du texte tout en ignorant <think>...</think>
-        let outputBuffer = '';
-        while (true) {
-            const startIdx = buffer.indexOf('<think>');
-            const endIdx = buffer.indexOf('</think>');
-
-            if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-                // Garder tout avant <think>
-                outputBuffer += buffer.slice(0, startIdx);
-                // Retirer tout jusqu’après </think>
-                buffer = buffer.slice(endIdx + '</think>'.length);
-            } else if (startIdx !== -1 && endIdx === -1) {
-                // Début de <think> mais pas encore la fin → attendre chunk suivant
-                break;
-            } else {
-                // Aucun think ou terminé → tout est du texte normal
-                outputBuffer += buffer;
-                buffer = '';
-                break;
-            }
-        }
-
-        if (outputBuffer.length > 0) {
-            onTitleToken(outputBuffer, currentConvId);
-        }
-    }
-
-    return currentConvId;
-};
-
-export const sendMessage = async (
-    conversationId: string,
-    message: string,
-    model_name: string,
-    onContainerGenerated: (userMsg: Message, newMsg: Message) => void,
-    onToken: (token: string) => void,
-    onTokenUsage: (promptToken: number, responseToken: number) => void,
-    onThink: (thinkContent: string) => void
-) => {
-    const token = getToken();
-    const response = await fetch(`${serverUrl}/message/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            convId: conversationId,
-            messageContent: message,
-            model_name: model_name
-        })
-    });
-
-    if (!response.body) {
-        throw new Error('Response body is null');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let fullText = '';
-    let userMsg = null;
-    let newMsg = null;
-
-    let buffer = ''; // accumulateur global
-    let isThinking = false;
-    let thinkBuffer = '';
-
-    while (true) {
-        const { done, value } = await reader.read();
-        const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
-
-        if (chunk.includes('<<MsgCONTAINER>>')) {
-            const jsonStr = chunk.split('<<MsgCONTAINER>>')[1].trim();
-            try {
-                const data = JSON.parse(jsonStr);
-                userMsg = data.userMsg;
-                newMsg = data.newMsg;
-                onContainerGenerated(userMsg, newMsg);
-            } catch (err) {
-                console.error('Erreur de parsing du MsgCONTAINER:', err);
-            }
-            continue;
-        }
-
-        if (chunk.includes('<<tokenUsage>>')) {
-            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
-            try {
-                const data = JSON.parse(jsonStr);
-                onTokenUsage(data.promptToken, data.responseToken);
-            } catch (err) {
-                console.error('Erreur de parsing du TokenUsage:', err);
-            }
-            continue;
-        }
-
-        buffer += chunk;
-
-        while (buffer.length > 0) {
-            if (!isThinking) {
-                const startIdx = buffer.indexOf('<think>');
-                if (startIdx !== -1) {
-                    // On a trouvé un début de <think>
-                    const before = buffer.slice(0, startIdx);
-                    if (before) {
-                        fullText += before;
-                        onToken(before);
-                    }
-                    buffer = buffer.slice(startIdx + '<think>'.length);
-                    isThinking = true;
-                    thinkBuffer = '';
-                } else {
-                    // Aucun <think> pour l'instant, on flush tout
-                    fullText += buffer;
-                    onToken(buffer);
-                    buffer = '';
-                    break;
-                }
-            } else {
-                const endIdx = buffer.indexOf('</think>');
-                if (endIdx !== -1) {
-                    // Fin trouvée
-                    thinkBuffer += buffer.slice(0, endIdx);
-                    onThink(thinkBuffer.trim());
-                    buffer = buffer.slice(endIdx + '</think>'.length);
-                    isThinking = false;
-                } else {
-                    // Pas encore de fin → on accumule et attend
-                    thinkBuffer += buffer;
-                    onThink(thinkBuffer);
-                    buffer = '';
-                    break;
-                }
-            }
-        }
-
-        if (done) {
-            break;
-        }
-    }
-
-    // 🔥 Si le modèle n’a jamais fermé le <think>, on le flush quand même à la fin
-    if (isThinking && thinkBuffer.trim()) {
-        onThink(thinkBuffer.trim() + '...');
-    }
-
-    if (newMsg) {
-        newMsg.content = fullText;
-    }
-
-    return { userMsg, newMsg };
-};
-
-export const updateMessage = async (
-    conversationId: string,
-    messageId: string,
-    newMessage: string,
-    model_name: string,
-    onContainerGenerated: (newMsg: Message) => void,
-    onToken: (token: string) => void,
-    onTokenUsage: (promptToken: number, responseToken: number) => void,
-    onThink: (thinkContent: string) => void
-) => {
-    const token = getToken();
-    const response = await fetch(`${serverUrl}/message/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            convId: conversationId,
-            msgId: messageId,
-            newContent: newMessage,
-            model_name: model_name
-        })
-    });
-
-
-    if (!response.body) {
-        throw new Error('Response body is null');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let fullText = '';
-    let userMsg = null;
-    let newMsg = null;
-
-    let buffer = ''; // accumulateur global
-    let isThinking = false;
-    let thinkBuffer = '';
-
-    while (true) {
-        const { done, value } = await reader.read();
-        const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
-
-        if (chunk.includes('<<MsgCONTAINER>>')) {
-            const jsonStr = chunk.split('<<MsgCONTAINER>>')[1].trim();
-            try {
-                const data = JSON.parse(jsonStr);
-                userMsg = data.userMsg;
-                newMsg = data.newMsg;
-                onContainerGenerated(newMsg);
-            } catch (err) {
-                console.error('Erreur de parsing du MsgCONTAINER:', err);
-            }
-            continue;
-        }
-
-        if (chunk.includes('<<tokenUsage>>')) {
-            const jsonStr = chunk.split('<<tokenUsage>>')[1].trim();
-            try {
-                const data = JSON.parse(jsonStr);
-                onTokenUsage(data.promptToken, data.responseToken);
-            } catch (err) {
-                console.error('Erreur de parsing du TokenUsage:', err);
-            }
-            continue;
-        }
-
-        buffer += chunk;
-
-        while (buffer.length > 0) {
-            if (!isThinking) {
-                const startIdx = buffer.indexOf('<think>');
-                if (startIdx !== -1) {
-                    // On a trouvé un début de <think>
-                    const before = buffer.slice(0, startIdx);
-                    if (before) {
-                        fullText += before;
-                        onToken(before);
-                    }
-                    buffer = buffer.slice(startIdx + '<think>'.length);
-                    isThinking = true;
-                    thinkBuffer = '';
-                } else {
-                    // Aucun <think> pour l'instant, on flush tout
-                    fullText += buffer;
-                    onToken(buffer);
-                    buffer = '';
-                    break;
-                }
-            } else {
-                const endIdx = buffer.indexOf('</think>');
-                if (endIdx !== -1) {
-                    // Fin trouvée
-                    thinkBuffer += buffer.slice(0, endIdx);
-                    onThink(thinkBuffer.trim());
-                    buffer = buffer.slice(endIdx + '</think>'.length);
-                    isThinking = false;
-                } else {
-                    // Pas encore de fin → on accumule et attend
-                    thinkBuffer += buffer;
-                    onThink(thinkBuffer);
-                    buffer = '';
-                    break;
-                }
-            }
-
-
-        }
-
-        if (done) {
-            break;
-        }
-    }
-
-    // Si le modèle n’a jamais fermé le <think>, on le flush quand même à la fin
-    if (isThinking && thinkBuffer.trim()) {
-        onThink(thinkBuffer.trim() + '...');
-    }
-
-    if (newMsg) {
-        newMsg.content = fullText;
-    }
-
-    return { userMsg, newMsg };
+    return containerData.convId;
 }
+
+
+export const sendMessage = (
+    convId: string, msg: string, model: string,
+    onContainer: (u: Message, b: Message) => void,
+    onToken: (tok: string) => void,
+    onUsage: (p: number, r: number) => void,
+    onThink: (think: string) => void
+) => convoStream(
+    `${serverUrl}/message/`, { convId, messageContent: msg, model_name: model }, {
+    onContainer: (data: { userMsg: Message, newMsg: Message }) => onContainer(data.userMsg, data.newMsg),
+    onToken, onThink,
+    onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+}
+);
+
+export const updateMessage = (
+    convId: string, msgId: string, newContent: string, model: string,
+    onContainer: (m: Message) => void,
+    onToken: (tok: string) => void,
+    onUsage: (p: number, r: number) => void,
+    onThink: (think: string) => void
+) => convoStream(
+    `${serverUrl}/message/`, { convId, msgId, newContent, model_name: model }, {
+    onContainer: (data: { newMsg: Message }) => onContainer(data.newMsg),
+    onToken, onThink,
+    onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+}
+);
