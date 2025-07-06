@@ -9,13 +9,28 @@ export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b
     console.log('Appel de chatWithGroq avec le(s) message(s):', messages);
 
     let promptTokens = 0;
-    for (const message of messages) {
+    let currentMessageTokens = 0;
+    let historyTokens = 0;
+
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
         // Simulating chat format of groq
         const simulated = `<|start_header_id|>${message.role}<|end_header_id|>\n${message.content}<|eot_id|>`;
         // Count token of the prompt with llama tokenizer
-        promptTokens += tokenizer.encode(simulated).length;
+        const messageTokenCount = tokenizer.encode(simulated).length;
+
+        if (i === messages.length - 1) {
+            // Dernier message = message actuel
+            currentMessageTokens = messageTokenCount;
+        } else {
+            // Tous les autres = historique
+            historyTokens += messageTokenCount;
+        }
+
+        promptTokens += messageTokenCount;
     }
-    console.log(`\n[Prompt token estimation] ≈ ${promptTokens} tokens\n`);
+
+    // console.log(`\n[Token breakdown] Current: ${currentMessageTokens} | History: ${historyTokens} | Total: ${promptTokens} tokens\n`);
 
 
 
@@ -39,23 +54,24 @@ export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b
     return {
         generatedText,
         promptTokens,
+        currentMessageTokens,
+        historyTokens,
         completionTokens,
     };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-    (async () => {
-        const messages = [
-            { role: "user", content: "Explique-moi le concept de gravité en termes simples." }
-        ];
 
-        const result = await chatWithGroq(messages, (token) => {
-            process.stdout.write(token);
-        });
+// (async () => {
+//     const messages = [
+//         { role: "user", content: "Explique-moi le concept de gravité en termes simples." }
+//     ];
 
-        console.log("\n\n--- Résumé ---");
-        console.log("Texte généré :", result.generatedText);
-        console.log("Prompt tokens :", result.promptTokens);
-        console.log("Completion tokens :", result.completionTokens);
-    })();
-}
+//     const result = await chatWithGroq(messages, (token) => {
+//         process.stdout.write(token);
+//     });
+
+//     console.log("\n\n--- Résumé ---");
+//     console.log("Texte généré :", result.generatedText);
+//     console.log("Prompt tokens :", result.promptTokens);
+//     console.log("Completion tokens :", result.completionTokens);
+// })();

@@ -48,7 +48,7 @@ async function streamJson<T, R = void>(
         onContainer?: (data: T) => R | void;
         onToken?: (token: string) => void;
         onThink?: (think: string) => void;
-        onUsage?: (usage: { promptToken: number; responseToken: number }) => void;
+        onUsage?: (usage: { currentMessageTokens: number, historyTokens: number, responseToken: number }) => void;
     }
 ): Promise<R | void> {
     if (!response.body) throw new Error('No body');
@@ -76,7 +76,8 @@ async function streamJson<T, R = void>(
                         handlers.onContainer?.(data as T);
                         break;
                     case 'tokenUsage':
-                        handlers.onUsage?.({ promptToken: data.tokenUsage, responseToken: 0 });
+                        handlers.onUsage?.({ currentMessageTokens: data.currentMessageTokens, historyTokens: data.historyTokens, responseToken: data.responseToken });
+                        console.log('Token usage:', data);
                         break;
                 }
             } catch { /*ignore*/ }
@@ -184,7 +185,7 @@ async function convoStream<T, R = void>(
         onContainer?: (data: T) => R | void;
         onToken?: (token: string) => void;
         onThink?: (think: string) => void;
-        onUsage?: (usage: { promptToken: number; responseToken: number }) => void;
+        onUsage?: (usage: { currentMessageTokens: number, historyTokens: number, responseToken: number }) => void;
     },
     method: 'POST' | 'PUT' = 'POST'
 
@@ -251,7 +252,7 @@ export const sendMessage = (
     model: string,
     onContainer: (u: Message, b: Message) => void,
     onToken: (tok: string) => void,
-    onUsage: (p: number, r: number) => void,
+    onUsage: (c: number, h: number, r: number) => void,
     onThink: (think: string) => void
 ) => {
     return convoStream(
@@ -260,7 +261,7 @@ export const sendMessage = (
         {
             onContainer: (data: { userMsg: Message, newMsg: Message }) => onContainer(data.userMsg, data.newMsg),
             onToken, onThink,
-            onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+            onUsage: usage => onUsage(usage.currentMessageTokens, usage.historyTokens, usage.responseToken)
         }
     );
 }
@@ -272,7 +273,7 @@ export const updateMessage = (
     model: string,
     onContainer: (m: Message) => void,
     onToken: (tok: string) => void,
-    onUsage: (p: number, r: number) => void,
+    onUsage: (c: number, h: number, r: number) => void,
     onThink: (think: string) => void
 ) => {
     return convoStream(
@@ -281,7 +282,7 @@ export const updateMessage = (
         {
             onContainer: (data: { newMsg: Message }) => onContainer(data.newMsg),
             onToken, onThink,
-            onUsage: usage => onUsage(usage.promptToken, usage.responseToken)
+            onUsage: usage => onUsage(usage.currentMessageTokens, usage.historyTokens, usage.responseToken)
         },
         'PUT'
     );

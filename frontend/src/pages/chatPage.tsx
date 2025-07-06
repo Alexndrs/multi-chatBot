@@ -129,7 +129,7 @@ const ChatPage: React.FC = () => {
     };
 
 
-    const updateTokenCount = (promptToken: number, responseToken: number) => {
+    const updateTokenCount = (currentMessageTokens: number, historyTokens: number, responseToken: number) => {
         // Should update the last two message in conversation
         setConversation((prev) => {
             if (!prev || !prev.msgList) return prev;
@@ -140,9 +140,9 @@ const ChatPage: React.FC = () => {
             if (userMsg && userMsg.role === "user") {
                 updated[updated.length - 2] = {
                     ...userMsg,
-                    token: promptToken,
+                    token: currentMessageTokens,
+                    historyTokens: historyTokens,
                 };
-                console.log("test", userMsg, promptToken)
             }
             if (assistantMsg && assistantMsg.role === "assistant") {
                 updated[updated.length - 1] = {
@@ -158,8 +158,6 @@ const ChatPage: React.FC = () => {
         if (conversation?.convId) return conversation.convId;
 
         const convId = await createConversation(message, selectedModel, createConvHandler, handleTitleTokenStream);
-        console.log("New conversation created with ID:", convId);
-
         setTimeout(() => setModalOpen(false), 3000);
         return convId;
     };
@@ -259,19 +257,22 @@ const ChatPage: React.FC = () => {
                     <span className="absolute right-6 top-4 text-sm text-gray-400 font-normal">
                         {
                             // Sum of the tokens of the messages in the conversation
-                            conversation.msgList?.reduce((acc, msg) => acc + (msg.token || 0), 0)
+                            conversation.msgList?.reduce((acc, msg) => {
+                                return acc + (msg.token + (msg.historyTokens ?? 0))
+                            }, 0)
                         } tokens used
                     </span>
                 )}
             </div>
             <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleUserSubmit} />
-            <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
+            <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar">
                 {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
                         <UserMessage
                             key={msg.msgId}
                             message={msg.content}
                             token={msg.token}
+                            historyTokens={msg.historyTokens}
                             onEdit={(newContent: string | null) => { handleMessageEdit(newContent, msg.msgId) }} />
                     ) : (
                         <BotMessage
@@ -286,7 +287,7 @@ const ChatPage: React.FC = () => {
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="flex items-center justify-between p-4 shadow-custom">
+            <div className="flex items-center justify-between p-4 shadow-custom mt-10">
                 <Input onSend={handleUserSubmit} />
             </div>
         </div>

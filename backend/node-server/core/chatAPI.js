@@ -68,16 +68,16 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
 
 
     // TODO: Envoyer l'historique à l'API de l'IA (python ou groq)
-    let generatedText, promptTokens, completionTokens;
+    let generatedText, currentMessageTokens, historyTokens, completionTokens;
 
     if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
         console.log('Using Groq API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
     } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
         console.log('Using Gemini API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
     } else {
-        ({ generatedText, promptTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
     }
 
 
@@ -85,11 +85,12 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
     newMsg.content = generatedText;
     newMsg.token = completionTokens;
     console.log('newMsg:', newMsg);
-    userMsg.token = promptTokens;
+    userMsg.token = currentMessageTokens;
+    userMsg.historyTokens = historyTokens;
     // Ajouter la réponse de l'IA à la conversation et update le nombre de tokens
-    db.addToken(userId, convId, promptTokens + completionTokens);
+    db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
 
-    console.log("Adding to db : ", userMsg, newMsg);
+    // console.log("Adding to db : ", userMsg, newMsg);
     db.addMessage(userId, convId, userMsg)
     db.addMessage(userId, convId, newMsg)
     return { userMsg, newMsg };
@@ -111,21 +112,21 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
     }
     onIdGenerated(newConv);
 
-    let generatedText, promptTokens, completionTokens;
+    let generatedText, currentMessageTokens, historyTokens, completionTokens;
     if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
         console.log('Using Groq API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
     } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
         console.log('Using Gemini API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
     }
     else {
         // By default use the python API when the model is not supported by Groq
-        ({ generatedText, promptTokens, completionTokens } = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '" \no_think' }], onToken));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '" \no_think' }], onToken));
     }
 
     newConv.convName = generatedText;
-    newConv.token = promptTokens + completionTokens;
+    newConv.token = currentMessageTokens + historyTokens + completionTokens;
     db.addConversation(userId, newConv);
     return { conv: newConv };
 }
@@ -175,14 +176,12 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
         throw new Error('Conversation not found');
     }
     const convName = conv.convName;
-    console.log("Searching for message with id:", msgId, "in the conversation:", conv.msgList);
     const msg = conv.msgList.find(m => m.msgId === msgId);
 
     if (!msg) {
         throw new Error('Message not found');
     }
 
-    console.log("Found message:");
 
     // Deleting the message and all the messages after it
     const index = conv.msgList.indexOf(msg);
@@ -190,8 +189,6 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
         db.deleteMessage(userId, convId, m.msgId);
     })
     conv.msgList = conv.msgList.slice(0, index);
-
-    console.log("conv after slicing:", conv.msgList);
 
     // Creating a new message
     const userMsg = {
@@ -204,7 +201,6 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
         token: 0
     }
     conv.msgList.push(userMsg);
-    console.log("conv after adding user message:", conv.msgList);
 
     // Creating a clean history for the AI (keeping only the role and content)
     const filteredConv = conv.msgList.map(msg => {
@@ -214,7 +210,6 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
         }
     })
 
-    console.log("Filtered conversation for AI:", filteredConv);
 
     // Creating a container for the new message from the AI
     const newMsg = {
@@ -229,28 +224,26 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
     if (onIdGenerated) onIdGenerated(userMsg, newMsg);
 
     // Now we can ask the AI to generate a new answer
-    let generatedText, promptTokens, completionTokens;
+    let generatedText, currentMessageTokens, historyTokens, completionTokens;
 
     if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
         console.log('Using Groq API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq(filteredConv, onToken, model_name));
     } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
         console.log('Using Gemini API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini(filteredConv, onToken, model_name));
     } else {
-        ({ generatedText, promptTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
+        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithPython(filteredConv, onToken));
     }
 
     // Post-processing the generated text
     console.log('Generated text:', generatedText);
     newMsg.content = generatedText;
     newMsg.token = completionTokens;
-    console.log('newMsg:', newMsg);
-    userMsg.token = promptTokens;
+    userMsg.token = currentMessageTokens;
+    userMsg.historyTokens = historyTokens;
     // Ajouter la réponse de l'IA à la conversation et update le nombre de tokens
-    db.addToken(userId, convId, promptTokens + completionTokens);
-
-    console.log("Adding to db : ", userMsg, newMsg);
+    db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
     db.addMessage(userId, convId, userMsg)
     db.addMessage(userId, convId, newMsg)
     return { userMsg, newMsg };

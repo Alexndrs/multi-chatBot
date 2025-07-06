@@ -72,8 +72,13 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             if ((content === null || content.trim() === "") && (thinkContent)) {
                 content = "should I continue thinking?";
             }
+            console.log("msg :", msg)
+            const historyTokens = msg.historyTokens || 0;
+            const token = msg.token || 0;
             return {
                 ...msg,
+                historyTokens,
+                token,
                 content,
                 thinkContent,
             };

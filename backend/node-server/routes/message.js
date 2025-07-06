@@ -26,7 +26,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 
         const { userMsg, newMsg } = await chatAPI.handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name);
-        res.write(`\n<<tokenUsage>>${JSON.stringify({ promptToken: userMsg.token, responseToken: newMsg.token })}\n`);
+        res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token, responseToken: newMsg.token })}\n`);
         res.end();
     } catch (error) {
         console.error('Error handling message:', error);
@@ -54,7 +54,7 @@ router.put('/', authenticateToken, async (req, res) => {
         };
 
         const { userMsg, newMsg } = await chatAPI.editMessage(userId, convId, msgId, newContent, onToken, onIdGenerated, model_name);
-        res.write(`\n<<tokenUsage>>${JSON.stringify({ promptToken: userMsg.token, responseToken: newMsg.token })}\n`);
+        res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token })}\n`);
         res.end();
     } catch (error) {
         console.error('Error editing message:', error);

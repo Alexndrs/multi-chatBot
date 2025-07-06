@@ -9,6 +9,7 @@ export interface Message {
     convId?: string;
     convName?: string;
     token: number;
+    historyTokens?: number;
 }
 
 export interface ConversationData {

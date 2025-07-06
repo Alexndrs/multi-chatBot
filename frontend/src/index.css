@@ -30,9 +30,9 @@ body {
   background: transparent;
 }
 
-.shadow-custom {
+/* .shadow-custom {
   box-shadow: 0 -5px 100px 50px #12161e;
-}
+} */
 
 .hide-scrollbar {
   scrollbar-width: none; /* Firefox */
