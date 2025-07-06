@@ -3,8 +3,14 @@ import { faRotateRight, faChevronDown, faChevronUp } from '@fortawesome/free-sol
 import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../codeBlock';
 import remarkGfm from 'remark-gfm';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
+
+
+const ThinkingPlaceholder = () => (
+    <span className="font-semibold relative inline-block shimmer-text text-transparent bg-clip-text italic">Please wait, I'm thinking...</span>
+);
+
 
 type CodeComponentProps = ComponentPropsWithoutRef<'code'> & {
     inline?: boolean;
@@ -22,7 +28,16 @@ export function BotMessage({
     }) {
 
     const [showThinking, setShowThinking] = useState(false);
-    const isLoading = !message;
+    const [isLoading, setIsLoading] = useState(message === null || message.trim() === "");
+
+
+    useEffect(() => {
+        if (message && message.trim() !== "") {
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
+    }, [message]);
 
 
     return (
@@ -51,26 +66,30 @@ export function BotMessage({
                 </div>
             )}
             <div className="prose prose-invert max-w-none text-gray-300 text-sm p-4">
-                <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                        code({ className, children, inline }: CodeComponentProps) {
+                {!isLoading ? (
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            code({ className, children, inline }: CodeComponentProps) {
 
-                            const match = /language-(\w+)/.exec(className || '');
-                            const codeContent = String(children).replace(/\n$/, '');
+                                const match = /language-(\w+)/.exec(className || '');
+                                const codeContent = String(children).replace(/\n$/, '');
 
-                            if (!inline && match) {
-                                return <CodeBlock language={match[1]} value={codeContent} />;
-                            }
+                                if (!inline && match) {
+                                    return <CodeBlock language={match[1]} value={codeContent} />;
+                                }
 
-                            return <code className="bg-gray-800 px-1 rounded">{children}</code>;
-                        },
-                    }}
+                                return <code className="bg-gray-800 px-1 rounded">{children}</code>;
+                            },
+                        }}
 
-                >
-                    {message || ''}
-                </ReactMarkdown>
-
+                    >
+                        {message}
+                    </ReactMarkdown>
+                ) : (
+                    // If the message already has think content we don't need to say it again
+                    think ? null : <ThinkingPlaceholder />
+                )}
             </div>
 
             <div className="border-t-2 border-gray-800 mb-2 w-full" />

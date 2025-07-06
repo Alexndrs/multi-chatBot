@@ -8,7 +8,7 @@ import { useConv } from "../../hooks/useConv";
 
 
 export default function Input({ onSend, }: { onSend: (message: string) => void; }) {
-    const { task, modelName } = useConv();
+    const { task, selectedModel } = useConv();
     const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
 
@@ -94,7 +94,7 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
             {/* Infos */}
             <div className="flex items-center gap-2 mt-2">
                 <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
-                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{modelName}</div>
+                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{selectedModel}</div>
             </div>
         </div>
     );

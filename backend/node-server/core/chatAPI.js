@@ -117,7 +117,7 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
         ({ generatedText, promptTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
     } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
         console.log('Using Gemini API for model:', model_name);
-        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContentv + '"' }], onToken, model_name));
+        ({ generatedText, promptTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
     }
     else {
         // By default use the python API when the model is not supported by Groq

@@ -4,7 +4,7 @@ export interface Message {
     msgId: string | null;
     role: string | null;
     content: string | null;
-    thinkContent?: string;
+    thinkContent?: string | null;
     timestamp: string | null;
     convId?: string;
     convName?: string;
@@ -19,12 +19,12 @@ export interface ConversationData {
 }
 
 export interface ConversationContextType {
-    ConversationData: ConversationData | null;
-    setConversationData: React.Dispatch<React.SetStateAction<ConversationData | null>>;
+    conversation: ConversationData | null;
+    setConversation: React.Dispatch<React.SetStateAction<ConversationData | null>>;
     modalOpen: boolean;
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    modelName: string;
-    setModelName: React.Dispatch<React.SetStateAction<string>>;
+    selectedModel: string;
+    setSelectedModel: React.Dispatch<React.SetStateAction<string>>;
     task: string;
     setTask: React.Dispatch<React.SetStateAction<string>>;
 }

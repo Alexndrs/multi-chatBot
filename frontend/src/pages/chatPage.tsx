@@ -11,7 +11,7 @@ import ModalInput from "../components/modalInput";
 import { stripThinkTags } from "../utils";
 
 const ChatPage: React.FC = () => {
-    const { ConversationData, setConversationData, modalOpen, setModalOpen, modelName } = useConv();
+    const { conversation, setConversation, modalOpen, setModalOpen, selectedModel } = useConv();
     const { setUserData } = useUser();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -31,81 +31,66 @@ const ChatPage: React.FC = () => {
         };
     }, [modalOpen, setModalOpen]);
 
-    const appendMessage = (userMsg: Message, newMsg: Message) => {
-        setConversationData((prev) => {
-            if (prev && prev.convId === newMsg.convId) {
+
+    const appendToConversation = (...messages: Message[]) => {
+        setConversation((prev) => {
+            if (prev && prev.convId === messages[0].convId) {
                 return {
                     ...prev,
-                    date: userMsg.timestamp,
-                    msgList: [...(prev.msgList || []), userMsg, newMsg],
+                    date: messages[messages.length - 1].timestamp,
+                    msgList: [...(prev.msgList || []), ...messages],
                 };
             } else {
                 return {
-                    convId: newMsg.convId ?? null,
-                    convName: newMsg.convName ?? null,
-                    date: newMsg.timestamp,
-                    msgList: [userMsg, newMsg],
+                    convId: messages[0].convId ?? null,
+                    convName: messages[0].convName ?? null,
+                    date: messages[messages.length - 1].timestamp,
+                    msgList: [...messages],
                 };
             }
         });
     };
-    const appendAnswer = (ansMessage: Message) => {
-        // Same as appendMessage but only for the assistant's message
-        setConversationData((prev) => {
-            if (prev && prev.convId === ansMessage.convId) {
-                return {
-                    ...prev,
-                    date: ansMessage.timestamp,
-                    msgList: [...(prev.msgList || []), ansMessage],
-                };
-            } else {
-                return {
-                    convId: ansMessage.convId ?? null,
-                    convName: ansMessage.convName ?? null,
-                    date: ansMessage.timestamp,
-                    msgList: [ansMessage],
-                };
-            }
-        });
-    }
 
-    const updateAssistantReply = (chunk: string) => {
-        setConversationData((prev) => {
+    const appendUserAndBotMessages = (userMsg: Message, botMsg: Message) => {
+        console.log("Appending messages:", userMsg, botMsg);
+        appendToConversation(userMsg, botMsg);
+    };
+
+    const appendBotMessage = (ansMessage: Message) => {
+        appendToConversation(ansMessage);
+    };
+
+
+    const updateLastBotMessage = (updater: (msg: Message) => Message) => {
+        setConversation((prev) => {
             if (!prev || !prev.msgList) return prev;
             const updated = [...prev.msgList];
             const last = updated[updated.length - 1];
 
             if (last && last.role === "assistant") {
-                updated[updated.length - 1] = {
-                    ...last,
-                    content: (last.content || "") + chunk,
-                };
+                updated[updated.length - 1] = updater(last);
                 return { ...prev, msgList: updated };
             }
             return prev;
         });
     };
 
-    const onThink = (thinkChunk: string) => {
-        // console.log("Thinking content:", thinkChunk);
-        setConversationData((prev) => {
-            if (!prev || !prev.msgList) return prev;
-            const updated = [...prev.msgList];
-            const last = updated[updated.length - 1];
+    const appendToBotContent = (chunk: string) => {
+        updateLastBotMessage((msg) => ({
+            ...msg,
+            content: (msg.content || "") + chunk,
+        }));
+    };
 
-            if (last && last.role === "assistant") {
-                updated[updated.length - 1] = {
-                    ...last,
-                    thinkContent: thinkChunk,
-                };
-                return { ...prev, msgList: updated };
-            }
-            return prev;
-        });
-    }
+    const updateBotThinkingContent = (thinkChunk: string) => {
+        updateLastBotMessage((msg) => ({
+            ...msg,
+            thinkContent: thinkChunk,
+        }));
+    };
 
     const createConvHandler = (conv: ConversationItem) => {
-        setConversationData({ ...conv, msgList: [] });
+        setConversation({ ...conv, msgList: [] });
         setUserData((prev) => {
             if (!prev) return prev;
             return {
@@ -115,11 +100,9 @@ const ChatPage: React.FC = () => {
         });
     };
 
-    const updateConvTitle = (token: string, convId: string | null) => {
-        if (!convId) return;
-
-        setConversationData((prev) => {
-            if (!prev) return prev;
+    const appendToConversationTitle = (convId: string, token: string) => {
+        setConversation((prev) => {
+            if (!prev || prev.convId !== convId) return prev;
             return {
                 ...prev,
                 convName: (prev.convName || "") + token,
@@ -139,9 +122,16 @@ const ChatPage: React.FC = () => {
         });
     };
 
+
+    const handleTitleTokenStream = (token: string, convId: string | null) => {
+        if (!convId) return;
+        appendToConversationTitle(convId, token);
+    };
+
+
     const updateTokenCount = (promptToken: number, responseToken: number) => {
-        // Should update the last two message in conversationData
-        setConversationData((prev) => {
+        // Should update the last two message in conversation
+        setConversation((prev) => {
             if (!prev || !prev.msgList) return prev;
             const updated = [...prev.msgList];
             const userMsg = updated[updated.length - 2];
@@ -164,79 +154,90 @@ const ChatPage: React.FC = () => {
         });
     }
 
-    const handleSendMessage = async (message: string) => {
-        console.log("ConversationData :", ConversationData)
-        let convId = ConversationData?.convId;
+    const ensureConversationReady = async (message: string): Promise<string | null> => {
+        if (conversation?.convId) return conversation.convId;
 
-        if (!convId) {
-            convId = await createConversation(message, modelName, createConvHandler, updateConvTitle);
-            console.log("New conversation created with ID:", convId);
-            // Timeout to ensure the generation of the message as started :
-            setTimeout(() => {
-                setModalOpen(false);
-            }, 3000);
-            if (!convId) return;
-        }
-        await sendMessage(convId, message, modelName, appendMessage, updateAssistantReply, updateTokenCount, onThink);
+        const convId = await createConversation(message, selectedModel, createConvHandler, handleTitleTokenStream);
+        console.log("New conversation created with ID:", convId);
+
+        setTimeout(() => setModalOpen(false), 3000);
+        return convId;
     };
 
-    const handleEditMessage = async (newContent: string | null, msgId: string | null) => {
-        if (!newContent || newContent.trim() === "") {
+    const sendMessageToAPI = async (convId: string, message: string) => {
+        await sendMessage(convId, message, selectedModel, appendUserAndBotMessages, appendToBotContent, updateTokenCount, updateBotThinkingContent);
+    };
+
+
+
+    const handleUserSubmit = async (message: string) => {
+        const convId = await ensureConversationReady(message);
+        if (!convId) return;
+        await sendMessageToAPI(convId, message);
+    };
+
+    const keepMessagesUpTo = (msgId: string) => {
+        setConversation((prev) => {
+            if (!prev || !prev.msgList) return prev;
+            const msgIndex = prev.msgList.findIndex(msg => msg.msgId === msgId);
+            if (msgIndex === -1) return prev;
+
+            return {
+                ...prev,
+                msgList: prev.msgList.slice(0, msgIndex + 1),
+            };
+        });
+    };
+
+    const handleMessageEdit = async (newContent: string | null, msgId: string | null) => {
+        const content = newContent?.trim();
+        if (!content) {
             console.warn("Empty message, not sending.");
             return;
         }
+
         if (!msgId) {
-            handleSendMessage(newContent);
+            await handleUserSubmit(content);
             return;
         }
-        if (!ConversationData || !ConversationData.convId) return;
 
-        // We need to remove the message after the one we are editing from the conversation data
-        setConversationData((prev) => {
-            if (!prev || !prev.msgList) return prev;
-            // Get index of the current message
-            const msgIndex = prev.msgList.findIndex(msg => msg.msgId === msgId);
-            if (msgIndex === -1) return prev;
-            // Filter out the message with index > msgIndex
-            const updatedMsgList = prev.msgList.filter((_, index) => index <= msgIndex);
-            return {
-                ...prev,
-                msgList: updatedMsgList,
-            };
-        });
-        const convId = ConversationData.convId;
-        await updateMessage(convId, msgId, newContent, modelName, appendAnswer, updateAssistantReply, updateTokenCount, onThink);
-    }
+        const convId = conversation?.convId;
+        if (!convId) return;
+
+        keepMessagesUpTo(msgId);
+        await updateMessage(convId, msgId, content, selectedModel, appendBotMessage, appendToBotContent, updateTokenCount, updateBotThinkingContent);
+    };
+
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
             <div className="relative h-16 flex justify-center items-center">
                 <h1 className="text-3xl font-medium text-white font-playfair">
-                    {ConversationData ? stripThinkTags(ConversationData.convName || "") : "Hello, ask me anything!"}
+                    {conversation ? stripThinkTags(conversation.convName || "") : "Hello, ask me anything!"}
                 </h1>
-                {ConversationData && (
+                {conversation && (
                     <span className="absolute right-6 top-4 text-sm text-gray-400 font-normal">
                         {
                             // Sum of the tokens of the messages in the conversation
-                            ConversationData.msgList?.reduce((acc, msg) => acc + (msg.token || 0), 0)
+                            conversation.msgList?.reduce((acc, msg) => acc + (msg.token || 0), 0)
                         } tokens used
                     </span>
                 )}
             </div>
-            <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleSendMessage} />
+            <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleUserSubmit} />
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar scroll-smooth">
-                {ConversationData?.msgList?.map((msg) =>
+                {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
-                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={(newContent: string | null) => { handleEditMessage(newContent, msg.msgId) }} />
+                        <UserMessage key={msg.msgId} message={msg.content} token={msg.token} onEdit={(newContent: string | null) => { handleMessageEdit(newContent, msg.msgId) }} />
                     ) : (
-                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} think={msg.thinkContent} onReload={() => { }} />
+                        <BotMessage key={msg.msgId} message={msg.content} token={msg.token} think={msg.thinkContent ?? undefined} onReload={() => { }} />
                     )
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
             <div className="flex items-center justify-between p-4 shadow-custom">
-                <Input onSend={handleSendMessage} />
+                <Input onSend={handleUserSubmit} />
             </div>
         </div>
     );

@@ -9,7 +9,7 @@ interface FloatingMenuProps {
 
 export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { setTask, setModelName } = useConv();
+    const { setTask, setSelectedModel } = useConv();
 
     const items = [
         {
@@ -66,7 +66,7 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
                                 onClick={() => {
                                     setTask(section.task);
                                     console.log("Task set to:", section.task);
-                                    setModelName(model);
+                                    setSelectedModel(model);
                                     console.log("Model set to:", model);
                                     onSelect(model);
                                     onClose();
