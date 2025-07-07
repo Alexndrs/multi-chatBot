@@ -1,11 +1,11 @@
 import { chatWithPython } from '../services/python_api.js';
 import { chatWithGemini, chatWithGroq } from '../services/free_api.js';
 import { applySlidingWindow, getMaxTokenInput } from '../services/utils.js';
-import * as db from '../db/interface.js';
+import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getAllConvIdsAndNameAndDate(userId) {
-    const convIdsAndName = db.getUserConversationsIdAndNameAndDate(userId);
+    const convIdsAndName = await db.getUserConversationsIdAndNameAndDate(userId);
     if (!convIdsAndName) {
         throw new Error('No conversations found');
     }
@@ -45,9 +45,9 @@ async function generateResponseForMessages({
     userMsg.historyTokens = historyTokens;
 
     // MAJ des tokens et des messages
-    db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
-    db.addMessage(userId, convId, userMsg);
-    db.addMessage(userId, convId, newMsg);
+    await db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
+    await db.addMessage(userId, convId, userMsg);
+    await db.addMessage(userId, convId, newMsg);
 
     return { userMsg, newMsg };
 }
@@ -64,12 +64,9 @@ async function generateResponseForMessages({
  * @returns {Promise<{userMsg, newMsg}>}
  */
 export async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
-
-    const convName = db.getConversationById(userId, convId).convName;
-    const conv = db.getAllMessages(userId, convId).map(msg => ({
-        role: msg.role,
-        content: msg.content,
-    }));
+    const convData = await db.getConversationById(userId, convId);
+    const convName = convData.convName;
+    let conv = convData.msgList;
 
     const userMsg = {
         msgId: uuidv4(),
@@ -91,11 +88,12 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
         token: 0
     };
 
-    const filteredConv = [...conv, { role: userMsg.role, content: userMsg.content }];
+    const filteredConv = conv.map(msg => ({
+        role: msg.role,
+        content: msg.content
+    }));
     const maxContextTokens = getMaxTokenInput(model_name);
     const trimmedConv = applySlidingWindow(filteredConv, maxContextTokens);
-
-
     return await generateResponseForMessages({
         userId,
         convId,
@@ -118,7 +116,7 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
  * @param {string} newContent 
  */
 export async function editMessage(userId, convId, msgId, newContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
-    const conv = db.getConversationById(userId, convId);
+    const conv = await db.getConversationById(userId, convId);
     if (!conv) throw new Error('Conversation not found');
 
     const convName = conv.convName;
@@ -127,7 +125,7 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
 
     // Suppression des anciens messages à partir du msg édité
     const index = conv.msgList.indexOf(msg);
-    conv.msgList.slice(index).forEach(m => db.deleteMessage(userId, convId, m.msgId));
+    conv.msgList.slice(index).forEach(async m => await db.deleteMessage(userId, convId, m.msgId));
     conv.msgList = conv.msgList.slice(0, index);
 
     const userMsg = {
@@ -202,7 +200,7 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
 
     newConv.convName = generatedText;
     newConv.token = currentMessageTokens + historyTokens + completionTokens;
-    db.addConversation(userId, newConv);
+    await db.addConversation(userId, newConv);
     return { conv: newConv };
 }
 
@@ -212,8 +210,8 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
  * @param {string} convId 
  * @param {string} newName 
  */
-export function changeConversationName(userId, convId, newName) {
-    db.changeConversationName(userId, convId, newName)
+export async function changeConversationName(userId, convId, newName) {
+    await db.changeConversationName(userId, convId, newName)
 }
 
 /**
@@ -221,17 +219,17 @@ export function changeConversationName(userId, convId, newName) {
  * @param {string} userId 
  * @param {string} convId 
  */
-export function deleteConversation(userId, convId) {
+export async function deleteConversation(userId, convId) {
     try {
-        db.deleteConversation(userId, convId);
+        await db.deleteConversation(userId, convId);
     }
     catch (err) {
         throw new Error('Conversation not found');
     }
 }
 
-export function getConversationById(userId, convId) {
-    const conv = db.getConversationById(userId, convId);
+export async function getConversationById(userId, convId) {
+    const conv = await db.getConversationById(userId, convId);
     if (!conv) {
         throw new Error('Conversation not found');
     }

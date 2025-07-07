@@ -1,4 +1,4 @@
-import * as db from '../db/interface.js';
+import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -12,13 +12,15 @@ const JWT_SECRET = process.env.JWT_SECRET
  * @param {string} mail 
  * @param {string} name 
  * @param {string} hpass 
- * @returns {import('../db/interface').userObject}
+ * @returns {Promise<{import('../db/interface').userObject}>}
  */
 export async function createUser(mail, name, pass) {
     // Verify if user already exists
-    if (db.getUserByMail(mail)) {
+    const existingUser = await db.getUserByMail(mail); // <-- important
+    if (existingUser) {
         throw new Error('Email already exists');
     }
+
 
     // Create a new user
     const newUser = {
@@ -33,7 +35,7 @@ export async function createUser(mail, name, pass) {
     };
 
 
-    db.addUser(newUser);
+    await db.addUser(newUser);
     const token = jwt.sign({ userId: newUser.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
     return { userId: newUser.userId, token };
 }
@@ -46,7 +48,7 @@ export async function createUser(mail, name, pass) {
  */
 export async function loginUser(mail, pass) {
     // Verify if user exists
-    const user = db.getUserByMail(mail);
+    const user = await db.getUserByMail(mail);
     if (!user) {
         throw new Error('User not found');
     }
@@ -63,7 +65,7 @@ export async function loginUser(mail, pass) {
 }
 
 export async function getUserInfo(userId) {
-    const userInfo = db.getUserInfo(userId);
+    const userInfo = await db.getUserInfo(userId);
     if (!userInfo) {
         throw new Error('User not found');
     }

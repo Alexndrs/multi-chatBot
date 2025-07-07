@@ -1,9 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+
 import messageRouter from './routes/message.js';
 import authRouter from './routes/auth.js';
 import conversationRouter from './routes/conversation.js';
+import { initDB } from './db/sqlite_interface.js';
+import { createUser } from './core/auth.js';
+
+
 
 const app = express();
 app.use(cors());
@@ -14,4 +19,17 @@ app.use('/auth', authRouter);
 app.use('/conversation', conversationRouter);
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+async function startServer() {
+    try {
+        await initDB();
+        // createUser("alex@example.com", "Alex", "password123");
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (err) {
+        console.error("Erreur lors de l'initialisation de la base de données :", err);
+        process.exit(1);
+    }
+}
+
+startServer();

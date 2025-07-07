@@ -9,7 +9,6 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!userId || !convId || !messageContent || !model_name) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
-
     try {
 
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');

@@ -26,6 +26,8 @@
     "llama-tokenizer-js": "^1.2.2",
     "mongoose": "^8.14.2",
     "openai": "^5.8.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
     "tokenizers": "^0.13.3",
     "uuid": "^11.1.0"
   }

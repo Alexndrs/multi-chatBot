@@ -17,20 +17,25 @@ const AppContent = () => {
                 await loginUser('alex@example.com', 'password123');
             }
 
+            try {
+                const userInfo = await getUserInfo();
+                const conversations = await getUserConversations();
 
-            const userInfo = await getUserInfo();
-            const conversations = await getUserConversations();
+                const newUser = {
+                    token: localStorage.getItem('token'),
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    conversations,
+                }
 
-            const newUser = {
-                token: localStorage.getItem('token'),
-                name: userInfo.name,
-                email: userInfo.email,
-                conversations,
+                setUserData(newUser);
+
+                console.log('✅ Contexte utilisateur initialisé : ', newUser);
+            } catch (error) {
+                // Remove token we need to login again :
+                console.error('❌ Erreur lors de l\'initialisation du contexte utilisateur : ', error);
+                localStorage.removeItem('token');
             }
-
-            setUserData(newUser);
-
-            console.log('✅ Contexte utilisateur initialisé : ', newUser);
         };
 
         init().catch(console.error);
