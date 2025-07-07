@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { createUser, loginUser, getUserInfo, getUserConversations } from '../api';
 import { useUser } from '../hooks/useUser';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import LogoIcon from '../components/icons/LogoIcon';
+import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
 
 const LoginPage = () => {
     const { setUserData } = useUser();
@@ -39,8 +40,42 @@ const LoginPage = () => {
         }
     };
 
+    const shuffleArray = <T,>(array: T[]): T[] => {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    };
+
+    const shuffledArrays = useMemo(() => {
+        const logos = [
+            "/api_logo/chatGPT.png",
+            "/api_logo/claude.png",
+            "/api_logo/llama.png",
+            "/api_logo/qwen.png",
+            "/api_logo/gemma.png",
+            "/api_logo/gemini.png",
+        ];
+        return Array.from({ length: 5 }, () => shuffleArray(logos));
+    }, []);
+
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a] text-white overflow-hidden">
+
+
+            <div className='absolute w-full flex flex-col gap-10 opacity-5'>
+                {shuffledArrays.map((shuffledLogos, index) => (
+                    <div className='relative w-full h-30'>
+                        <InfiniteSlider key={index} gap={24} reverse={index % 2 === 0}>
+                            {shuffledLogos.map((logo, logoIndex) => (
+                                <img key={`slider-${logoIndex}`} src={logo} className="h-30 w-auto" />
+                            ))}
+                        </InfiniteSlider>
+                    </div>
+                ))}
+            </div>
 
             <AnimatePresence mode="wait">
                 <motion.form
@@ -50,16 +85,16 @@ const LoginPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="p-0 rounded-lg shadow-xl bg-gray-700/20 border-t-2 border-gray-500/20 space-y-4 w-80 relative z-10 backdrop-blur-md"
+                    className="p-0 rounded-lg shadow-xl bg-blue-300/5 border-t-2 border-gray-500/20 space-y-4 w-[90%] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg relative z-10 backdrop-blur-md"
                 >
-                    <div className='px-8 py-5 mb-0 border-b-3 border-black/20 flex items-center'>
+                    <div className='px-12 py-5 mb-0 border-b-3 border-black/20 flex items-center'>
                         <LogoIcon className="w-15 h-15 mb-0 text-lime-400" />
                         <h2 className="text-xl font-bold mb-0 text-center">
                             {isRegister ? "Let's get you started" : "Welcome back"}
                         </h2>
                     </div>
 
-                    <div className='px-8 py-5 flex flex-col mb-0 bt-0 border-b-3 border-b-black/20 border-t-2 border-t-white/7'>
+                    <div className='px-12 py-5 flex flex-col mb-0 bt-0 border-b-3 border-b-black/20 border-t-2 border-t-white/7'>
                         {isRegister && (
                             <div>
                                 <label className="text-sm">What should we call you?</label>
@@ -85,7 +120,9 @@ const LoginPage = () => {
                         </div>
 
                         <div className="relative">
-                            <label className="text-sm">Pick a strong password</label>
+                            <label className="text-sm">
+                                {isRegister ? "Pick a strong password" : "Your password"}
+                            </label>
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
@@ -112,7 +149,7 @@ const LoginPage = () => {
 
                     </div>
 
-                    <div className='px-8 py-5 border-t-2 border-white/7'>
+                    <div className='px-12 py-5 border-t-2 border-white/7'>
                         <p className="text-sm text-gray-400 text-center">
                             {isRegister ? 'Already onboard?' : "New here?"}{' '}
                             <button

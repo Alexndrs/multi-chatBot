@@ -2,7 +2,6 @@ import { UserProvider } from './contexts/userProvider';
 import { ConvProvider } from './contexts/convProvider';
 import AppWrapper from './AppWrapper';
 
-
 function App() {
 
   return (

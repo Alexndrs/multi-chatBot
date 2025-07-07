@@ -2,10 +2,31 @@ import Button from "../components/button";
 import TextArea from "../components/textArea";
 import { EditableMessage } from "../components/editableMessage";
 
+import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
+
+
+export function InfiniteSliderBasic() {
+    const logos = [
+        "/api_logo/chatGPT.png",
+        "/api_logo/claude.png",
+        "/api_logo/llama.png",
+        "/api_logo/qwen.png",
+        "/api_logo/gemma.png",
+        "/api_logo/gemini.png",
+    ]
+
+    return (
+        <InfiniteSlider gap={24} reverse>
+            {logos.map((logo, index) => (
+                <img key={`slider-${index}`} src={logo} className="h-[120px] w-auto" />
+            ))}
+        </InfiniteSlider>
+    );
+}
+
 
 
 const UIPage: React.FC = () => {
-
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-tr from-[#12141b] to-[#191c2a]">
@@ -34,6 +55,9 @@ const UIPage: React.FC = () => {
                         }}
                     />
                 </div>
+            </div>
+            <div className="w-full border-2 border-red-400">
+                <InfiniteSliderBasic />
             </div>
         </div>
     );

@@ -27,3 +27,7 @@ export function splitThinkContent(message: string | null): { content: string | n
         thinkContent: thinkContent.length > 0 ? thinkContent : null
     };
 }
+
+export function cn(...classes: (string | boolean | null | undefined)[]) {
+    return classes.filter(Boolean).join(' ');
+}
