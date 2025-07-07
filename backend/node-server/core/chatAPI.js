@@ -67,7 +67,6 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
     const convData = await db.getConversationById(userId, convId);
     const convName = convData.convName;
     let conv = convData.msgList;
-
     const userMsg = {
         msgId: uuidv4(),
         role: 'user',
@@ -87,11 +86,14 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
         convId,
         token: 0
     };
-
     const filteredConv = conv.map(msg => ({
         role: msg.role,
         content: msg.content
     }));
+    filteredConv.push({
+        role: userMsg.role,
+        content: userMsg.content
+    });
     const maxContextTokens = getMaxTokenInput(model_name);
     const trimmedConv = applySlidingWindow(filteredConv, maxContextTokens);
     return await generateResponseForMessages({

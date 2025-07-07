@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleUser, faSquarePlus, faNoteSticky } from "@fortawesome/free-regular-svg-icons";
+import { faCircleUser, faSquarePlus } from "@fortawesome/free-regular-svg-icons";
 import LogoIcon from "../icons/LogoIcon";
 import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
@@ -114,7 +114,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
 
     return (
         <div
-            className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-t from-[#12141b] to-[#191c2a] border-r-2 border-gray-700 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
+            className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-t from-[#12141b] to-[#191c2a] border-r-2 border-gray-700/40 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
                 }`}
         >
             <button
@@ -128,7 +128,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
                 <div className="mb-2 px-4">
                     <LogoIcon className="w-15 h-15 mb-8 text-lime-300" />
                     <SideBarItem name="New conversation" onClick={onCreateConv} icon={<FontAwesomeIcon icon={faSquarePlus} />} />
-                    <SideBarItem name="Notes" onClick={() => { }} icon={<FontAwesomeIcon icon={faNoteSticky} />} />
+                    {/* <SideBarItem name="Notes" onClick={() => { }} icon={<FontAwesomeIcon icon={faNoteSticky} />} /> */}
                 </div>
 
 
@@ -157,6 +157,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
                     <SideBarItem name={UserData && UserData.name ? UserData.name : 'No name found'} onClick={() => { }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
                 </div>
             </div>
+            <div className="absolute top-0 right-0 h-full w-[3px] bg-black/20" />
         </div>
     );
 }

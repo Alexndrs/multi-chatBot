@@ -238,7 +238,7 @@ const ChatPage: React.FC = () => {
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
-            <div className="relative h-16 flex justify-center items-center">
+            <div className="relative pt-5 h-16 flex justify-center items-center">
                 <h1 className="text-3xl font-medium text-white font-playfair">
                     {conversation ? stripThinkTags(conversation.convName || "") : "Hello, ask me anything!"}
                 </h1>
