@@ -101,9 +101,9 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                 </div>
 
 
-                <div className="rounded-lg bg-[#171c23] shadow-lg p-6 z-10">
+                <div className="rounded-lg bg-[#171c23] shadow-lg py-6 z-10">
                     <div className="flex flex-col ml-auto mr-auto">
-                        <div className="flex gap-2 ml-auto mr-auto sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2">
+                        <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
 
                             <div ref={taskButtonRef}>
                                 <ButtonIcon
@@ -142,7 +142,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                                 type={isGlowingLoop ? "deactivated" : "primary"} />
                         </div>
                         {/* Infos */}
-                        <div className="flex flex-wrap justify-between mt-2 pt-5 border-t-1 border-[#ffffff16]">
+                        <div className="flex flex-wrap px-6 justify-between mt-0 pt-5 border-t-2 border-white/7">
                             <div className="flex items-center gap-2 flex-wrap flex-1">
                                 <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
                                 <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{selectedModel}</div>
@@ -154,13 +154,13 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                                 >
                                     Give me a recipe for 20 cookies</div>
                                 <div
-                                    className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
-                                    onClick={() => { sendMessage("Tell me the taylor formula with integral remainder") }}
-                                >Tell me the taylor formula with integral rest</div>
-                                <div
-                                    className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
+                                    className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default text-ellipsis"
                                     onClick={() => { sendMessage("what's DP algorithm") }}
                                 >what's DP algorithm</div>
+                                <div
+                                    className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
+                                    onClick={() => { sendMessage("Tell me the taylor formula") }}
+                                >Tell me the taylor formula</div>
                             </div>
                         </div>
                     </div>

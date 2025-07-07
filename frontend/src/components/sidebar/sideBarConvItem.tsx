@@ -13,15 +13,15 @@ export default function SideBarConvItem({
     onDelete: (id: string) => void;
 }) {
     return (
-        <div className="flex py-1.5 px-2 hover:bg-gray-800 rounded-md cursor-pointer transition duration-100 ease-in-out group items-center" key={id} id={id} onClick={() => onClick(id)} >
+        <div className="flex py-2 px-2 hover:bg-white/2 border-t-transparent border-t-2 hover:border-t-white/5 hover:shadow-md rounded-md cursor-pointer transition duration-100 ease-in-out group items-center text-gray-400 hover:text-gray-200" key={id} id={id} onClick={() => onClick(id)} >
             <div
-                className="text-gray-400 whitespace-nowrap overflow-hidden text-ellipsis flex-1"
+                className="whitespace-nowrap overflow-hidden text-ellipsis flex-1"
                 title={name}
             >
                 {name}
             </div>
             <button
-                className="ml-2 text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-100 z-10"
+                className="ml-2 text-gray-400/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-100 z-10"
                 onClick={e => {
                     e.stopPropagation();
                     onDelete(id);

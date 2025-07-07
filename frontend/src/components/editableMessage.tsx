@@ -27,7 +27,7 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
     }, [isEditing]);
 
     return (
-        <div className="flex flex-col w-fit min-w-[25vw] max-w-[50vw] bg-gray-800 border-2 border-gray-700 p-4 rounded-lg">
+        <div className="flex flex-col w-fit min-w-[25vw] max-w-[50vw] bg-slate-300/3 shadow-lg border-t-2 border-white/7 p-4 rounded-lg">
             {isEditing ? (
                 <div className="flex flex-col w-auto">
                     <textarea
