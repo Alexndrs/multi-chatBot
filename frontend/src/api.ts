@@ -77,7 +77,6 @@ async function streamJson<T, R = void>(
                         break;
                     case 'tokenUsage':
                         handlers.onUsage?.({ currentMessageTokens: data.currentMessageTokens, historyTokens: data.historyTokens, responseToken: data.responseToken });
-                        console.log('Token usage:', data);
                         break;
                 }
             } catch { /*ignore*/ }

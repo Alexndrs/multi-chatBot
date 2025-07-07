@@ -31,7 +31,6 @@ const ChatPage: React.FC = () => {
         };
     }, [modalOpen, setModalOpen]);
 
-
     const appendToConversation = (...messages: Message[]) => {
         setConversation((prev) => {
             if (prev && prev.convId === messages[0].convId) {
@@ -52,14 +51,12 @@ const ChatPage: React.FC = () => {
     };
 
     const appendUserAndBotMessages = (userMsg: Message, botMsg: Message) => {
-        console.log("Appending messages:", userMsg, botMsg);
         appendToConversation(userMsg, botMsg);
     };
 
     const appendBotMessage = (ansMessage: Message) => {
         appendToConversation(ansMessage);
     };
-
 
     const updateLastBotMessage = (updater: (msg: Message) => Message) => {
         setConversation((prev) => {
@@ -122,12 +119,10 @@ const ChatPage: React.FC = () => {
         });
     };
 
-
     const handleTitleTokenStream = (token: string, convId: string | null) => {
         if (!convId) return;
         appendToConversationTitle(convId, token);
     };
-
 
     const updateTokenCount = (currentMessageTokens: number, historyTokens: number, responseToken: number) => {
         // Should update the last two message in conversation
@@ -165,8 +160,6 @@ const ChatPage: React.FC = () => {
     const sendMessageToAPI = async (convId: string, message: string) => {
         await sendMessage(convId, message, selectedModel, appendUserAndBotMessages, appendToBotContent, updateTokenCount, updateBotThinkingContent);
     };
-
-
 
     const handleUserSubmit = async (message: string) => {
         const convId = await ensureConversationReady(message);
@@ -242,10 +235,6 @@ const ChatPage: React.FC = () => {
             updateBotThinkingContent
         );
     };
-
-
-
-
 
     return (
         <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
