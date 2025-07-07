@@ -9,8 +9,10 @@ export interface UserData {
 }
 
 export interface UserContextType {
-    UserData: UserData | null;
+    userData: UserData | null;
     setUserData: React.Dispatch<React.SetStateAction<UserData | null>>;
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 

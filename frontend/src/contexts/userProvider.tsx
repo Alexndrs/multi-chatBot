@@ -8,9 +8,10 @@ interface Props {
 
 export const UserProvider: React.FC<Props> = ({ children }) => {
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [loading, setLoading] = useState(true);
 
     return (
-        <UserContext.Provider value={{ UserData: userData, setUserData }}>
+        <UserContext.Provider value={{ userData, setUserData, loading, setLoading }}>
             {children}
         </UserContext.Provider>
     );

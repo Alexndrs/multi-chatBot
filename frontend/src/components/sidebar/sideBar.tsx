@@ -6,7 +6,7 @@ import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
 import { useUser } from '../../hooks/useUser';
 import { useConv } from "../../hooks/useConv";
-import { getConversation, deleteConversation } from "../../api";
+import { getConversation, deleteConversation, logoutUser } from "../../api";
 import { stripThinkTags } from "../../utils";
 import { splitThinkContent } from "../../utils";
 import type { Message } from "../../contexts/convContext";
@@ -20,7 +20,7 @@ export type ConversationItem = {
 export default function SideBar({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 
-    const { UserData, setUserData } = useUser();
+    const { userData, setUserData } = useUser();
     const { setConversation, setModalOpen } = useConv();
 
 
@@ -37,8 +37,8 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             Last7: [] as ConversationItem[],
             Preceding: [] as ConversationItem[],
         };
-        if (UserData?.conversations) {
-            for (const conv of UserData.conversations) {
+        if (userData?.conversations) {
+            for (const conv of userData.conversations) {
                 const convDate = new Date(conv.date);
                 const convStr = convDate.toDateString();
                 if (convStr === todayStr) groups.Today.push(conv);
@@ -51,7 +51,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         );
         return groups;
-    }, [UserData?.conversations]);
+    }, [userData?.conversations]);
 
 
     // Handing the escape key to close the sidebar
@@ -154,10 +154,10 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
                         <FontAwesomeIcon icon={faCircleUser} className="text-2xl" />
                         <span>{username}</span>
                     </div> */}
-                    <SideBarItem name={UserData && UserData.name ? UserData.name : 'No name found'} onClick={() => { }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
+                    <SideBarItem name={userData && userData.name ? userData.name : 'No name found'} onClick={() => { logoutUser(); }} icon={<FontAwesomeIcon icon={faCircleUser} />} />
                 </div>
             </div>
-            <div className="absolute top-0 right-0 h-full w-[3px] bg-black/20" />
+            <div className="absolute top-0 right-0 h-full w-[2px] bg-black/20" />
         </div>
     );
 }

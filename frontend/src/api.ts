@@ -36,6 +36,10 @@ export const getToken = () => {
     return token;
 }
 
+export const removeToken = () => {
+    localStorage.removeItem('token');
+}
+
 async function jsonRequest<T>(input: RequestInfo, init: RequestInit): Promise<T> {
     const res = await fetch(input, init);
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
@@ -139,6 +143,11 @@ export const loginUser = async (mail: string, password: string) => {
         body: JSON.stringify({ mail, password })
     });
     localStorage.setItem('token', json.token);
+}
+
+export const logoutUser = () => {
+    removeToken();
+    window.location.reload();
 }
 
 export const getUserInfo = async (): Promise<UserData> => {
