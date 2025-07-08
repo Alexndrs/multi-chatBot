@@ -37,7 +37,7 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
     return (
         <div className="flex flex-col ml-auto mr-auto">
 
-            <div className="rounded-lg bg-slate-300/3 shadow-lg py-6 z-10 border-t-2 border-white/7">
+            <div className="rounded-lg bg-slate-300/3 shadow-lg py-4 z-10 border-t-2 border-white/7">
                 <div className="flex flex-col ml-auto mr-auto">
                     <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
                         <div className="relative">

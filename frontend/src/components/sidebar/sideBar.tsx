@@ -11,18 +11,34 @@ import { stripThinkTags } from "../../utils";
 import { splitThinkContent } from "../../utils";
 import type { Message } from "../../contexts/convContext";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 
 const FloatingUserMenu = forwardRef<HTMLDivElement, { x: number, y: number, onClose: () => void }>(({ x, y, onClose }, ref) => {
+    const navigate = useNavigate();
+
     return (
         <div
             ref={ref}
             className="absolute bg-blue-300/5 backdrop-blur-md rounded-md shadow-md border-t-2 border-white/5 z-50 w-48 text-sm text-gray-400"
             style={{ top: y, left: x }}
         >
-            <div className="hover:bg-white/2 border-t-2 border-t-transparent border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => { alert("Profile"); onClose(); }}>Profile</div>
-            <div className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => { alert("Paramètres"); onClose(); }}>Paramètres</div>
-            <div className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => { alert("Contact"); onClose(); }}>Contact</div>
-            <div className="hover:bg-red-300/2 hover:border-t-2 border-transparent hover:border-white/5 hover:text-red-400 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => { logoutUser(); onClose(); }}>Logout</div>
+            <div
+                className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
+                    navigate("/settings");
+                    onClose();
+
+                }}>Settings</div>
+            <div
+                className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
+                    navigate("/contact");
+                    onClose();
+                }}>Contact</div>
+            <div
+                className="hover:bg-red-300/2 hover:border-t-2 border-transparent hover:border-white/5 hover:text-red-400 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100"
+                onClick={() => {
+                    logoutUser();
+                    onClose();
+                }}>Logout</div>
         </div>
     );
 });
@@ -35,8 +51,7 @@ export type ConversationItem = {
 };
 
 export default function SideBar({ open, onClose }: { open: boolean; onClose: () => void }) {
-
-
+    const navigate = useNavigate();
     const { userData, setUserData } = useUser();
     const { setConversation, setModalOpen } = useConv();
 
@@ -90,7 +105,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
     const handleUserOpenMenu = () => {
         if (userRef.current) {
             const rect = userRef.current.getBoundingClientRect();
-            const menuHeight = 160;
+            const menuHeight = 130;
             setMenuPosition({
                 x: rect.left,
                 y: rect.top - menuHeight - 8,
@@ -152,6 +167,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             msgList: cleanedMsgList,
         });
 
+
         setModalOpen(false);
     };
     const deleteConv = async (convId: string) => {
@@ -171,8 +187,9 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
 
 
     const onCreateConv = async () => {
-        setConversation(null);
+        navigate("/");
         setModalOpen(true);
+        setConversation(null);
     }
 
 

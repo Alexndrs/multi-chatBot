@@ -8,7 +8,6 @@ import { createPortal } from "react-dom";
 import { useConv } from "../hooks/useConv";
 
 
-
 export default function ModalInput({ open, onClose, onSend }: { open: boolean; onClose: () => void, onSend: (message: string) => void; }) {
     const { task, selectedModel } = useConv();
     const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
@@ -186,28 +185,6 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                 </div>,
                 document.body
             )}
-
-            {/* {openMenu === "upload" && createPortal(
-                <div
-                    style={{
-                        position: 'fixed',
-                        left: menuPosition.x,
-                        top: menuPosition.y,
-                        transform: 'translateY(-100%)',
-                        zIndex: 9999
-                    }}
-                >
-                    <FloatingMenu
-                        items={["Upload image", "Upload document"]}
-                        onSelect={(v) => {
-                            alert(`Selected upload: ${v}`);
-                            setOpenMenu(null);
-                        }}
-                        onClose={() => setOpenMenu(null)}
-                    />
-                </div>,
-                document.body
-            )} */}
         </div>
     );
 }

@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useUser } from './hooks/useUser';
 import { getToken, getUserInfo, getUserConversations, removeToken } from './api';
 import Layout from './components/layout';
-import AppContent from './AppContent';
+import LoadingPage from './pages/loadingPage';
 import LoginPage from './pages/loginPage';
+import AppContent from './AppContent';
 
 const AppWrapper = () => {
     const { userData, setUserData, loading, setLoading } = useUser();
@@ -31,7 +32,7 @@ const AppWrapper = () => {
         init();
     }, [setUserData, setLoading]);
 
-    if (loading) return null;
+    if (loading) return <LoadingPage />;
 
     if (!userData) return <LoginPage />;
 

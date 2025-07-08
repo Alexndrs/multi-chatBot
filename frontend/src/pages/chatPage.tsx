@@ -254,6 +254,7 @@ const ChatPage: React.FC = () => {
                 )}
             </div>
             <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleUserSubmit} />
+
             <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar">
                 {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
