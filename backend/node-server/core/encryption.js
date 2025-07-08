@@ -2,7 +2,7 @@ import crypto from "crypto";
 import 'dotenv/config';
 const mySecret = process.env.ENCRYPT_SECRET;
 
-import { getUserKeys, getUserKeysForApi, addUserKey } from "../db/sqlite_interface.js";
+import { getUserKeys, getUserKeysForApi, addUserKey, deleteKey } from "../db/sqlite_interface.js";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
@@ -40,6 +40,10 @@ export async function addKey(key, api_name, userId) {
 
     const encryptedKey = encrypt(key, mySecret);
     await addUserKey(userId, encryptedKey, api_name);
+}
+
+export async function deleteKeyForApi(userId, api_name) {
+    await deleteKey(userId, api_name);
 }
 
 export async function getKeys(userId) {

@@ -290,7 +290,16 @@ export const addApiKey = async (api: string, key: string) => {
     })
 }
 
-type ApiKey = { keyId: string; key: string; api: string; date: string };
+// Delete an API key for a given api name
+export const deleteApiKey = async (api: string) => {
+    await jsonRequest<void>(
+        `${serverUrl}/apiKeys/${api}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+    })
+}
+
+export type ApiKey = { keyId: string; key: string; api: string; date: string };
 
 export const getApiKeys = async () => {
     const json = await jsonRequest<ApiKey[]>(

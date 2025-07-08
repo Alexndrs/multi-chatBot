@@ -30,6 +30,22 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
+router.delete('/:api_name', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const api_name = req.params.api_name;
+    if (!userId || !api_name) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await encryption.deleteKey(userId, api_name);
+        res.status(200).json({ message: 'API key deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting key:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.get('/:api_name', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const api_name = req.params.api_name;

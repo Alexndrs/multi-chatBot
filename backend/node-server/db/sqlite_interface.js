@@ -204,6 +204,12 @@ export async function addUserKey(userId, encrypted_key, api_name) {
     );
 }
 
+export async function deleteKey(userId, api_name) {
+    const db = await getDB();
+    const res = await db.run(`DELETE FROM keys WHERE userId = ? AND api = ?`, userId, api_name);
+    if (res.changes === 0) throw new Error('Clé non trouvée');
+}
+
 export async function updateUser(userId, updatedInfo) {
     const db = await getDB();
     const fields = [];
