@@ -4,20 +4,6 @@ import type { UserData } from "./contexts/userContext";
 // const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:8000';
 const serverUrl = 'http://localhost:8000';
 
-
-// The following test user is used for testing purposes only
-//  {
-//       "userId": "e940b7b9-88f0-4355-8a20-3bc4994ae099",
-//       "userInfo": {
-//         "name": "Alex",
-//         "email": "alex@example.com",
-//         "password": "$2b$10$Z7Rd6jxAmaejNHdZ.sIXKeQ8bfB67cofkjMwZKQTy2E0gUXt3AcKO", (not hashed = password123)
-//         "preferences": {}
-//       },
-//      "conversations": [...]
-// }
-
-
 export const getToken = () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -253,7 +239,6 @@ export const createConversation = async (
     return containerData.convId;
 }
 
-
 export const sendMessage = (
     convId: string,
     msg: string,
@@ -294,4 +279,22 @@ export const updateMessage = (
         },
         'PUT'
     );
+}
+
+export const addApiKey = async (api: string, key: string) => {
+    await jsonRequest<void>(
+        `${serverUrl}/apiKeys`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api, key })
+    })
+}
+
+type ApiKey = { keyId: string; key: string; api: string; date: string };
+
+export const getApiKeys = async () => {
+    const json = await jsonRequest<ApiKey[]>(
+        `${serverUrl}/apiKeys`, { headers: { 'Authorization': `Bearer ${getToken()}` } }
+    );
+    return json;
 }

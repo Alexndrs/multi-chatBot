@@ -13,7 +13,7 @@ export default function SideBarConvItem({
     onDelete: (id: string) => void;
 }) {
     return (
-        <div className="flex py-2 px-2 hover:bg-white/2 border-t-transparent border-t-2 hover:border-t-white/5 hover:shadow-md rounded-md cursor-pointer transition duration-100 ease-in-out group items-center text-gray-400 hover:text-gray-200" key={id} id={id} onClick={() => onClick(id)} >
+        <div className="flex py-2 px-2 hover:bg-white/5 border-t-transparent border-t-2 hover:border-t-white/5 hover:shadow-md rounded-md cursor-pointer transition duration-100 ease-in-out group items-center text-gray-400 hover:text-gray-200" key={id} id={id} onClick={() => onClick(id)} >
             <div
                 className="whitespace-nowrap overflow-hidden text-ellipsis flex-1"
                 title={name}

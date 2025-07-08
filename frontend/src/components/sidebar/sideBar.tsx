@@ -166,7 +166,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             ...convData,
             msgList: cleanedMsgList,
         });
-
+        navigate("/");
 
         setModalOpen(false);
     };

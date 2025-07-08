@@ -46,6 +46,14 @@ export async function initDB() {
             historyTokens INTEGER,
             FOREIGN KEY (convId) REFERENCES conversations(convId)
         );
+
+        CREATE TABLE IF NOT EXISTS keys (
+            keyId TEXT PRIMARY KEY,
+            userId TEXT,
+            key TEXT,
+            api TEXT,
+            date TEXT
+        );
     `);
 
     // Cleaning the database (conv with no user, messages with no conv)
@@ -57,6 +65,12 @@ export async function initDB() {
     await db.run(`
         DELETE FROM messages
         WHERE convId NOT IN (SELECT convId FROM conversations)
+    `);
+
+    // Removing the API key that don't have a user
+    await db.run(`
+        DELETE FROM keys
+        WHERE userId NOT IN (SELECT userId FROM users)
     `);
 
 }
@@ -127,7 +141,6 @@ export async function getUserByMail(email) {
     };
 }
 
-
 export async function getUserInfo(userId) {
     const db = await getDB();
     const user = await db.get(`SELECT name, email, preferences FROM users WHERE userId = ?`, userId);
@@ -139,6 +152,57 @@ export async function getUserInfo(userId) {
     };
 }
 
+export async function getUserKeys(userId) {
+    const db = await getDB();
+    const keys = await db.all(`SELECT keyId, key, api, date FROM keys WHERE userId = ?`, userId);
+    return keys.map(k => ({
+        keyId: k.keyId,
+        key: k.key,
+        api: k.api,
+        date: k.date
+    }));
+}
+
+export async function getUserKeysForApi(userId, api_name) {
+    const db = await getDB();
+    // The key is supposed to be unique per user and API, so we can use a simple query
+    const key = await db.get(`SELECT keyId, key, date FROM keys WHERE userId = ? AND api = ?`, userId, api_name);
+    if (!key) return undefined;
+    return {
+        keyId: key.keyId,
+        key: key.key,
+        date: key.date
+    };
+}
+
+export async function addUserKey(userId, encrypted_key, api_name) {
+    // Hash the key before storing it
+    const db = await getDB();
+    const keyId = uuidv4();
+    const date = new Date().toISOString();
+
+    // If a key already exists for this user and API, update it
+    const existingKey = await db.get(`SELECT keyId FROM keys WHERE userId = ? AND api = ?`, userId, api_name);
+    if (existingKey) {
+        await db.run(
+            `UPDATE keys SET key = ?, date = ? WHERE userId = ? AND api = ?`,
+            encrypted_key,
+            date,
+            userId,
+            api_name
+        );
+        return;
+    }
+
+    await db.run(
+        `INSERT INTO keys (keyId, userId, key, api, date) VALUES (?, ?, ?, ?, ?)`,
+        keyId,
+        userId,
+        encrypted_key,
+        api_name,
+        date
+    );
+}
 
 export async function updateUser(userId, updatedInfo) {
     const db = await getDB();
