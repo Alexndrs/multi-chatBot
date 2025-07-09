@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { addApiKey } from '../api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { addApiKey, deleteApiKey } from '../api';
 import dayjs from 'dayjs';
 
 interface ApiKeyInputProps {
@@ -58,16 +60,40 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                         type={show ? 'text' : 'password'}
                         value={value}
                         onChange={e => setValue(e.target.value)}
-                        className="w-full bg-slate-200/3 border-t-4 border-black/30 text-white px-4 py-2 pr-10 rounded-lg outline-none"
+                        className="w-full bg-slate-200/3 border-t-4 border-black/30 text-white px-4 py-2 pr-15 rounded-lg outline-none"
                         placeholder="API Key"
                     />
                     <button
                         type="button"
                         onClick={() => setShow(!show)}
-                        className="absolute right-2 top-4 text-gray-400 hover:text-white"
+                        className="absolute right-8 top-4 text-gray-400 hover:text-white transition-all duration-100 z-10 cursor-pointer"
                     >
                         {show ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
+                    {
+                        // Show a delete button only if there's a current key
+                        currentKey && (
+                            <button
+                                type='button'
+                                onClick={
+                                    async (e) => {
+                                        e.preventDefault();
+                                        if (!currentKey) return;
+                                        try {
+                                            await deleteApiKey(apiName);
+                                            setValue('');
+                                            setHasChanged(false);
+                                            onSave?.();
+                                        } catch (err) {
+                                            console.error('Failed to delete API key:', err);
+                                        }
+                                    }
+                                }
+                                className='absolute right-2 top-3.5 text-gray-400 hover:text-red-500 transition-all duration-100 z-10 cursor-pointer'
+                                aria-label="delete API key"
+                            ><FontAwesomeIcon icon={faTrash} size="sm" /></button>
+                        )
+                    }
                 </div>
 
                 {/* Submit button */}

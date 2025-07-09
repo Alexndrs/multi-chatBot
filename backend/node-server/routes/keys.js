@@ -38,7 +38,7 @@ router.delete('/:api_name', authenticateToken, async (req, res) => {
     }
 
     try {
-        await encryption.deleteKey(userId, api_name);
+        await encryption.deleteKeyForApi(userId, api_name);
         res.status(200).json({ message: 'API key deleted successfully' });
     } catch (error) {
         console.error('Error deleting key:', error);
