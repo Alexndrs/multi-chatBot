@@ -32,7 +32,7 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
                 <div className="flex flex-col w-auto">
                     <textarea
                         ref={textareaRef}
-                        className="w-auto p-3 rounded-lg outline-none focus:ring-1 focus:ring-indigo-200 resize-none text-gray-200 min-h-[48px] overflow-auto"
+                        className="w-auto p-3 rounded-lg outline-none focus:none resize-none text-gray-200 min-h-[48px] overflow-auto"
                         value={editedMessage ? editedMessage : ""}
                         onChange={(e) => {
                             setEditedMessage(e.target.value)

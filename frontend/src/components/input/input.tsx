@@ -5,6 +5,7 @@ import { faEllipsisVertical, faArrowUp, faSpinner } from "@fortawesome/free-soli
 import FloatingMenu from "./floatingMenu";
 import { useState } from "react";
 import { useConv } from "../../hooks/useConv";
+import { motion } from "framer-motion";
 
 
 export default function Input({ onSend, }: { onSend: (message: string) => void; }) {
@@ -35,9 +36,14 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
 
 
     return (
-        <div className="flex flex-col ml-auto mr-auto">
+        <motion.div
+            className="flex flex-col ml-auto mr-auto"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+        >
 
-            <div className="rounded-lg bg-slate-300/3 shadow-lg py-4 z-10 border-t-2 border-white/7">
+            <div className="rounded-lg bg-slate-300/3 shadow-lg py-4 z-10 border-t-2 border-white/7 backdrop-blur-2xl">
                 <div className="flex flex-col ml-auto mr-auto">
                     <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
                         <div className="relative">
@@ -87,6 +93,6 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
                     </div>
                 </div>
             </div>
-        </div >
+        </motion.div>
     );
 }

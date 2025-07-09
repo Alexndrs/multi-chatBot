@@ -10,6 +10,7 @@ import type { ConversationItem } from "../components/sidebar/sideBar";
 import ModalInput from "../components/modalInput";
 import { stripThinkTags } from "../utils";
 
+
 const ChatPage: React.FC = () => {
     const { conversation, setConversation, modalOpen, setModalOpen, selectedModel } = useConv();
     const { setUserData } = useUser();
@@ -237,15 +238,16 @@ const ChatPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col overflow-auto h-screen bg-linear-to-t from-[#12141b] to-[#191c2a]">
-            <div className="relative pt-5 h-16 flex justify-center items-center">
+        <div className="relative flex flex-col overflow-hidden h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a]">
+
+            {/* Header */}
+            <div className="relative pt-5 h-16 flex justify-center items-center z-10">
                 <h1 className="text-3xl font-medium text-white font-playfair">
                     {conversation ? stripThinkTags(conversation.convName || "") : "Hello, ask me anything!"}
                 </h1>
                 {conversation && (
                     <span className="absolute right-6 top-4 text-sm text-gray-400 font-normal">
                         {
-                            // Sum of the tokens of the messages in the conversation
                             conversation.msgList?.reduce((acc, msg) => {
                                 return acc + (msg.token + (msg.historyTokens ?? 0))
                             }, 0)
@@ -253,9 +255,12 @@ const ChatPage: React.FC = () => {
                     </span>
                 )}
             </div>
-            <ModalInput open={modalOpen} onClose={() => { setModalOpen(false) }} onSend={handleUserSubmit} />
 
-            <div className="flex flex-col overflow-y-auto p-4 h-full w-full hide-scrollbar">
+            {/* Modal */}
+            {modalOpen && (<ModalInput open={modalOpen} onClose={() => setModalOpen(false)} onSend={handleUserSubmit} />)}
+
+            {/* Scrollable message list */}
+            <div className="flex flex-col overflow-y-auto px-4 pb-[300px] w-full hide-scrollbar">
                 {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
                         <UserMessage
@@ -263,7 +268,8 @@ const ChatPage: React.FC = () => {
                             message={msg.content}
                             token={msg.token}
                             historyTokens={msg.historyTokens}
-                            onEdit={(newContent: string | null) => { handleMessageEdit(newContent, msg.msgId) }} />
+                            onEdit={(newContent: string | null) => handleMessageEdit(newContent, msg.msgId)}
+                        />
                     ) : (
                         <BotMessage
                             key={msg.msgId}
@@ -277,10 +283,12 @@ const ChatPage: React.FC = () => {
                 <div ref={messagesEndRef} />
             </div>
 
-            <div className="flex items-center justify-between p-4 shadow-custom mt-10">
+            {/* Fixed input bar */}
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 p-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent">
                 <Input onSend={handleUserSubmit} />
             </div>
         </div>
+
     );
 };
 

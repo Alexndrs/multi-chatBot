@@ -7,6 +7,8 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useConv } from "../hooks/useConv";
 
+import { motion } from "framer-motion";
+
 
 export default function ModalInput({ open, onClose, onSend }: { open: boolean; onClose: () => void, onSend: (message: string) => void; }) {
     const { task, selectedModel } = useConv();
@@ -70,34 +72,43 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
-            <div className="w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative">
+            <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative"
+            >
                 {isGlowingLoop && (
                     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
                         <div className="absolute w-[200%] h-[200%] bg-white opacity-10 blur-3xl rotate-45 animate-shineLoop" />
                     </div>
                 )}
 
-
-                <div className="absolute top-0 left-0 right-0 h-[2px] z-20 pointer-events-none">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0, duration: 1, ease: "easeIn" }}
+                    className="absolute top-0 left-0 h-[2.5px] right-0 z-20 pointer-events-none"
+                >
                     {/* Couche nette */}
-                    <div className="left-[15%] right-[15%] h-full absolute blur-sm opacity-90 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-22" />
+                    <div className="left-[15%] right-[15%] h-full absolute blur-sm opacity-90 gradientMove z-22" />
 
-                    <div className="left-[12%] right-[12%] h-full absolute blur-md opacity-90 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-22" />
+                    <div className="left-[12%] right-[12%] h-full absolute blur-md opacity-90 gradientMove z-22" />
 
-                    <div className="left-[8%] right-[8%] h-full absolute blur-lg opacity-90 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-21" />
+                    <div className="left-[8%] right-[8%] h-full absolute blur-lg opacity-90 gradientMove z-21" />
 
                     {/* Couche halo diffus */}
-                    <div className="left-[4%] right-[4%] h-full absolute blur-xl opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
+                    <div className="left-[4%] right-[4%] h-full absolute blur-xl opacity-40 gradientMove z-20" />
 
-                    <div className="left-[1%] right-[1%] absolute blur-2xl opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-3xl opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[50px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[60px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[70px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[80px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[90px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                    <div className="w-full h-full absolute blur-[100px] opacity-40 bg-[length:300%] bg-[linear-gradient(to_right,_#00f0ff,_#00ff6e,_#ffff00,_#ff9900,_#ff00e1,_#7200ff,_#00f0ff)] z-20" />
-                </div>
+                    <div className="left-[1%] right-[1%] absolute blur-2xl opacity-40 gradientMove z-20 gradientMove" />
+                    <div className="w-full h-full absolute blur-3xl opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[50px] opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[60px] opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[70px] opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[80px] opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[90px] opacity-40 gradientMove z-20" />
+                    <div className="w-full h-full absolute blur-[100px] opacity-40 gradientMove z-20" />
+
+                </motion.div>
 
 
                 <div className="rounded-lg bg-[#171c23] shadow-lg py-6 z-10">
@@ -164,7 +175,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {openMenu === "task" && createPortal(
                 <div
