@@ -1,7 +1,7 @@
 import express from 'express';
 import * as chatAPI from '../core/chatAPI.js';
 import authenticateToken from '../middleware/auth.js';
-
+import { handleStreamError } from './message.js';
 
 const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
@@ -42,8 +42,7 @@ router.post('/', authenticateToken, async (req, res) => {
         res.write(`\n<<tokenUsage>>${JSON.stringify({ tokenUsage: conv.token })}\n`);
         res.end();
     } catch (error) {
-        console.error('Error handling message:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        handleStreamError(res, error, 'Error creating conversation:');
     }
 });
 

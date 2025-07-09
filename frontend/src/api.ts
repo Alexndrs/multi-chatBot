@@ -58,18 +58,24 @@ async function streamJson<T, R = void>(
             const tag = containerMatch[1];
             const [prefix, rest] = buf.split(new RegExp(`<<${tag}>>`));
             buf = prefix;
+            let data;
             try {
-                const data = JSON.parse(rest.trim());
-                switch (tag) {
-                    case 'MsgCONTAINER':
-                    case 'convContainer':
-                        handlers.onContainer?.(data as T);
-                        break;
-                    case 'tokenUsage':
-                        handlers.onUsage?.({ currentMessageTokens: data.currentMessageTokens, historyTokens: data.historyTokens, responseToken: data.responseToken });
-                        break;
-                }
-            } catch { /*ignore*/ }
+                data = JSON.parse(rest.trim());
+            } catch (e) {
+                console.warn('Invalid JSON in stream:', e);
+                return;
+            }
+            switch (tag) {
+                case 'MsgCONTAINER':
+                case 'convContainer':
+                    handlers.onContainer?.(data as T);
+                    break;
+                case 'tokenUsage':
+                    handlers.onUsage?.({ currentMessageTokens: data.currentMessageTokens, historyTokens: data.historyTokens, responseToken: data.responseToken });
+                    break;
+                case 'error':
+                    throw new Error(data.message || 'Streamed error from server');
+            }
         }
 
         // parse think tags and tokens

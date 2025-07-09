@@ -8,7 +8,8 @@ import { getKeyForApi } from './encryption.js';
 export async function getAllConvIdsAndNameAndDate(userId) {
     const convIdsAndName = await db.getUserConversationsIdAndNameAndDate(userId);
     if (!convIdsAndName) {
-        throw new Error('No conversations found');
+        console.error(`Error browsing conversations for user ${userId}:`, err);
+        throw new Error('Conversations not found');
     }
     return convIdsAndName;
 }
@@ -54,9 +55,14 @@ async function generateResponseForMessages({
     userMsg.historyTokens = historyTokens;
 
     // MAJ des tokens et des messages
-    await db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
-    await db.addMessage(userId, convId, userMsg);
-    await db.addMessage(userId, convId, newMsg);
+    try {
+        await db.addToken(userId, convId, currentMessageTokens + historyTokens + completionTokens);
+        await db.addMessage(userId, convId, userMsg);
+        await db.addMessage(userId, convId, newMsg);
+    } catch (err) {
+        console.error(`Error adding messages for user ${userId} in conversation ${convId}:`, err);
+        throw new Error('Failed to add messages');
+    }
 
     return { userMsg, newMsg };
 }
@@ -74,6 +80,10 @@ async function generateResponseForMessages({
  */
 export async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
     const convData = await db.getConversationById(userId, convId);
+    if (!convData) {
+        console.error(`Conversation with ID ${convId} not found for user ${userId}`);
+        throw new Error('Conversation not found');
+    }
     const convName = convData.convName;
     let conv = convData.msgList;
     const userMsg = {
@@ -135,7 +145,7 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
 
     // Suppression des anciens messages à partir du msg édité
     const index = conv.msgList.indexOf(msg);
-    conv.msgList.slice(index).forEach(async m => await db.deleteMessage(userId, convId, m.msgId));
+    conv.msgList.slice(index).forEach(async m => { await db.deleteMessage(userId, convId, m.msgId) });
     conv.msgList = conv.msgList.slice(0, index);
 
     const userMsg = {
@@ -222,7 +232,12 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
 
     newConv.convName = generatedText;
     newConv.token = currentMessageTokens + historyTokens + completionTokens;
-    await db.addConversation(userId, newConv);
+    try {
+        await db.addConversation(userId, newConv);
+    } catch (err) {
+        console.error(`Error creating conversation for user ${userId}:`, err);
+        throw new Error('Failed to create conversation');
+    }
     return { conv: newConv };
 }
 
@@ -246,7 +261,9 @@ export async function deleteConversation(userId, convId) {
         await db.deleteConversation(userId, convId);
     }
     catch (err) {
-        throw new Error('Conversation not found');
+        console.error(`Error deleting conversation ${convId} for user ${userId}:`, err);
+        throw new Error('Conversation not found or could not be deleted');
+
     }
 }
 

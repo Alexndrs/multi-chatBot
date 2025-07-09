@@ -2,6 +2,17 @@ import express from 'express';
 import * as chatAPI from '../core/chatAPI.js';
 import authenticateToken from '../middleware/auth.js';
 
+export function handleStreamError(res, error, logPrefix = '') {
+    console.error(`${logPrefix} ${error.message}`, error);
+    try {
+        res.write(`\n<<error>>${JSON.stringify({ message: error.message || 'Internal server error' })}\n`);
+        res.end();
+    } catch {
+        res.destroy();
+    }
+}
+
+
 const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
     const { convId, messageContent, model_name } = req.body;
@@ -28,8 +39,7 @@ router.post('/', authenticateToken, async (req, res) => {
         res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token, responseToken: newMsg.token })}\n`);
         res.end();
     } catch (error) {
-        console.error('Error handling message:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        handleStreamError(res, error, 'Error sending/streaming message:');
     }
 });
 
@@ -56,8 +66,7 @@ router.put('/', authenticateToken, async (req, res) => {
         res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token })}\n`);
         res.end();
     } catch (error) {
-        console.error('Error editing message:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        handleStreamError(res, error, 'Error editing/streaming message:');
     }
 });
 
