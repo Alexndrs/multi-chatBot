@@ -57,8 +57,9 @@ const LoginPage = () => {
             "/api_logo/qwen.png",
             "/api_logo/gemma.png",
             "/api_logo/gemini.png",
+            "/api_logo/mistral.png",
         ];
-        return Array.from({ length: 5 }, () => shuffleArray(logos));
+        return Array.from({ length: 7 }, () => shuffleArray(logos));
     }, []);
 
     return (

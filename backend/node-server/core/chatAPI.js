@@ -1,8 +1,9 @@
-import { chatWithPython } from '../services/python_api.js';
-import { chatWithGemini, chatWithGroq } from '../services/free_api.js';
-import { applySlidingWindow, getMaxTokenInput } from '../services/utils.js';
+import 'dotenv/config';
+import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude } from '../services/api_providers.js';
+import { applySlidingWindow, getMaxTokenInput, models, apis } from '../services/utils.js';
 import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
+import { getKeyForApi } from './encryption.js';
 
 export async function getAllConvIdsAndNameAndDate(userId) {
     const convIdsAndName = await db.getUserConversationsIdAndNameAndDate(userId);
@@ -15,7 +16,6 @@ export async function getAllConvIdsAndNameAndDate(userId) {
 async function generateResponseForMessages({
     userId,
     convId,
-    convName,
     messages,
     userMsg,
     newMsg,
@@ -25,17 +25,26 @@ async function generateResponseForMessages({
 }) {
     if (onIdGenerated) onIdGenerated(userMsg, newMsg);
 
-    // Appel au bon modèle
+    const apiName = models[model_name]?.api;
+    if (!apiName) throw new Error(`Model ${model_name} is not supported`);
+
+
+    const key = (await getKeyForApi(userId, apiName))?.key;
+    if (!key && !apis[apiName].isFree) throw new Error(`API key for ${apiName} is required`);
+
     let generatedText, currentMessageTokens, historyTokens, completionTokens;
-    if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } =
-            await chatWithGroq(messages, onToken, model_name));
-    } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } =
-            await chatWithGemini(messages, onToken, model_name));
-    } else {
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } =
-            await chatWithPython(messages, onToken));
+    switch (apiName) {
+        case 'groq':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq(messages, onToken, model_name, key)); break;
+        case 'gemini':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini(messages, onToken, model_name, key)); break;
+        case 'openai':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithOpenAI(messages, onToken, model_name, key)); break;
+        case 'mistral':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithMistral(messages, onToken, model_name, key)); break;
+        case 'claude':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithClaude(messages, onToken, model_name, key)); break;
+        default: throw new Error(`API ${apiName} is not supported`);
     }
 
     // Finalisation des messages
@@ -99,7 +108,6 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
     return await generateResponseForMessages({
         userId,
         convId,
-        convName,
         messages: trimmedConv,
         userMsg,
         newMsg,
@@ -163,7 +171,6 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
     return await generateResponseForMessages({
         userId,
         convId,
-        convName,
         messages: trimmedConv,
         userMsg,
         newMsg,
@@ -180,6 +187,12 @@ export async function editMessage(userId, convId, msgId, newContent, onToken, on
  */
 export async function createConversation(userId, messageContent, onToken, onIdGenerated, model_name = 'llama-3.1-8b-instant') {
 
+    const apiName = models[model_name]?.api;
+    if (!apiName) throw new Error(`Model ${model_name} is not supported`);
+
+    const key = (await getKeyForApi(userId, apiName))?.key;
+    if (!key && !apis[apiName].isFree) throw new Error(`API key for ${apiName} is required`);
+
     const newConv = {
         convId: uuidv4(),
         convName: '',
@@ -189,15 +202,22 @@ export async function createConversation(userId, messageContent, onToken, onIdGe
     }
     onIdGenerated(newConv);
 
+    const message = [{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }]
+    if (model_name.toLowerCase().includes('qwen')) message[0].content += '  IMPORTANT : DON\'T THINK'
+
     let generatedText, currentMessageTokens, historyTokens, completionTokens;
-    if (['llama-3.1-8b-instant', 'qwen-qwq-32b', 'gemma2-9b-it'].includes(model_name)) {
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
-    } else if (['gemini-2.5-flash', 'gemini-2.5-pro'].includes(model_name)) {
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '"' }], onToken, model_name));
-    }
-    else {
-        // By default use the python API when the model is not supported by Groq
-        ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithPython([{ role: 'user', content: 'From the following message, create a short title in the same language as the input for this conversation, answer with only the title no ponctuation or container just the content of the title. The message : "' + messageContent + '" \no_think' }], onToken));
+    switch (apiName) {
+        case 'groq':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGroq(message, onToken, model_name, key)); break;
+        case 'gemini':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithGemini(message, onToken, model_name, key)); break;
+        case 'openai':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithOpenAI(message, onToken, model_name, key)); break;
+        case 'mistral':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithMistral(message, onToken, model_name, key)); break;
+        case 'claude':
+            ({ generatedText, currentMessageTokens, historyTokens, completionTokens } = await chatWithClaude(message, onToken, model_name, key)); break;
+        default: throw new Error(`API ${apiName} is not supported`);
     }
 
     newConv.convName = generatedText;

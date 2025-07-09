@@ -1,4 +1,26 @@
-import { tokenizer } from './free_api.js';
+import { tokenizer } from './api_providers.js';
+
+export const apis = {
+    'groq': { isFree: true },
+    'gemini': { isFree: true },
+    'openai': { isFree: false },
+    'claude': { isFree: false },
+    'mistral': { isFree: false },
+}
+
+
+export const models = {
+    'llama-3.1-8b-instant': { api: 'groq' },
+    'qwen-qwq-32b': { api: 'groq' },
+    'gemma2-9b-it': { api: 'groq' },
+    'gemini-2.5-flash': { api: 'gemini' },
+    'gemini-2.5-pro': { api: 'gemini' },
+    'o4-mini-2025-04-16': { api: 'openai' },
+    'gpt-4.1-nano-2025-04-14': { api: 'openai' },
+    'claude-sonnet-4-20250514': { api: 'claude' },
+    'claude-3-5-haiku-20241022': { api: 'claude' },
+    'mistral-small-latest': { api: 'mistral' },
+}
 
 export const budget = {
     'llama-3.1-8b-instant': { RPM: 30, RPD: 14400, TPM: 6000, TPD: 500000 },

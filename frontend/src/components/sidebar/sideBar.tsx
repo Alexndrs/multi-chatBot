@@ -91,16 +91,6 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
         return groups;
     }, [userData?.conversations]);
 
-
-    // Handing the escape key to close the sidebar
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
-
     // Handling the click on profile 
     const handleUserOpenMenu = () => {
         if (userRef.current) {

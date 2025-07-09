@@ -58,7 +58,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                         type={show ? 'text' : 'password'}
                         value={value}
                         onChange={e => setValue(e.target.value)}
-                        className="w-full bg-slate-200/4 border-t-4 border-black/30 text-white px-4 py-2 pr-10 rounded-lg outline-none"
+                        className="w-full bg-slate-200/3 border-t-4 border-black/30 text-white px-4 py-2 pr-10 rounded-lg outline-none"
                         placeholder="API Key"
                     />
                     <button
