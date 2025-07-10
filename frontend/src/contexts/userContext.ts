@@ -18,6 +18,7 @@ export type ModelBudget = {
 export type ModelInfo = {
     api: string;
     budget?: ModelBudget;
+    task: 'text-2-text' | 'multimodal-2-text';
 };
 
 export type Apis = Record<string, ApiInfo>;

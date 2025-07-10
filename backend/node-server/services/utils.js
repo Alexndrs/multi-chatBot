@@ -10,16 +10,16 @@ export const apis = {
 
 
 export const models = {
-    'llama-3.1-8b-instant': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 6000, TPD: 500000 } },
-    'qwen-qwq-32b': { api: 'groq', budget: { RPM: 30, RPD: 1000, TPM: 6000, TPD: 10000000 } },
-    'gemma2-9b-it': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 15000, TPD: 500000 } },
-    'gemini-2.5-flash': { api: 'gemini', budget: { RPM: 10, RPD: 250, TPM: 250000, TPD: 10000000 } },
-    'gemini-2.5-pro': { api: 'gemini', budget: { RPM: 5, RPD: 100, TPM: 250000, TPD: 10000000 } },
-    'o4-mini-2025-04-16': { api: 'openai' },
-    'gpt-4.1-nano-2025-04-14': { api: 'openai' },
-    'claude-sonnet-4-20250514': { api: 'claude' },
-    'claude-3-5-haiku-20241022': { api: 'claude' },
-    'mistral-small-latest': { api: 'mistral' },
+    'llama-3.1-8b-instant': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 6000, TPD: 500000 }, task: 'text-2-text' },
+    'qwen-qwq-32b': { api: 'groq', budget: { RPM: 30, RPD: 1000, TPM: 6000, TPD: 10000000 }, task: 'text-2-text' },
+    'gemma2-9b-it': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 15000, TPD: 500000 }, task: 'text-2-text' },
+    'gemini-2.5-flash': { api: 'gemini', budget: { RPM: 10, RPD: 250, TPM: 250000, TPD: 10000000 }, task: 'multimodal-2-text' },
+    'gemini-2.5-pro': { api: 'gemini', budget: { RPM: 5, RPD: 100, TPM: 250000, TPD: 10000000 }, task: 'multimodal-2-text' },
+    'o4-mini-2025-04-16': { api: 'openai', task: 'multimodal-2-text' },
+    'gpt-4.1-nano-2025-04-14': { api: 'openai', task: 'multimodal-2-text' },
+    'claude-sonnet-4-20250514': { api: 'claude', task: 'multimodal-2-text' },
+    'claude-3-5-haiku-20241022': { api: 'claude', task: 'text-2-text' },
+    'mistral-small-latest': { api: 'mistral', task: 'multimodal-2-text' },
 }
 
 export function getMaxTokenInput(model_name) {

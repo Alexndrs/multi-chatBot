@@ -24,7 +24,6 @@ const AppWrapper = () => {
                 });
                 setAvailableApis(userInfo.apiInfo.availableApis || {});
                 setAvailableModels(userInfo.apiInfo.availableModels || {});
-                console.log("user api : ", userInfo.apiInfo.userApis, "available apis : ", userInfo.apiInfo.availableApis, "available models : ", userInfo.apiInfo.availableModels);
             } catch {
                 removeToken();
                 setUserData(null);
