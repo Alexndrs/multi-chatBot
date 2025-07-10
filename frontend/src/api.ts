@@ -292,13 +292,27 @@ export const updateMessage = (
     );
 }
 
+
+type apiAnswer = {
+    message: string;
+    error?: boolean;
+}
 export const addApiKey = async (api: string, key: string) => {
-    await jsonRequest<void>(
-        `${serverUrl}/apiKeys`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api, key })
-    })
+    try {
+        const answer = await jsonRequest<apiAnswer>(
+            `${serverUrl}/apiKeys`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api, key })
+        })
+        if (answer.error) {
+            throw new Error(answer.message);
+        }
+        return answer.message;
+    } catch (error) {
+        console.error('Error adding API key:', error);
+        throw new Error(`Failed to add API key for ${api}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 }
 
 // Delete an API key for a given api name

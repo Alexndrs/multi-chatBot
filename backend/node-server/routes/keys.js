@@ -1,6 +1,7 @@
 import express from 'express';
 import * as encryption from '../core/encryption.js';
 import authenticateToken from '../middleware/auth.js';
+import { testKey } from '../core/chatAPI.js';
 
 const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
@@ -11,8 +12,13 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     try {
+        // Test the API key before adding it
+        const testResult = await testKey(key, api);
+        if (testResult.error) {
+            return res.status(400).json({ message: `Invalid API key for ${api}: ${testResult.message}`, error: true });
+        }
         await encryption.addKey(key, api, userId);
-        res.status(200).json({ message: 'api key added successfully' })
+        res.status(200).json(testResult);
     } catch (error) {
         console.error('Error adding key:', error);
         res.status(500).json({ error: 'Internal server error' });

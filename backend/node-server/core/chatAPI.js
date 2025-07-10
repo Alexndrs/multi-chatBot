@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude } from '../services/api_providers.js';
+import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude, testGroq, testGemini, testOpenAI, testMistral, testClaude } from '../services/api_providers.js';
 import { applySlidingWindow, getMaxTokenInput, models, apis } from '../services/utils.js';
 import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +13,26 @@ export async function getAllConvIdsAndNameAndDate(userId) {
     }
     return convIdsAndName;
 }
+
+
+export async function testKey(key, apiName) {
+    let answer;
+    switch (apiName) {
+        case 'groq':
+            answer = await testGroq(key); break;
+        case 'gemini':
+            answer = await testGemini(key); break;
+        case 'openai':
+            answer = await testOpenAI(key); break;
+        case 'mistral':
+            answer = await testMistral(key); break;
+        case 'claude':
+            answer = await testClaude(key); break;
+        default: answer = { message: `API ${apiName} is not supported`, error: true };
+    }
+    return answer;
+}
+
 
 async function generateResponseForMessages({
     userId,

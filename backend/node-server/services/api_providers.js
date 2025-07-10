@@ -93,6 +93,18 @@ export async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5
     };
 }
 
+export async function testGemini(key, model_name = 'gemini-2.5-flash') {
+    try {
+        const google = new GoogleGenAI({ apiKey: key });
+        const message = await google.models.generateContent({
+            model: model_name,
+            contents: "Say hello originaly and in less than 8 words!",
+        });
+        return { message: message.text, error: false };
+    } catch (error) {
+        return { message: error.message, error: true };
+    }
+}
 
 
 export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b-instant', apiKey = null) {
@@ -135,6 +147,25 @@ export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b
     };
 }
 
+export async function testGroq(key, model_name = 'llama-3.1-8b-instant') {
+    try {
+        const groq = new Groq({ apiKey: key });
+        const response = await groq.chat.completions.create({
+            messages: [
+                {
+                    role: "user",
+                    content: "Say hello originaly and in less than 8 words!",
+                },
+            ],
+            model: model_name,
+        });
+        const message = response.choices[0].message.content;
+        return { message, error: false };
+    } catch (error) {
+        return { message: error.message, error: true };
+    }
+}
+
 
 
 export async function chatWithOpenAI(messages, onToken, model_name = "gpt-3.5-turbo", apiKey = null) {
@@ -164,9 +195,23 @@ export async function chatWithOpenAI(messages, onToken, model_name = "gpt-3.5-tu
     return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
 }
 
+export async function testOpenAI(key, model_name = "gpt-3.5-turbo") {
+    try {
+        const openai = new OpenAI({ apiKey: key });
+        const response = await openai.responses.create({
+            model: "gpt-3.5-turbo",
+            input: "Say hello originaly and in less than 8 words!",
+        });
+        const message = response.output_text;
+        return { message, error: false };
+    }
+    catch (error) {
+        return { message: error.message, error: true };
+    }
+}
 
 
-export async function chatWithMistral(messages, onToken, model_name = "mistral-large-latest", apiKey = null) {
+export async function chatWithMistral(messages, onToken, model_name = "mistral-small-latest", apiKey = null) {
     if (!apiKey) throw new Error("API key for Mistral is required");
     const mistral = new Mistral({ apiKey });
     const { promptTokens, currentMessageTokens, historyTokens } = computeTokenStats(messages);
@@ -193,6 +238,20 @@ export async function chatWithMistral(messages, onToken, model_name = "mistral-l
     return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
 }
 
+export async function testMistral(key, model_name = "mistral-small-latest") {
+    try {
+        const mistral = new Mistral({ apiKey: key });
+        const response = await mistral.chat.complete({
+            model: model_name,
+            messages: [{ role: 'user', content: 'Say hello originaly and in less than 8 words!' }],
+        });
+
+        const message = response.choices[0].message.content;
+        return { message, error: false };
+    } catch (error) {
+        return { message: error.message, error: true };
+    }
+}
 
 
 export async function chatWithClaude(messages, onToken, model_name = "claude-3.5-sonnet-20240620", apiKey = null) {
@@ -223,6 +282,21 @@ export async function chatWithClaude(messages, onToken, model_name = "claude-3.5
     }
     const completionTokens = tokenizer.encode(generatedText).length;
     return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
+}
+
+export async function testClaude(key, model_name = "claude-3.5-sonnet-20240620") {
+    try {
+        const anthropic = new Anthropic({ apiKey: key });
+        const response = await anthropic.messages.create({
+            model: model_name,
+            messages: [{ role: 'user', content: [{ type: "text", "text": 'Say hello originaly and in less than 8 words!' }] }],
+        });
+
+        const message = response.choices[0].message.text;
+        return { message, error: false };
+    } catch (error) {
+        return { message: error.message, error: true };
+    }
 }
 
 

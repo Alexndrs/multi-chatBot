@@ -27,6 +27,9 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     const [value, setValue] = useState(currentKey);
     const [show, setShow] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
+    const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+
 
     useEffect(() => {
         setHasChanged(value !== currentKey);
@@ -38,13 +41,22 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
         e.preventDefault();
         if (!hasChanged || !value.trim()) return;
 
+        setMessage(null);
+
         try {
-            await addApiKey(apiName, value.trim());
-            onSave?.();
+            const msg = await addApiKey(apiName, value.trim());
+            setMessage({ text: msg || "Clé ajoutée avec succès !", type: 'success' });
+            setTimeout(() => {
+                onSave?.();
+            }, 5000);
         } catch (err) {
             console.error('Failed to save API key:', err);
+            const errMsg = (err instanceof Error && err.message) ? err.message : 'Failed to validate the API key.';
+            setMessage({ text: errMsg, type: 'error' });
         }
     };
+
+
 
     return (
         <form
@@ -99,6 +111,18 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                         )
                     }
                 </div>
+
+                {message && (
+                    <div
+                        className={`mt-2 text-xs px-4 py-2 rounded-md border ${message.type === 'success'
+                            ? 'text-green-400 bg-green-900/20 border-green-500/20'
+                            : 'text-red-400 bg-red-900/20 border-red-500/20'
+                            }`}
+                    >
+                        {message.text}
+                    </div>
+                )}
+
 
                 {/* Submit button */}
                 <div className="w-full md:w-21 px-0 md:px-4 mt-2 md:mt-0">
