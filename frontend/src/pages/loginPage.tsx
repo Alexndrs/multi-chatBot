@@ -7,7 +7,7 @@ import LogoIcon from '../components/icons/LogoIcon';
 import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
 
 const LoginPage = () => {
-    const { setUserData } = useUser();
+    const { setUserData, setAvailableApis, setAvailableModels } = useUser();
 
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState('');
@@ -29,10 +29,14 @@ const LoginPage = () => {
             const conversations = await getUserConversations();
             setUserData({
                 token: localStorage.getItem('token'),
-                name: userInfo.name,
-                email: userInfo.email,
-                conversations
+                name: userInfo.userInfo.name,
+                email: userInfo.userInfo.email,
+                conversations,
+                userApis: userInfo.apiInfo.userApis || [],
             });
+            setAvailableApis(userInfo.apiInfo.availableApis || {});
+            setAvailableModels(userInfo.apiInfo.availableModels || {});
+            console.log("user api : ", userInfo.apiInfo.userApis, "available apis : ", userInfo.apiInfo.availableApis, "available models : ", userInfo.apiInfo.availableModels);
 
         } catch (err) {
             setError('❌ Échec de la connexion ou de la création du compte.');

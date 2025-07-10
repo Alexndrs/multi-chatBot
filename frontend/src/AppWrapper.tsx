@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useUser } from './hooks/useUser';
-import { getToken, getUserInfo, getUserConversations, removeToken } from './api';
+import { getToken, getUserInfo, getUserConversations, removeToken, } from './api';
 import Layout from './components/layout';
 import LoadingPage from './pages/loadingPage';
 import LoginPage from './pages/loginPage';
 import AppContent from './AppContent';
 
 const AppWrapper = () => {
-    const { userData, setUserData, loading, setLoading } = useUser();
+    const { userData, setUserData, loading, setLoading, setAvailableApis, setAvailableModels } = useUser();
 
     useEffect(() => {
         const init = async () => {
@@ -17,10 +17,14 @@ const AppWrapper = () => {
                 const conversations = await getUserConversations();
                 setUserData({
                     token,
-                    name: userInfo.name,
-                    email: userInfo.email,
-                    conversations
+                    name: userInfo.userInfo.name,
+                    email: userInfo.userInfo.email,
+                    conversations,
+                    userApis: userInfo.apiInfo.userApis || [],
                 });
+                setAvailableApis(userInfo.apiInfo.availableApis || {});
+                setAvailableModels(userInfo.apiInfo.availableModels || {});
+                console.log("user api : ", userInfo.apiInfo.userApis, "available apis : ", userInfo.apiInfo.availableApis, "available models : ", userInfo.apiInfo.availableModels);
             } catch {
                 removeToken();
                 setUserData(null);
@@ -30,7 +34,7 @@ const AppWrapper = () => {
         };
 
         init();
-    }, [setUserData, setLoading]);
+    }, [setUserData, setLoading, setAvailableApis, setAvailableModels]);
 
     if (loading) return <LoadingPage />;
 

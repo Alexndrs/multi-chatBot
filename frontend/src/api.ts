@@ -1,6 +1,6 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { ConversationData, Message } from "./contexts/convContext";
-import type { UserData } from "./contexts/userContext";
+import type { Apis, Models, UserData } from "./contexts/userContext";
 // const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:8000';
 const serverUrl = 'http://localhost:8000';
 
@@ -118,7 +118,7 @@ async function streamJson<T, R = void>(
 
 export const createUser = async (name: string, mail: string, password: string) => {
     const json = await jsonRequest<{ token: string }>(
-        `${serverUrl}/auth`, {
+        `${serverUrl}/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, mail, password })
@@ -129,7 +129,7 @@ export const createUser = async (name: string, mail: string, password: string) =
 export const loginUser = async (mail: string, password: string) => {
 
     const json = await jsonRequest<{ token: string }>(
-        `${serverUrl}/auth/login`, {
+        `${serverUrl}/user/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mail, password })
@@ -142,9 +142,14 @@ export const logoutUser = () => {
     window.location.reload();
 }
 
-export const getUserInfo = async (): Promise<UserData> => {
-    const json = await jsonRequest<UserData>(
-        `${serverUrl}/auth`,
+interface allUserInfo {
+    userInfo: UserData;
+    apiInfo: { userApis: string[], availableApis: Apis, availableModels: Models };
+}
+
+export const getUserInfo = async (): Promise<allUserInfo> => {
+    const json = await jsonRequest<allUserInfo>(
+        `${serverUrl}/user`,
         { headers: { 'Authorization': `Bearer ${getToken()}` } }
     );
     return json

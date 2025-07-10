@@ -1,31 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { getApiKeys } from '../api';
-import { ApiKeyInput } from '../components/apiKeyInput';
 import type { ApiKey } from '../api';
-import { apiList } from '../utils';
+import { ApiKeyInput } from '../components/apiKeyInput';
+import { useUser } from '../hooks/useUser';
+import type { ApiInfo } from '../contexts/userContext';
 
 const SettingsPage: React.FC = () => {
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+    const { setUserData, availableApis, userData } = useUser();
 
-    const refetchKeys = async () => {
+    const refetchKeys = React.useCallback(async () => {
         try {
             const keys = await getApiKeys();
             setApiKeys(keys);
+            setUserData((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    userApis: keys.map(k => k.api),
+                }
+            });
         } catch (error) {
             console.error('Error fetching API keys:', error);
         }
-    };
+    }, [setUserData]);
 
     useEffect(() => {
         refetchKeys();
-    }, []);
+    }, [refetchKeys]);
 
     const keysByApi: Record<string, ApiKey> = Object.fromEntries(
-        apiKeys.map((k) => [k.api, k])
+        apiKeys.map(k => [k.api, k])
     );
 
-    const usedApis = apiList.filter((api) => keysByApi[api.api]);
-    const unusedApis = apiList.filter((api) => !keysByApi[api.api]);
+
+    let usedApis: [string, ApiInfo][] = [];
+    let unusedApis: [string, ApiInfo][] = [];
+
+    if (availableApis && userData?.userApis) {
+        usedApis = Object.entries(availableApis).filter(
+            ([apiName]) => userData.userApis?.includes(apiName)
+        );
+
+        unusedApis = Object.entries(availableApis).filter(
+            ([apiName]) => !userData.userApis?.includes(apiName)
+        );
+    }
 
     return (
         <div className="px-5 md:px-20 lg:px-30 py-10 flex flex-col items-start h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a] text-white overflow-auto">
@@ -44,36 +64,37 @@ const SettingsPage: React.FC = () => {
                         <div className='w-20 pl-4 px-4'></div>
                         <div className='w-30 pl-4 px-0'>Last Update</div>
                     </div>
-                    {usedApis.length > 0 && (
-                        <>
-                            {usedApis.map((api) => (
-                                <ApiKeyInput
-                                    key={api.api}
-                                    apiName={api.api}
-                                    displayName={api.name}
-                                    siteUrl={api.siteUrl}
-                                    currentKey={keysByApi[api.api]?.key}
-                                    updatedAt={keysByApi[api.api]?.date}
-                                    onSave={refetchKeys}
-                                />
-                            ))}
-                        </>
-                    )}
+                    <>
+                        {usedApis.map(([apiName, apiInfo]) => {
+                            console.log('Rendering API key input for:', apiName, "keysByApi:", keysByApi[apiName]?.key);
+                            return <ApiKeyInput
+                                key={apiName}
+                                apiName={apiName}
+                                displayName={apiInfo.name}
+                                siteUrl={apiInfo.url}
+                                currentKey={keysByApi[apiName]?.key}
+                                updatedAt={keysByApi[apiName]?.date}
+                                onSave={refetchKeys}
+                                isFree={apiInfo.isFree}
+                            />
+                        }
+                        )}
 
-                    {unusedApis.length > 0 && (
-                        <>
-                            {unusedApis.map((api) => (
-                                <ApiKeyInput
-                                    key={api.api}
-                                    apiName={api.api}
-                                    displayName={api.name}
-                                    siteUrl={api.siteUrl}
-                                    currentKey={undefined}
-                                    onSave={refetchKeys}
-                                />
-                            ))}
-                        </>
-                    )}
+                        {unusedApis.map(([apiName, apiInfo]) => {
+
+                            console.log('Rendering unused API key input for:', apiName, "keysByApi:", keysByApi[apiName]?.key);
+                            return <ApiKeyInput
+                                key={apiName}
+                                apiName={apiName}
+                                displayName={apiInfo.name}
+                                siteUrl={apiInfo.url}
+                                currentKey={undefined}
+                                onSave={refetchKeys}
+                                isFree={apiInfo.isFree}
+                            />
+                        }
+                        )}
+                    </>
                 </div>
             </div>
         </div>

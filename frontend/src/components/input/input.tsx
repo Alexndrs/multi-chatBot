@@ -3,14 +3,17 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical, faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
 // import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import FloatingMenu from "./floatingMenu";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useConv } from "../../hooks/useConv";
 import { motion } from "framer-motion";
+import { createPortal } from "react-dom";
 
 
 export default function Input({ onSend, }: { onSend: (message: string) => void; }) {
     const { task, selectedModel } = useConv();
     const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+    const taskButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
 
 
@@ -34,8 +37,21 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
         }
     };
 
+    const handleMenuOpen = (menuType: "task" | "upload", buttonRef: React.RefObject<HTMLDivElement>) => {
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setMenuPosition({
+                x: rect.left,
+                y: rect.top - 9
+            });
+        }
+        setOpenMenu(openMenu === menuType ? null : menuType);
+    };
 
-    return (
+
+
+    return (<>
+
         <motion.div
             className="flex flex-col ml-auto mr-auto"
             initial={{ opacity: 0, y: 40 }}
@@ -43,24 +59,15 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
             transition={{ duration: 0.5, ease: "easeOut" }}
         >
 
-            <div className="rounded-lg bg-slate-300/3 shadow-lg py-4 z-10 border-t-2 border-white/7 backdrop-blur-2xl">
+            <div className="rounded-lg bg-slate-300/3 py-4 z-10 border-t-2 border-white/7 backdrop-blur-2xl">
                 <div className="flex flex-col ml-auto mr-auto">
                     <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
-                        <div className="relative">
-
+                        <div ref={taskButtonRef}>
                             <ButtonIcon
                                 icon={<FontAwesomeIcon icon={faEllipsisVertical} />}
-                                onClick={() => setOpenMenu(openMenu === "task" ? null : "task")}
+                                onClick={() => handleMenuOpen("task", taskButtonRef)}
                                 type="transparent"
                             />
-                            {openMenu === "task" && (
-                                <FloatingMenu
-                                    onSelect={() => {
-                                        setOpenMenu(null);
-                                    }}
-                                    onClose={() => setOpenMenu(null)}
-                                />
-                            )}
                         </div>
 
                         <input
@@ -94,5 +101,24 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
                 </div>
             </div>
         </motion.div>
+        {openMenu === "task" && createPortal(
+            <div
+                style={{
+                    position: 'fixed',
+                    left: menuPosition.x,
+                    top: menuPosition.y,
+                    transform: 'translateY(-100%)',
+                    zIndex: 9999
+                }}
+            >
+                <FloatingMenu
+                    onSelect={() => {
+                        setOpenMenu(null);
+                    }}
+                    onClose={() => setOpenMenu(null)}
+                />
+            </div>,
+            document.body
+        )}</>
     );
 }

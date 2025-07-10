@@ -48,7 +48,7 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-300/1 text-gray-200 shadow-xl rounded-xl py-[1px] text-sm min-w-[220px] border-t-2 border-slate-300/6 backdrop-blur-md flex flex-row"
+            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-300/3 text-gray-200 shadow-lg rounded-xl py-[1px] text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-2xl flex flex-row"
         >
             {items.map((section, idx) => (
                 <div key={idx} className="flex flex-col py-3 min-w-[180px] ml-0 border-l-2 border-r-2 border-l-slate-300/6 border-r-black/8 opacity-50 first:ml-0 first:border-l-0 last:border-r-0">

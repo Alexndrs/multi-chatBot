@@ -241,7 +241,7 @@ const ChatPage: React.FC = () => {
         <div className="relative flex flex-col overflow-hidden h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a]">
 
             {/* Header */}
-            <div className="relative pt-5 h-16 flex justify-center items-center z-10">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full py-5 flex justify-center items-center z-20 backdrop-blur-md">
                 <h1 className="text-3xl font-medium text-white font-playfair">
                     {conversation ? stripThinkTags(conversation.convName || "") : "Hello, ask me anything!"}
                 </h1>
@@ -260,7 +260,7 @@ const ChatPage: React.FC = () => {
             {modalOpen && (<ModalInput open={modalOpen} onClose={() => setModalOpen(false)} onSend={handleUserSubmit} />)}
 
             {/* Scrollable message list */}
-            <div className="flex flex-col overflow-y-auto px-4 pb-[300px] w-full hide-scrollbar">
+            <div className="flex flex-col overflow-y-auto px-4 pt-[150px] pb-[300px] w-full hide-scrollbar mask-fade-bottom">
                 {conversation?.msgList?.map((msg) =>
                     msg.role === "user" ? (
                         <UserMessage
@@ -284,7 +284,7 @@ const ChatPage: React.FC = () => {
             </div>
 
             {/* Fixed input bar */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 p-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent">
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent shadow-xl">
                 <Input onSend={handleUserSubmit} />
             </div>
         </div>

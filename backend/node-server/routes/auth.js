@@ -40,7 +40,8 @@ router.get('/', authenticateToken, async (req, res) => {
         if (!userInfo) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json(userInfo);
+        const apiInfo = await auth.getUserApis(userId);
+        res.status(200).json({ userInfo, apiInfo });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal server error' });

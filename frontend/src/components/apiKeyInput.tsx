@@ -12,6 +12,7 @@ interface ApiKeyInputProps {
     updatedAt?: string;
     siteUrl?: string;
     onSave?: () => void;
+    isFree: boolean;
 }
 
 export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
@@ -21,7 +22,9 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     updatedAt,
     siteUrl,
     onSave,
+    isFree
 }) => {
+    console.log(apiName, isFree)
     const [value, setValue] = useState(currentKey);
     const [show, setShow] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
@@ -120,15 +123,16 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
             </div>
             {/* Site URL */}
             {siteUrl && (
-                <div className="text-xs text-gray-400 mt-2">
-                    Find a key here <a
+                <div className="text-xs text-gray-400 mt-2 flex">
+                    Find a key here : <a
                         href={siteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline text-blue-300/80 hover:text-blue-200 transition-colors"
+                        className="ml-2 hover:underline text-blue-300/80 hover:text-blue-200 transition-colors"
                     >
                         {siteUrl}
                     </a>
+                    {isFree && (<div className='ml-2'>(It's free !)</div>)}
                 </div>
             )}
         </form>

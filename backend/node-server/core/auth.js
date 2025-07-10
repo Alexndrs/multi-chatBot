@@ -1,4 +1,6 @@
 import * as db from '../db/sqlite_interface.js';
+import { getKeys } from './encryption.js';
+import { apis, models } from '../services/utils.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -70,4 +72,14 @@ export async function getUserInfo(userId) {
         throw new Error('User not found');
     }
     return userInfo;
+}
+
+export async function getUserApis(userId) {
+    const userKeys = await getKeys(userId);
+    const userApis = userKeys.map(k => k.api);
+    return {
+        userApis,
+        availableApis: apis,
+        availableModels: models,
+    }
 }
