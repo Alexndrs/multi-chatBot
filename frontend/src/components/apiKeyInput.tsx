@@ -24,7 +24,6 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     onSave,
     isFree
 }) => {
-    console.log(apiName, isFree)
     const [value, setValue] = useState(currentKey);
     const [show, setShow] = useState(false);
     const [hasChanged, setHasChanged] = useState(false);
@@ -32,6 +31,8 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     useEffect(() => {
         setHasChanged(value !== currentKey);
     }, [value, currentKey]);
+
+    useEffect(() => { setValue(currentKey); }, [currentKey]);
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

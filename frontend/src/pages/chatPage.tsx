@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Input from "../components/input/input";
 import { UserMessage } from "../components/message/userMessage";
 import { BotMessage } from "../components/message/botMessage";
@@ -15,6 +15,25 @@ const ChatPage: React.FC = () => {
     const { conversation, setConversation, modalOpen, setModalOpen, selectedModel } = useConv();
     const { setUserData } = useUser();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const errorRef = useRef<HTMLDivElement>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!error || !errorRef.current) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (errorRef.current && !errorRef.current.contains(event.target as Node)) {
+                setError(null);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [error]);
+
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,12 +70,29 @@ const ChatPage: React.FC = () => {
         });
     };
 
-    const appendUserAndBotMessages = (userMsg: Message, botMsg: Message) => {
-        appendToConversation(userMsg, botMsg);
+    const appendUserMessage = (userMsg: Message) => {
+        appendToConversation(userMsg);
     };
 
-    const appendBotMessage = (ansMessage: Message) => {
+    const removeLastBotMessage = (msgId: string | null) => {
+        if (!msgId) return;
+
+        setConversation((prev) => {
+            console.log("Removing last bot message:", msgId);
+            if (!prev || !prev.msgList) return prev;
+            const updated = prev.msgList.filter(msg => msg.msgId !== msgId);
+            return { ...prev, msgList: updated };
+        });
+    };
+
+
+
+
+    const appendBotMessage = (ansMessage: Message): string | null => {
+        console.log("Appending bot message:", ansMessage);
         appendToConversation(ansMessage);
+        return ansMessage.msgId || null;
+
     };
 
     const updateLastBotMessage = (updater: (msg: Message) => Message) => {
@@ -87,7 +123,7 @@ const ChatPage: React.FC = () => {
         }));
     };
 
-    const createConvHandler = (conv: ConversationItem) => {
+    const createConvHandler = (conv: ConversationItem): ConversationItem => {
         setConversation({ ...conv, msgList: [] });
         setUserData((prev) => {
             if (!prev) return prev;
@@ -96,7 +132,18 @@ const ChatPage: React.FC = () => {
                 conversations: [...(prev.conversations || []), conv],
             };
         });
+
+        return conv;
     };
+
+    const removeConversationFromUserData = (convId: string) => {
+        setUserData((prev) => {
+            if (!prev || !prev.conversations) return prev;
+            const updated = prev.conversations.filter(c => c.convId !== convId);
+            return { ...prev, conversations: updated };
+        });
+    };
+
 
     const appendToConversationTitle = (convId: string, token: string) => {
         setConversation((prev) => {
@@ -153,19 +200,85 @@ const ChatPage: React.FC = () => {
     const ensureConversationReady = async (message: string): Promise<string | null> => {
         if (conversation?.convId) return conversation.convId;
 
-        const convId = await createConversation(message, selectedModel, createConvHandler, handleTitleTokenStream);
-        setTimeout(() => setModalOpen(false), 3000);
-        return convId;
+        let newConv: ConversationItem | null = null;
+
+        try {
+            const convId = await createConversation(
+                message,
+                selectedModel,
+                (conv) => {
+                    newConv = createConvHandler(conv);
+                    return newConv;
+                },
+                handleTitleTokenStream
+            );
+            setTimeout(() => setModalOpen(false), 1500);
+            return convId;
+        } catch (err: unknown) {
+            console.error("Error creating conversation:", err);
+            setModalOpen(false);
+
+            if ((newConv as ConversationItem | null)?.convId) {
+                console.warn("Removing failed conv from UI", ((newConv as unknown) as ConversationItem).convId);
+                removeConversationFromUserData(((newConv as unknown) as ConversationItem).convId);
+            }
+
+            if (err instanceof Error) {
+                setError(err.message || "Une erreur est survenue.");
+                throw new Error("Failed to create conversation : " + err.message)
+            } else {
+                setError("Une erreur est survenue.");
+            }
+            return null;
+        }
     };
+
 
     const sendMessageToAPI = async (convId: string, message: string) => {
-        await sendMessage(convId, message, selectedModel, appendUserAndBotMessages, appendToBotContent, updateTokenCount, updateBotThinkingContent);
+        let botMsgId: string | null = null;
+
+        try {
+            await sendMessage(
+                convId,
+                message,
+                selectedModel,
+                (userMsg, botMsg) => {
+                    appendUserMessage(userMsg);
+                    botMsgId = appendBotMessage(botMsg);
+                },
+                appendToBotContent,
+                updateTokenCount,
+                updateBotThinkingContent
+            );
+        } catch (err: unknown) {
+            console.error("Error in sendMessageToAPI:", err);
+            removeLastBotMessage(botMsgId); // << On passe l'id manuellement
+            if (err instanceof Error) {
+                setError(err.message || "Une erreur est survenue.");
+            } else {
+                setError("Une erreur est survenue.");
+            }
+        }
     };
 
+
+
     const handleUserSubmit = async (message: string) => {
-        const convId = await ensureConversationReady(message);
-        if (!convId) return;
-        await sendMessageToAPI(convId, message);
+        setError(null); // Reset any previous error
+
+        try {
+            const convId = await ensureConversationReady(message);
+            if (!convId) throw new Error("Failed to create conversation.");
+            await sendMessageToAPI(convId, message);
+        } catch (err: unknown) {
+            console.error("Error sending message:", err);
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("Une erreur est survenue.");
+            }
+        }
+
     };
 
     const keepMessagesUpTo = (msgId: string, editedMessageContent?: string | null) => {
@@ -282,6 +395,12 @@ const ChatPage: React.FC = () => {
                 )}
                 <div ref={messagesEndRef} />
             </div>
+
+            {error && (
+                <div className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 text-red-400 bg-red-950/30 backdrop-blur-sm border-2 border-red-400/20 rounded-md px-10 py-5 text-sm shadow-md z-[51] max-w-[80%] text-center" ref={errorRef}>
+                    {error}
+                </div>
+            )}
 
             {/* Fixed input bar */}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent shadow-xl">

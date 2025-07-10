@@ -59,46 +59,48 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-300/3 text-gray-200 shadow-lg rounded-xl py-3 text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-2xl flex flex-row"
+            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-300/3 text-gray-200 shadow-lg rounded-xl text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-2xl flex flex-row"
         >
-            {items.map((section, idx) => (
-                <div key={idx} className="flex flex-col min-w-[180px] ml-0 border-l-2 border-r-2 border-l-slate-300/6 border-r-black/8 opacity-50 first:ml-0 first:border-l-0 last:border-r-0 max-h-[200px] overflow-auto hide-scrollbar">
-                    {/* Titre de section (task) */}
-                    <div className="text-xs px-3 text-gray-400 uppercase tracking-wide mb-1 mt-2 cursor-default">
-                        {section.task}
-                    </div>
-                    {/* Modèles associés */}
-                    <div className="flex flex-col justify-center">
 
-                        {section.models.length > 0 ? (
-                            section.models.map((model) => (
-                                <div
-                                    key={model.modelName}
-                                    className={`px-5 py-2 hover:bg-blue-400/15 hover:text-blue-300 border-t-2 border-t-transparent hover:border-t-slate-300/5 hover:shadow-md cursor-pointer transition duration-150 ease-in-out ${!model.isAvailableForUser ? 'opacity-30 pointer-events-none' : ''}`}
-                                    onClick={() => {
-                                        if (!model.isAvailableForUser) return;
-                                        setTask(section.task);
-                                        console.log("Task set to:", section.task);
-                                        setSelectedModel(model.modelName);
-                                        console.log("Model set to:", model.modelName);
-                                        onSelect(model.modelName);
-                                        onClose();
-                                    }}
-                                >
-                                    {model.modelName}
-                                    {/* {!model.isAvailableForUser && (
+            {items.map((section, idx) => (
+                <div className="py-3 border-l-2 border-r-3 border-l-slate-300/6 border-r-black/20 opacity-50 first:ml-0 first:border-l-0 last:border-r-0">
+                    <div key={idx} className="flex flex-col min-w-[180px] ml-0 opacity-50 first:ml-0 max-h-[200px] overflow-auto hide-scrollbar">
+                        {/* Titre de section (task) */}
+                        <div className="text-xs px-3 text-gray-400 uppercase tracking-wide mb-1 mt-2 cursor-default">
+                            {section.task}
+                        </div>
+                        {/* Modèles associés */}
+                        <div className="flex flex-col justify-center">
+
+                            {section.models.length > 0 ? (
+                                section.models.map((model) => (
+                                    <div
+                                        key={model.modelName}
+                                        className={`px-5 py-2 hover:bg-blue-400/15 hover:text-blue-300 border-t-2 border-t-transparent hover:border-t-slate-300/5 hover:shadow-md cursor-pointer transition duration-150 ease-in-out ${!model.isAvailableForUser ? 'opacity-30 pointer-events-none' : ''}`}
+                                        onClick={() => {
+                                            if (!model.isAvailableForUser) return;
+                                            setTask(section.task);
+                                            console.log("Task set to:", section.task);
+                                            setSelectedModel(model.modelName);
+                                            console.log("Model set to:", model.modelName);
+                                            onSelect(model.modelName);
+                                            onClose();
+                                        }}
+                                    >
+                                        {model.modelName}
+                                        {/* {!model.isAvailableForUser && (
                                         <span className="ml-2 text-xs text-red-400">(Not available)</span>
                                         )} */}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-3 py-2 text-gray-600 italic cursor-default">
+                                    No models available
                                 </div>
-                            ))
-                        ) : (
-                            <div className="px-3 py-2 text-gray-600 italic cursor-default">
-                                No models available
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
-            ))}
+                </div>))}
         </div>
     );
 }

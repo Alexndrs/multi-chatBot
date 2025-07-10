@@ -261,9 +261,7 @@ export async function deleteConversation(userId, convId) {
         await db.deleteConversation(userId, convId);
     }
     catch (err) {
-        console.error(`Error deleting conversation ${convId} for user ${userId}:`, err);
-        throw new Error('Conversation not found or could not be deleted');
-
+        throw new Error('Conversation not found');
     }
 }
 

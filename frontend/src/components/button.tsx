@@ -21,7 +21,7 @@ export default function Button({ text, onClick, type = "primary" }: ButtonProps)
         <button
             onClick={onClick}
             className={clsx(
-                "py-2 px-4 rounded-lg transition duration-150 border-2 cursor-pointer",
+                "py-2 px-3 text-xs rounded-md transition duration-150 border-2 cursor-pointer",
                 variantClasses[type]
             )}
         >

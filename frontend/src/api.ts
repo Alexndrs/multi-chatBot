@@ -245,7 +245,7 @@ export const createConversation = async (
         }
     );
     if (!containerData) {
-        throw new Error('Failed to create conversation');
+        throw new Error('Failed to create conversation, please verify your API key');
     }
     return containerData.convId;
 }

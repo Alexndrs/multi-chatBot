@@ -66,7 +66,6 @@ const SettingsPage: React.FC = () => {
                     </div>
                     <>
                         {usedApis.map(([apiName, apiInfo]) => {
-                            console.log('Rendering API key input for:', apiName, "keysByApi:", keysByApi[apiName]?.key);
                             return <ApiKeyInput
                                 key={apiName}
                                 apiName={apiName}
@@ -82,7 +81,6 @@ const SettingsPage: React.FC = () => {
 
                         {unusedApis.map(([apiName, apiInfo]) => {
 
-                            console.log('Rendering unused API key input for:', apiName, "keysByApi:", keysByApi[apiName]?.key);
                             return <ApiKeyInput
                                 key={apiName}
                                 apiName={apiName}

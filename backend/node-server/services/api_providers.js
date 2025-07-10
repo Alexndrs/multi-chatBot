@@ -104,17 +104,18 @@ export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b
     const groq = new Groq({ apiKey });
 
     let stream;
-    try {
-        stream = await groq.chat.completions.create({
-            messages: messages,
-            model: model_name,
-            temperature: 0.2,
-            max_completion_tokens: getMaxModelOutput(model_name),
-            stream: true,
-        });
-    } catch (error) {
-        throw new Error(`Error creating Groq chat completion: ${error.message}`);
-    }
+    // try {
+    stream = await groq.chat.completions.create({
+        messages: messages,
+        model: model_name,
+        temperature: 0.2,
+        max_completion_tokens: getMaxModelOutput(model_name),
+        stream: true,
+    });
+
+    // } catch (error) {
+    //     throw new Error(`Error creating Groq chat completion: ${error.message}, messages : ${JSON.stringify(messages)}`);
+    // }
 
     let generatedText = '';
     for await (const chunk of stream) {

@@ -1,5 +1,7 @@
 import Button from './button';
+import ButtonIcon from './buttonIcon';
 import { useEffect, useState, useRef } from "react";
+import { Edit } from 'lucide-react';
 
 
 export function EditableMessage({ message, onEdit, }: { message: string | null; onEdit: (newMessage: string | null) => void; }) {
@@ -66,15 +68,16 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col w-auto">
+                <div className="relative flex flex-col w-auto">
                     <p
                         className="w-auto p-2 rounded-lg text-gray-200 break-words whitespace-pre-line">
 
                         {displayMessage}
                     </p>
                     <div className="flex justify-end">
-                        <Button
-                            text="Edit"
+                        <ButtonIcon
+                            icon={<Edit size={16} />}
+                            text=""
                             onClick={() => { setIsEditing(true); }}
                             type="transparent" />
                     </div>

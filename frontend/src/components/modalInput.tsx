@@ -113,7 +113,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
 
                 <div className="rounded-lg bg-[#171c23] shadow-lg py-6 z-10">
                     <div className="flex flex-col ml-auto mr-auto">
-                        <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
+                        <div className="flex gap-2 w-full mb-0 items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
 
                             <div ref={taskButtonRef}>
                                 <ButtonIcon

@@ -7,7 +7,7 @@ const variantClasses = {
     success: "bg-green-600 hover:bg-green-700 border-green-500 text-white cursor-pointer",
     white: "bg-gray-200 hover:bg-gray-300 border-2 border-white text-gray-600 hover:text-gray-700 cursor-pointer",
     black: "bg-gray-900 hover:bg-gray-800 border-2 border-gray-700 text-gray-300 hover:text-gray-100 cursor-pointer",
-    transparent: "bg-transparent hover:bg-gray-200/2 border-4 border-gray-200/2 hover:border-gray-200/5 text-gray-200/15 hover:text-gray-200/30 cursor-pointer",
+    transparent: "bg-transparent border-transparent text-gray-200/15 hover:text-gray-200/30 cursor-pointer",
     deactivated: "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-500 cursor-not-allowed",
 };
 

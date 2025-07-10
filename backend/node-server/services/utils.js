@@ -33,10 +33,10 @@ export function getMaxTokenInput(model_name) {
 
 export function getMaxModelOutput(model_name) {
     // the output is less than 40% of the TPM so the user can use it with a new long message of 60% of the TPM
-    if (!budget[model_name]) {
+    if (!models[model_name]?.budget) {
         return 2048;
     }
-    const tpm = budget[model_name].TPM;
+    const tpm = models[model_name].budget.TPM;
     return Math.floor(tpm * 0.4);
 }
 
