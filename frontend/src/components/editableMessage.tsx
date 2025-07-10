@@ -1,7 +1,6 @@
-import Button from './button';
 import ButtonIcon from './buttonIcon';
 import { useEffect, useState, useRef } from "react";
-import { Edit } from 'lucide-react';
+import { Edit, Check, Undo2 } from 'lucide-react';
 
 
 export function EditableMessage({ message, onEdit, }: { message: string | null; onEdit: (newMessage: string | null) => void; }) {
@@ -29,12 +28,12 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
     }, [isEditing]);
 
     return (
-        <div className="flex flex-col w-fit min-w-[25vw] max-w-[50vw] bg-slate-300/3 shadow-lg border-t-2 border-white/7 p-4 rounded-lg">
+        <div className="flex flex-col w-full min-w-[25vw] max-w-[50vw] bg-slate-300/3 shadow-lg border-t-2 border-white/7 p-4 rounded-lg">
             {isEditing ? (
                 <div className="flex flex-col w-auto">
                     <textarea
                         ref={textareaRef}
-                        className="w-auto p-3 rounded-lg outline-none focus:none resize-none text-gray-200 min-h-[48px] overflow-auto"
+                        className="w-auto px-3 rounded-lg outline-none focus:none resize-none text-gray-200 min-h-[48px] overflow-auto"
                         value={editedMessage ? editedMessage : ""}
                         onChange={(e) => {
                             setEditedMessage(e.target.value)
@@ -53,22 +52,24 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
                         }}>
                         {editedMessage}
                     </textarea>
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            text="Cancel"
+                    <div className="flex justify-end gap-0">
+                        <ButtonIcon
+                            icon={<Undo2 size={16} />}
+                            text=''
                             onClick={() => {
                                 setIsEditing(false);
                                 setEditedMessage(displayMessage);
                             }}
-                            type="white" />
-                        <Button
-                            text="Save"
+                            type="transparent" />
+                        <ButtonIcon
+                            icon={<Check size={16} />}
+                            text=''
                             onClick={handleEdit}
-                            type="primary" />
+                            type="transparent" />
                     </div>
                 </div>
             ) : (
-                <div className="relative flex flex-col w-auto">
+                <div className="relative flex flex-col w-full">
                     <p
                         className="w-auto p-2 rounded-lg text-gray-200 break-words whitespace-pre-line">
 

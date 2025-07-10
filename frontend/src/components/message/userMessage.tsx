@@ -11,7 +11,7 @@ export function UserMessage({
         historyTokens?: number;
     }) {
     return (
-        <div className="self-end mr-15 mt-5">
+        <div className="self-end sm:mr-0 md:mr-15 mt-5">
             <EditableMessage
                 message={message}
                 onEdit={onEdit}

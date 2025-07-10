@@ -42,7 +42,7 @@ export function BotMessage({
 
     return (
 
-        <div className="self-start ml-15 mt-5 w-fit max-w-[90%]">
+        <div className="self-start ml-0 md:ml-15 mt-5 w-fit max-w-[90%]">
             {think && (
                 <div className="mb-2 text-xs text-gray-100">
                     <button

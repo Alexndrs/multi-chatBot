@@ -2,13 +2,13 @@
 import clsx from "clsx";
 
 const variantClasses = {
-    primary: "bg-lime-300 hover:bg-lime-500 border-lime-100 text-gray-800 cursor-pointer",
-    danger: "bg-red-600 hover:bg-red-700 border-red-400 text-white cursor-pointer",
-    success: "bg-green-600 hover:bg-green-700 border-green-500 text-white cursor-pointer",
-    white: "bg-gray-200 hover:bg-gray-300 border-2 border-white text-gray-600 hover:text-gray-700 cursor-pointer",
-    black: "bg-gray-900 hover:bg-gray-800 border-2 border-gray-700 text-gray-300 hover:text-gray-100 cursor-pointer",
-    transparent: "bg-transparent border-transparent text-gray-200/15 hover:text-gray-200/30 cursor-pointer",
-    deactivated: "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-500 cursor-not-allowed",
+    primary: "py-2 px-4 bg-lime-300 hover:bg-lime-500 border-lime-100 text-gray-800 cursor-pointer",
+    danger: "py-2 px-4 bg-red-600 hover:bg-red-700 border-red-400 text-white cursor-pointer",
+    success: "py-2 px-4 bg-green-600 hover:bg-green-700 border-green-500 text-white cursor-pointer",
+    white: "py-2 px-4 bg-gray-200 hover:bg-gray-300 border-2 border-white text-gray-600 hover:text-gray-700 cursor-pointer",
+    black: "py-2 px-4 bg-gray-900 hover:bg-gray-800 border-2 border-gray-700 text-gray-300 hover:text-gray-100 cursor-pointer",
+    transparent: "py-2 px-2 bg-transparent border-transparent text-gray-200/15 hover:text-gray-200/30 cursor-pointer",
+    deactivated: "py-2 px-4 bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-500 cursor-not-allowed",
 };
 
 interface ButtonIconProps {
@@ -23,7 +23,7 @@ export default function ButtonIcon({ icon, onClick, text = "", type = "primary" 
         <button
             onClick={onClick}
             className={clsx(
-                "flex py-2 px-4 rounded-lg transition duration-150 border-2",
+                "flex rounded-lg transition duration-150 border-2",
                 variantClasses[type]
             )}
         >

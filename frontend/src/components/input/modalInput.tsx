@@ -1,11 +1,11 @@
-import ButtonIcon from "./buttonIcon";
+import ButtonIcon from "../buttonIcon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical, faSpinner, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 // import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import FloatingMenu from "./input/floatingMenu";
+import FloatingMenu from "./floatingMenu";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useConv } from "../hooks/useConv";
+import { useConv } from "../../hooks/useConv";
 
 import { motion } from "framer-motion";
 
@@ -75,7 +75,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative"
+                className="w-[90vw] md:w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative"
             >
                 {isGlowingLoop && (
                     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
@@ -113,9 +113,9 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
 
                 <div className="rounded-lg bg-[#171c23] shadow-lg py-6 z-10">
                     <div className="flex flex-col ml-auto mr-auto">
-                        <div className="flex gap-2 w-full mb-0 items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
+                        <div className="flex gap-2 w-full mb-0 items-center justify-between rounded-lg focus:outline-none p-2 border-b-[3px] border-b-black/20">
 
-                            <div ref={taskButtonRef}>
+                            <div ref={taskButtonRef} className="ml-2 shrink-0">
                                 <ButtonIcon
                                     icon={<FontAwesomeIcon icon={faEllipsisVertical} />}
                                     onClick={() => handleMenuOpen("task", taskButtonRef)}
@@ -133,7 +133,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                             <input
                                 type="text"
                                 placeholder="Type your message here..."
-                                className="flex-1 p-2 mr-2 rounded-lg focus:outline-none resize-none text-gray-400"
+                                className="flex-1 p-2 rounded-lg focus:outline-none resize-none text-gray-400"
                                 onKeyDown={handleKeyDown}
                             />
                             <ButtonIcon
@@ -157,7 +157,8 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                                 <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
                                 <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{selectedModel}</div>
                             </div>
-                            <div className="flex items-center gap-2 max-w-[50%] flex-shrink-0">
+                            {/* Hide example on sm screen */}
+                            <div className="hidden md:flex items-center gap-2 max-w-[50%] flex-shrink-0">
                                 <div
                                     className=" text-gray-400 border-1 border-dashed border-gray-400 px-3 py-1 rounded-xl text-xs hover:text-gray-200 hover:border-gray-200 transition duration-150 cursor-default"
                                     onClick={() => { sendMessage("Give me a recipe for 20 cookies") }}

@@ -7,7 +7,7 @@ import { useUser } from "../hooks/useUser";
 import { createConversation, sendMessage, updateMessage } from "../api";
 import type { Message } from "../contexts/convContext";
 import type { ConversationItem } from "../components/sidebar/sideBar";
-import ModalInput from "../components/modalInput";
+import ModalInput from "../components/input/modalInput";
 import { stripThinkTags } from "../utils";
 
 

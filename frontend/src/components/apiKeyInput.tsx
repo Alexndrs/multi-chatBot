@@ -49,17 +49,17 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     return (
         <form
             onSubmit={onSubmit}
-            className="flex flex-col items-center w-full pt-4 pb-2 px-10 transition-all border-b-4 border-b-black/15 border-t-2 border-t-white/5"
+            className="flex flex-col items-start w-full pt-4 pb-2 px-6 md:px-10 transition-all border-b-4 border-b-black/15 border-t-2 border-t-white/5"
         >
-            <div className='flex items-center gap-3 w-full'>
-                {/* API name + icon */}
-                <div className="w-32 flex items-center text-white font-medium">
+            <div className='flex flex-col md:flex-row md:items-center gap-3 w-full'>
+                {/* API name */}
+                <div className="w-full md:w-32 flex items-center text-white font-medium">
                     {displayName}
                 </div>
 
 
                 {/* Input */}
-                <div className="flex-grow relative items-center">
+                <div className="w-full relative items-center">
                     <input
                         type={show ? 'text' : 'password'}
                         value={value}
@@ -70,7 +70,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                     <button
                         type="button"
                         onClick={() => setShow(!show)}
-                        className="absolute right-8 top-4 text-gray-400 hover:text-white transition-all duration-100 z-10 cursor-pointer"
+                        className="absolute right-8 top-3 md:top-4 text-gray-400 hover:text-white transition-all duration-100 z-10 cursor-pointer"
                     >
                         {show ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -93,7 +93,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                                         }
                                     }
                                 }
-                                className='absolute right-2 top-3.5 text-gray-400 hover:text-red-500 transition-all duration-100 z-10 cursor-pointer'
+                                className='absolute right-2 top-3 md:top-3.5 text-gray-400 hover:text-red-500 transition-all duration-100 z-10 cursor-pointer'
                                 aria-label="delete API key"
                             ><FontAwesomeIcon icon={faTrash} size="sm" /></button>
                         )
@@ -101,11 +101,11 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                 </div>
 
                 {/* Submit button */}
-                <div className="w-21 px-4">
+                <div className="w-full md:w-21 px-0 md:px-4 mt-2 md:mt-0">
                     {hasChanged && value.trim() && (
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded w-full md:w-auto"
                         >
                             {currentKey ? 'Modifier' : 'Ajouter'}
                         </button>
@@ -116,7 +116,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                 </div>
 
                 {/* Date */}
-                <div className="w-25 text-right text-xs text-gray-500">
+                <div className="w-full md:w-25 text-left md:text-right text-xs text-gray-500 mt-2 md:mt-0">
                     {updatedAt && (
                         <span>Modifié le {dayjs(updatedAt).format('DD MMM YYYY à HH:mm')}</span>
                     )}
@@ -124,7 +124,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
             </div>
             {/* Site URL */}
             {siteUrl && (
-                <div className="text-xs text-gray-400 mt-2 flex">
+                <div className="text-xs text-gray-400 mt-2 flex flex-wrap">
                     Find a key here : <a
                         href={siteUrl}
                         target="_blank"
