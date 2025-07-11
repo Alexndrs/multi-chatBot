@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "llama-tokenizer-js": "^1.2.2",
     "mongoose": "^8.14.2",
+    "nodemailer": "^7.0.5",
     "openai": "^5.8.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

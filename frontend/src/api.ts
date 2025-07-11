@@ -1,8 +1,8 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { ConversationData, Message } from "./contexts/convContext";
 import type { Apis, Models, UserData } from "./contexts/userContext";
-// const serverUrl = 'http://localhost:8000';
-const serverUrl = '/api';
+// export const serverUrl = 'http://localhost:8000';
+export const serverUrl = '/api';
 
 export const getToken = () => {
     const token = localStorage.getItem('token');
