@@ -9,7 +9,7 @@ const LoadingPage = () => {
                 transition={{ duration: 0.5 }}
                 className="text-4xl font-bold mb-8"
             >
-                🧠 ChatNova
+                🧠 Chatbot.Bridge
             </motion.h1>
 
             <motion.div

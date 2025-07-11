@@ -56,7 +56,7 @@ export default function Input({ onSend, }: { onSend: (message: string) => void; 
             className="flex flex-col ml-auto mr-auto"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
         >
 
             <div className="rounded-lg bg-slate-300/3 py-4 z-10 border-t-2 border-white/7 backdrop-blur-2xl">
