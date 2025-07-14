@@ -3,7 +3,7 @@
 A fullstack AI-powered chat platform supporting **multiple LLM providers** (OpenAI, Mistral, Anthropic, Gemini, Groq...) with **token-by-token streaming**, auth, dynamic prompt budgeting and a custom refined UI/UX.
 
 ---
-## 🌐   [Live Demo (click)](http://3.148.228.110/)
+## 🌐   [Live Demo https://chatbothub.org/](https://chatbothub.org/)
 
 > * App deployed on an AWS EC2 Ubuntu instance (fullstack deployment on a single machine).
 > * Using Nginx as reverse proxy and PM2 for process management.
