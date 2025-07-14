@@ -1,4 +1,4 @@
-# chatbot.Bridge : a multi-Model chat platform with real-time token streaming
+# A Multi-Model Chat Platform with Real-Time Token Streaming
 
 A fullstack AI-powered chat platform supporting **multiple LLM providers** (OpenAI, Mistral, Anthropic, Gemini, Groq...) with **token-by-token streaming**, auth, dynamic prompt budgeting and a custom refined UI/UX.
 
