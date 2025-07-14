@@ -1,8 +1,8 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { ConversationData, Message } from "./contexts/convContext";
 import type { Apis, Models, UserData } from "./contexts/userContext";
-// export const serverUrl = 'http://localhost:8000';
-export const serverUrl = '/api';
+export const serverUrl = 'http://localhost:8000';
+// export const serverUrl = '/api';
 
 export const getToken = () => {
     const token = localStorage.getItem('token');
@@ -244,6 +244,7 @@ export const createConversation = async (
             onUsage: () => { }
         }
     );
+    console.log('Container data:', containerData);
     if (!containerData) {
         throw new Error('Failed to create conversation, please verify your API key');
     }

@@ -1,9 +1,17 @@
 # A Multi-Model Chat Platform with Real-Time Token Streaming
 
+[![Live](https://img.shields.io/badge/Site-Live-green?style=flat-square&logo=rocket)](https://chatbothub.org)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js&style=flat-square)](https://nodejs.org)
+[![SQLite](https://img.shields.io/badge/DB-SQLite-lightgrey?logo=sqlite&style=flat-square)](https://www.sqlite.org/index.html)
+[![TailwindCSS](https://img.shields.io/badge/Styled%20with-TailwindCSS-06B6D4?logo=tailwindcss&style=flat-square)](https://tailwindcss.com)
+[![Hosted on AWS](https://img.shields.io/badge/Hosted_on-AWS-232F3E?logo=amazon-aws&logoColor=white&style=flat-square)](https://aws.amazon.com/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Webhook-blue?logo=github&style=flat-square)](https://github.com)
+
+
 A fullstack AI-powered chat platform supporting **multiple LLM providers** (OpenAI, Mistral, Anthropic, Gemini, Groq...) with **token-by-token streaming**, auth, dynamic prompt budgeting and a custom refined UI/UX.
 
 ---
-## 🌐   Live Demo [chatbothub.org](https://chatbothub.org)
+## 🌐   Deployed @ [chatbothub.org](https://chatbothub.org)
 
 > * App deployed on an AWS EC2 Ubuntu instance (fullstack deployment on a single machine).
 > * Using Nginx as reverse proxy and PM2 for process management.
