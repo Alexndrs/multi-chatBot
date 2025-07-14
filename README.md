@@ -47,8 +47,7 @@ A fullstack AI-powered chat platform supporting **multiple LLM providers** (Open
 
 ## 🧠 Notable Engineering Challenges
 
-- **Streaming with SSE over REST**  
-  Unlike websockets, SSE provides a simpler and more scalable solution for **unidirectional token streaming**. I built a middleware to handle multi-client streams reliably.
+- **Streaming with HTTP**  
 
 - **Token Budgeting per Provider**  
   Providers like Groq or Mistral have different context limits and pricing per TPM. I implemented a **sliding window mechanism** to dynamically select the right number of recent messages for context.
