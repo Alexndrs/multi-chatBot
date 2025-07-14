@@ -7,9 +7,10 @@ A fullstack AI-powered chat platform supporting **multiple LLM providers** (Open
 
 > * App deployed on an AWS EC2 Ubuntu instance (fullstack deployment on a single machine).
 > * Using Nginx as reverse proxy and PM2 for process management.
+> * Using webhook for CI/CD
 
 <p align="center">
-  <img src="./demo.gif" width="600" alt="Chat demo" />
+  <img src="./demo.gif" width="100%" alt="Chat demo" />
 </p>
 
 
