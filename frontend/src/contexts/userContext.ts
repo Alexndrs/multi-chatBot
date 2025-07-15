@@ -31,6 +31,7 @@ export interface UserData {
     token: string | null;
     conversations: ConversationItem[] | null;
     userApis: string[] | null;
+    verified?: boolean;
 }
 
 
@@ -44,6 +45,9 @@ export interface UserContextType {
     setAvailableApis: React.Dispatch<React.SetStateAction<Apis | null>>;
     availableModels: Models | null;
     setAvailableModels: React.Dispatch<React.SetStateAction<Models | null>>;
+
+    status: 'unverified' | 'verified' | 'unauthenticated';
+    setStatus: React.Dispatch<React.SetStateAction<'unverified' | 'verified' | 'unauthenticated'>>;
 }
 
 

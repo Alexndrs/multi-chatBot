@@ -5,9 +5,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import LogoIcon from '../components/icons/LogoIcon';
 import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
+import { useNavigate } from 'react-router-dom';
+import { isUnauthorizedError } from '../utils';
 
 const LoginPage = () => {
-    const { setUserData, setAvailableApis, setAvailableModels } = useUser();
+    const { setUserData, setAvailableApis, setAvailableModels, setStatus } = useUser();
 
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState('');
@@ -15,6 +17,7 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -24,18 +27,33 @@ const LoginPage = () => {
             } else {
                 await loginUser(email, password);
             }
+            try {
+                const userInfo = await getUserInfo();
+                const conversations = await getUserConversations();
+                setUserData({
+                    token: localStorage.getItem('token'),
+                    name: userInfo.userInfo.name,
+                    email: userInfo.userInfo.email,
+                    conversations,
+                    userApis: userInfo.apiInfo.userApis || [],
+                    verified: userInfo.userInfo.verified,
+                });
+                setAvailableApis(userInfo.apiInfo.availableApis || {});
+                setAvailableModels(userInfo.apiInfo.availableModels || {});
+                setStatus(userInfo.verified ? 'verified' : 'unverified');
 
-            const userInfo = await getUserInfo();
-            const conversations = await getUserConversations();
-            setUserData({
-                token: localStorage.getItem('token'),
-                name: userInfo.userInfo.name,
-                email: userInfo.userInfo.email,
-                conversations,
-                userApis: userInfo.apiInfo.userApis || [],
-            });
-            setAvailableApis(userInfo.apiInfo.availableApis || {});
-            setAvailableModels(userInfo.apiInfo.availableModels || {});
+                if (!userInfo.userInfo.verified) {
+                    navigate('/verify');
+                }
+
+            } catch (err: unknown) {
+                if (isUnauthorizedError(err)) {
+                    setStatus('unverified');
+                    navigate('/verify');
+                    return;
+                }
+                throw err;
+            }
         } catch (err) {
             setError('❌ Échec de la connexion ou de la création du compte.');
             console.error(err);

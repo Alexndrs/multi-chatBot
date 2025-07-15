@@ -1,6 +1,8 @@
 import express from 'express';
 import * as auth from '../core/auth.js';
 import authenticateToken from '../middleware/auth.js';
+import { isVerified } from '../db/sqlite_interface.js';
+import { sendVerificationEmail } from '../services/mail_sender.js';
 
 const router = express.Router();
 router.post('/', async (req, res) => {
@@ -10,7 +12,9 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const { userId, token } = await auth.createUser(mail, name, password);
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const { userId, token } = await auth.createUser(mail, name, password, code);
+        await sendVerificationEmail({ to: mail, name, code });
         res.status(201).json({ userId, token });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -18,12 +22,31 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.post('/verify/:code', authenticateToken, async (req, res) => {
+    const { code } = req.params;
+    const userId = req.user.userId;
+    if (!userId || !code) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    try {
+        const verificationResult = await auth.verifyUserCode(userId, code);
+        if (verificationResult) {
+            return res.status(200).json({ message: 'User verified successfully' });
+        }
+        const status = result.error === 'Verification code not found' ? 404 : 400;
+        return res.status(status).json({ error: result.error });
+    } catch (error) {
+        console.error('Error verifying user:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 router.post('/login', async (req, res) => {
     const { mail, password } = req.body;
     if (!mail || !password) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
-
     try {
         const { userId, token } = await auth.loginUser(mail, password);
         res.status(200).json({ userId, token });
@@ -36,12 +59,20 @@ router.post('/login', async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     try {
-        const userInfo = await auth.getUserInfo(userId);
-        if (!userInfo) {
+        try {
+            const isUserVerified = await isVerified(userId);
+            if (!isUserVerified) {
+                return res.status(403).json({ error: 'User not verified' });
+            }
+            const userInfo = await auth.getUserInfo(userId);
+            if (!userInfo) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            const apiInfo = await auth.getUserApis(userId);
+            res.status(200).json({ userInfo, apiInfo, verified: isUserVerified });
+        } catch {
             return res.status(404).json({ error: 'User not found' });
         }
-        const apiInfo = await auth.getUserApis(userId);
-        res.status(200).json({ userInfo, apiInfo });
     } catch (error) {
         console.error('Error fetching user:', error);
         res.status(500).json({ error: 'Internal server error' });

@@ -6,19 +6,19 @@ export const serverUrl = '/api';
 
 export const getToken = () => {
     const token = localStorage.getItem('token');
-    if (!token) {
-        throw new Error('No token found, please login');
-    }
+    if (!token) return null;
+
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
             localStorage.removeItem('token');
-            throw new Error('Token expired');
+            return null;
         }
     } catch {
         localStorage.removeItem('token');
-        throw new Error('Invalid token');
+        return null;
     }
+
     return token;
 }
 
@@ -28,8 +28,13 @@ export const removeToken = () => {
 
 async function jsonRequest<T>(input: RequestInfo, init: RequestInit): Promise<T> {
     const res = await fetch(input, init);
-    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    if (!res.ok) {
+        const error = new Error(`Request failed: ${res.status}`) as Error & { status?: number };
+        error.status = res.status;
+        throw error;
+    }
     return res.json();
+
 }
 
 async function streamJson<T, R = void>(
@@ -145,6 +150,7 @@ export const logoutUser = () => {
 interface allUserInfo {
     userInfo: UserData;
     apiInfo: { userApis: string[], availableApis: Apis, availableModels: Models };
+    verified: boolean;
 }
 
 export const getUserInfo = async (): Promise<allUserInfo> => {

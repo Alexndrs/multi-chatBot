@@ -1,18 +1,38 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useUser } from './hooks/useUser';
 import { getToken, getUserInfo, getUserConversations, removeToken, } from './api';
-import Layout from './components/layout';
 import LoadingPage from './pages/loadingPage';
-import LoginPage from './pages/loginPage';
 import AppContent from './AppContent';
+import { isUnauthorizedError } from './utils';
 
 const AppWrapper = () => {
-    const { userData, setUserData, loading, setLoading, setAvailableApis, setAvailableModels } = useUser();
+    const {
+        setUserData,
+        setAvailableApis,
+        setAvailableModels,
+        setStatus,
+        loading,
+        setLoading,
+        status,
+    } = useUser();
+
+    const initCalled = useRef(false);
+
 
     useEffect(() => {
+        if (initCalled.current) return;
         const init = async () => {
+            initCalled.current = true;
+
+
+            const token = getToken();
+            if (!token) {
+                setStatus('unauthenticated');
+                setLoading(false);
+                return;
+            }
+
             try {
-                const token = getToken();
                 const userInfo = await getUserInfo();
                 const conversations = await getUserConversations();
                 setUserData({
@@ -24,25 +44,27 @@ const AppWrapper = () => {
                 });
                 setAvailableApis(userInfo.apiInfo.availableApis || {});
                 setAvailableModels(userInfo.apiInfo.availableModels || {});
-            } catch {
-                removeToken();
-                setUserData(null);
+                setStatus(userInfo.verified ? 'verified' : 'unverified');
+            } catch (err: unknown) {
+                if (isUnauthorizedError(err)) {
+                    setStatus('unverified');
+                } else {
+                    removeToken();
+                    setUserData(null);
+                    setStatus('unauthenticated');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         init();
-    }, [setUserData, setLoading, setAvailableApis, setAvailableModels]);
+    }, [setUserData, setLoading, setAvailableApis, setAvailableModels, setStatus]);
 
     if (loading) return <LoadingPage />;
 
-    if (!userData) return <LoginPage />;
-
     return (
-        <Layout>
-            <AppContent />
-        </Layout>
+        <AppContent status={status} />
     );
 };
 

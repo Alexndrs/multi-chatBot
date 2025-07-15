@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET
  * @param {string} hpass 
  * @returns {Promise<{import('../db/interface').userObject}>}
  */
-export async function createUser(mail, name, pass) {
+export async function createUser(mail, name, pass, code) {
     // Verify if user already exists
     const existingUser = await db.getUserByMail(mail); // <-- important
     if (existingUser) {
@@ -37,7 +37,7 @@ export async function createUser(mail, name, pass) {
     };
 
 
-    await db.addUser(newUser);
+    await db.addUser(newUser, code);
     const token = jwt.sign({ userId: newUser.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
     return { userId: newUser.userId, token };
 }
@@ -82,4 +82,20 @@ export async function getUserApis(userId) {
         availableApis: apis,
         availableModels: models,
     }
+}
+
+export async function verifyUserCode(userId, enteredCode) {
+    const realCode = await db.getUserVerificationCode(userId);
+    console.log('realCode:', realCode, 'enteredCode:', enteredCode);
+    if (!realCode) {
+        throw new Error('Verification code not found');
+    }
+
+    if (realCode !== enteredCode) {
+        throw new Error('Invalid verification code');
+    }
+
+    // Update user verification status
+    await db.setUserVerified(userId);
+    return true;
 }

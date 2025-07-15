@@ -12,25 +12,24 @@ const transporter = nodemailer.createTransport({
 
 
 
-export async function sendVerificationCodeEmail({ to, name, code }) {
-    const link = `${process.env.URL}/verify-email?token=${token}`;
+export async function sendVerificationEmail({ to, name, code }) {
 
     const mailOptions = {
-        from: `"MultiBot" <${process.env.MAIL}>`,
+        from: `"chatbotHub" <${process.env.MAIL}>`,
         to,
         subject: 'Vérifie ton adresse e-mail',
         html: `
             <h2>Bienvenue ${name} 👋</h2>
-            <p>Merci de t’être inscrit. Clique sur le bouton ci-dessous pour vérifier ton adresse e-mail :</p>
-            <a href="${link}" style="padding:10px 20px; background:#4f46e5; color:white; text-decoration:none; border-radius:5px;">Vérifier mon e-mail</a>
-            <p>Ou copie-colle ce lien : <br>${link}</p>
+            <p>Merci de t’être inscrit. Pour activer ton compte, utilise le code de vérification suivant :</p>
+            <h3 style="color: #4CAF50;">${code}</h3>
+            <p>Copie-colle ce code dans l’application pour terminer la vérification.</p>
+            <p>Si tu n’as pas créé de compte, ignore ce message.</p>
+            <p>À bientôt sur ChatbotHub !</p>
         `
     };
 
     await transporter.sendMail(mailOptions);
 }
-
-
 
 
 

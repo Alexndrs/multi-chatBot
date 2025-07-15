@@ -24,7 +24,8 @@ export async function initDB() {
             name TEXT,
             email TEXT UNIQUE,
             password TEXT,
-            preferences TEXT
+            preferences TEXT,
+            isVerified INTEGER DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS conversations (
@@ -54,7 +55,31 @@ export async function initDB() {
             api TEXT,
             date TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS verifications (
+            userId TEXT PRIMARY KEY,
+            code TEXT,
+            FOREIGN KEY (userId) REFERENCES users(userId)
+        );
     `);
+
+
+    // verify if column isVerified exists
+    const columns = await db.all(`PRAGMA table_info(users);`);
+    const hasIsVerified = columns.some(col => col.name === 'isVerified');
+    if (!hasIsVerified) {
+        await db.run(`ALTER TABLE users ADD COLUMN isVerified INTEGER DEFAULT 0`);
+    }
+
+    // Make sure all users have a verification code if they are not verified
+    const unverifiedUsers = await db.all(`SELECT userId FROM users WHERE isVerified = 0`);
+    for (const user of unverifiedUsers) {
+        const exists = await db.get(`SELECT 1 FROM verifications WHERE userId = ?`, user.userId);
+        if (!exists) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            await db.run(`INSERT INTO verifications (userId, code) VALUES (?, ?)`, user.userId, code);
+        }
+    }
 
     // Cleaning the database (conv with no user, messages with no conv)
     await db.run(`
@@ -78,24 +103,32 @@ export async function initDB() {
 
 // --- USERS ---
 
-export async function addUser(user) {
+export async function addUser(user, code) {
+    console.log('Adding user:', user, code);
     const db = await getDB();
     const { userId, userInfo, conversations } = user;
     const { name, email, password, preferences } = userInfo;
 
     await db.run(
-        `INSERT INTO users (userId, name, email, password, preferences) VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO users (userId, name, email, password, preferences, isVerified) VALUES (?, ?, ?, ?, ?, ?)`,
         userId,
         name,
         email,
         password,
-        JSON.stringify(preferences || {})
+        JSON.stringify(preferences || {}),
+        0
+    );
+
+    await db.run(
+        `INSERT INTO verifications (userId, code) VALUES (?, ?)`,
+        userId,
+        code
     );
 
     if (conversations && conversations.length > 0) {
         for (const conv of conversations) {
             await db.run(
-                `INSERT INTO conversations (convId, userId, convName, date, token) VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO conversations (convId, userId, convName, date, token) VALUES (?, ?, ?, ?, ?, ?)`,
                 conv.convId,
                 userId,
                 conv.convName || '',
@@ -104,7 +137,30 @@ export async function addUser(user) {
             );
         }
     }
+
     return userId;
+}
+
+export async function isVerified(userId) {
+    const db = await getDB();
+    const user = await db.get(`SELECT isVerified FROM users WHERE userId = ?`, userId);
+    if (!user) throw new Error('Utilisateur non trouvé');
+    return user.isVerified === 1;
+}
+
+export async function setUserVerified(userId) {
+    const db = await getDB();
+    const res = await db.run(`UPDATE users SET isVerified = 1 WHERE userId = ?`, userId);
+    if (res.changes === 0) throw new Error('Utilisateur non trouvé');
+    await db.run(`DELETE FROM verifications WHERE userId = ?`, userId);
+    return true;
+}
+
+export async function getUserVerificationCode(userId) {
+    const db = await getDB();
+    const verification = await db.get(`SELECT code FROM verifications WHERE userId = ?`, userId);
+    if (!verification) throw new Error('Verification code not found');
+    return verification.code;
 }
 
 
