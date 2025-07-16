@@ -58,10 +58,10 @@ const VerifyPage = () => {
         }
     };
 
-    const handleResend = async () => {
-        // TODO : appel à une future route pour renvoyer l'email
-        alert("🚧 Fonction à venir : renvoi d'email");
-    };
+    // const handleResend = async () => {
+    //     // TODO : appel à une future route pour renvoyer l'email
+    //     alert("🚧 Fonction à venir : renvoi d'email");
+    // };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#12141b] text-white">
@@ -84,13 +84,15 @@ const VerifyPage = () => {
                 >
                     {loading ? 'Vérification...' : 'Vérifier'}
                 </button>
+                {/* 
                 <button
                     onClick={handleResend}
                     disabled={loading}
                     className="w-full p-2 bg-gray-500/30 hover:bg-gray-500/50 rounded font-medium text-white text-sm"
                 >
                     Renvoyer le mail
-                </button>
+                </button> 
+                */}
                 {message && <p className="mt-3 text-sm">{message}</p>}
             </div>
         </div>
