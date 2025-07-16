@@ -1,7 +1,7 @@
 import express from 'express';
 import * as auth from '../core/auth.js';
 import authenticateToken from '../middleware/auth.js';
-import { isVerified } from '../db/sqlite_interface.js';
+import { isVerified, getUserById, getUserVerificationCode } from '../db/sqlite_interface.js';
 import { sendVerificationEmail } from '../services/mail_sender.js';
 
 const router = express.Router();
@@ -18,6 +18,33 @@ router.post('/', async (req, res) => {
         res.status(201).json({ userId, token });
     } catch (error) {
         console.error('Error creating user:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/resend', authenticateToken, async (req, res) => {
+    // This route is for resending the verification email
+    const userId = req.user.userId;
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing user ID' });
+    }
+    try {
+        const user = await getUserById(userId);
+        console.log('Resending verification email for user:', user);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        if (user.userInfo.verified) {
+            return res.status(400).json({ error: 'User already verified' });
+        }
+        const code = await getUserVerificationCode(userId);
+        if (!code) {
+            return res.status(404).json({ error: 'Verification code not found' });
+        }
+        await sendVerificationEmail({ to: user.userInfo.email, name: user.userInfo.name, code });
+        res.status(200).json({ message: 'Verification email resent successfully' });
+    } catch (error) {
+        console.error('Error resending verification email:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

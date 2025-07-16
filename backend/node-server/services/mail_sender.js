@@ -13,6 +13,7 @@ const transporter = nodemailer.createTransport({
 
 
 export async function sendVerificationEmail({ to, name, code }) {
+    console.log('Sending verification email to:', to, 'with code:', code, "process.env.MAIL", process.env.MAIL);
 
     const mailOptions = {
         from: `"chatbotHub" <${process.env.MAIL}>`,

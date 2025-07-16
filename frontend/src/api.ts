@@ -1,8 +1,8 @@
 import type { ConversationItem } from "./components/sidebar/sideBar";
 import type { ConversationData, Message } from "./contexts/convContext";
 import type { Apis, Models, UserData } from "./contexts/userContext";
-// export const serverUrl = 'http://localhost:8000';
-export const serverUrl = '/api';
+export const serverUrl = 'http://localhost:8000';
+// export const serverUrl = '/api';
 
 export const getToken = () => {
     const token = localStorage.getItem('token');
@@ -129,6 +129,24 @@ export const createUser = async (name: string, mail: string, password: string) =
         body: JSON.stringify({ name, mail, password })
     })
     localStorage.setItem('token', json.token);
+}
+
+export const resendVerificationEmail = async () => {
+    const token = getToken();
+    if (!token) throw new Error('No token found');
+
+    const res = await fetch(`${serverUrl}/user/resend`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        }
+    });
+
+    if (!res.ok) {
+        throw new Error(`Failed to resend verification email: ${res.statusText}`);
+    }
+
+    return res.json();
 }
 
 export const loginUser = async (mail: string, password: string) => {

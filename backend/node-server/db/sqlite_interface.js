@@ -104,7 +104,6 @@ export async function initDB() {
 // --- USERS ---
 
 export async function addUser(user, code) {
-    console.log('Adding user:', user, code);
     const db = await getDB();
     const { userId, userInfo, conversations } = user;
     const { name, email, password, preferences } = userInfo;
@@ -174,7 +173,8 @@ export async function getUserById(userId) {
             name: userRow.name,
             email: userRow.email,
             password: userRow.password,
-            preferences: JSON.parse(userRow.preferences || '{}')
+            preferences: JSON.parse(userRow.preferences || '{}'),
+            verified: userRow.isVerified === 1
         },
         conversations: await getUserConversations(userRow.userId)
     };
