@@ -51,6 +51,19 @@ const ChatPage: React.FC = () => {
         };
     }, [modalOpen, setModalOpen]);
 
+    useEffect(() => {
+        const scrollToBottom = () => {
+            if (messagesEndRef.current) {
+                messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        // Petit délai pour s'assurer que le DOM est complètement mis à jour
+        const timeoutId = setTimeout(scrollToBottom, 100);
+
+        return () => clearTimeout(timeoutId);
+    }, [conversation?.msgList?.length]);
+
     const appendToConversation = (...messages: Message[]) => {
         setConversation((prev) => {
             if (prev && prev.convId === messages[0].convId) {
@@ -355,7 +368,7 @@ const ChatPage: React.FC = () => {
 
             {/* Header */}
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full py-5 flex justify-center items-center z-20 backdrop-blur-md">
-                <h1 className="text-3xl font-medium text-white font-playfair">
+                <h1 className="text-3xl pl-20 md:pl-0 font-medium text-white font-playfair">
                     {conversation ? stripThinkTags(conversation.convName || "") : "Hello, ask me anything!"}
                 </h1>
                 {conversation && (

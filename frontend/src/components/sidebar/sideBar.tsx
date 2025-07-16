@@ -50,7 +50,7 @@ export type ConversationItem = {
     date: string;
 };
 
-export default function SideBar({ open, onClose }: { open: boolean; onClose: () => void }) {
+const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void }>(({ open, onClose }, ref) => {
     const navigate = useNavigate();
     const { userData, setUserData } = useUser();
     const { setConversation, setModalOpen } = useConv();
@@ -185,6 +185,7 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
 
     return (
         <div
+            ref={ref}
             className={`fixed top-0 left-0 h-screen w-64 bg-linear-to-t from-[#12141b] to-[#191c2a] border-r-2 border-gray-700/40 p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
                 }`}
         >
@@ -240,4 +241,6 @@ export default function SideBar({ open, onClose }: { open: boolean; onClose: () 
             </div>
         </div>
     );
-}
+});
+
+export default SideBar;
