@@ -1,4 +1,4 @@
-# A Multi-Model Chat Platform with Real-Time Token Streaming
+# Multi-Model AI Chatbot with Real-Time Streaming (OpenAI, Mistral, Groq...)
 
 [![Live](https://img.shields.io/badge/Site-Live-green?style=flat-square&logo=rocket)](https://chatbothub.org)
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js&style=flat-square)](https://nodejs.org)
@@ -55,10 +55,14 @@ A fullstack AI-powered chat platform supporting **multiple LLM providers** (Open
 
 ## 🧠 Notable Engineering Challenges
 
-- **Streaming with HTTP**  
+- **Real-Time Token Streaming over HTTP**
+Had to manage manual flushing of token chunks and ensure frontend re-rendering with backpressure.
 
-- **Token Budgeting per Provider**  
-  Providers like Groq or Mistral have different context limits and pricing per TPM. I implemented a **sliding window mechanism** to dynamically select the right number of recent messages for context.
+- Prompt Budgeting & Sliding Context Window
+Each LLM has its own context/token limit. I implemented a dynamic sliding window to truncate message history while maximizing relevance for the current query.
+
+- **Built without any chatbot libraries or boilerplates**
+  all components handcrafted.
 
 ---
 
