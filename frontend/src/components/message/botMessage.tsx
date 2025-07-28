@@ -3,6 +3,8 @@ import { faRotateRight, faChevronDown, faChevronUp } from '@fortawesome/free-sol
 import ReactMarkdown from 'react-markdown';
 import { CodeBlock } from '../codeBlock';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { useEffect, useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 
@@ -68,7 +70,8 @@ export function BotMessage({
             <div className="prose prose-invert max-w-none text-gray-300 text-sm p-4">
                 {!isLoading ? (
                     <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
                         components={{
                             code({ className, children, inline }: CodeComponentProps) {
 

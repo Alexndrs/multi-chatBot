@@ -11,7 +11,7 @@ export const apis = {
 
 export const models = {
     'llama-3.1-8b-instant': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 6000, TPD: 500000 }, task: 'text-2-text' },
-    'qwen-qwq-32b': { api: 'groq', budget: { RPM: 30, RPD: 1000, TPM: 6000, TPD: 10000000 }, task: 'text-2-text' },
+    'qwen/qwen3-32b': { api: 'groq', budget: { RPM: 60, RPD: 1000, TPM: 6000, TPD: 500000 }, task: 'text-2-text' },
     'gemma2-9b-it': { api: 'groq', budget: { RPM: 30, RPD: 14400, TPM: 15000, TPD: 500000 }, task: 'text-2-text' },
     'gemini-2.5-flash': { api: 'gemini', budget: { RPM: 10, RPD: 250, TPM: 250000, TPD: 10000000 }, task: 'multimodal-2-text' },
     'gemini-2.5-pro': { api: 'gemini', budget: { RPM: 5, RPD: 100, TPM: 250000, TPD: 10000000 }, task: 'multimodal-2-text' },

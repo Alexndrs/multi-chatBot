@@ -27,7 +27,9 @@
     "react-router-dom": "^7.6.3",
     "react-syntax-highlighter": "^15.6.1",
     "react-use-measure": "^2.1.7",
+    "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "tailwindcss": "^4.1.7"
   },
   "devDependencies": {
