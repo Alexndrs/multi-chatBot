@@ -131,22 +131,31 @@ export const createUser = async (name: string, mail: string, password: string) =
     localStorage.setItem('token', json.token);
 }
 
+export const verifyCode = async (code: string) => {
+    await jsonRequest<{ error: string }>(
+        `${serverUrl}/user/verify/${code}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json',
+        }
+    })
+}
+
 export const resendVerificationEmail = async () => {
     const token = getToken();
     if (!token) throw new Error('No token found');
 
-    const res = await fetch(`${serverUrl}/user/resend`, {
+    const json = await jsonRequest<{ message: string }>(
+        `${serverUrl}/user/resend`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
         }
     });
 
-    if (!res.ok) {
-        throw new Error(`Failed to resend verification email: ${res.statusText}`);
-    }
-
-    return res.json();
+    return json;
 }
 
 export const loginUser = async (mail: string, password: string) => {

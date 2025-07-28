@@ -1,15 +1,13 @@
 import { useState, useMemo } from 'react';
-import { createUser, loginUser, getUserInfo, getUserConversations } from '../api';
-import { useUser } from '../hooks/useUser';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import LogoIcon from '../components/icons/LogoIcon';
 import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
-import { useNavigate } from 'react-router-dom';
-import { isUnauthorizedError } from '../utils';
+import { useAuthLogic } from '../hooks/useAuthLogic';
+
 
 const LoginPage = () => {
-    const { setUserData, setAvailableApis, setAvailableModels, setStatus } = useUser();
+    const { login, register } = useAuthLogic();
 
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState('');
@@ -17,42 +15,15 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
-    const navigate = useNavigate();
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
             if (isRegister) {
-                await createUser(name, email, password);
+                await register(name, email, password);
             } else {
-                await loginUser(email, password);
-            }
-            try {
-                const userInfo = await getUserInfo();
-                const conversations = await getUserConversations();
-                setUserData({
-                    token: localStorage.getItem('token'),
-                    name: userInfo.userInfo.name,
-                    email: userInfo.userInfo.email,
-                    conversations,
-                    userApis: userInfo.apiInfo.userApis || [],
-                    verified: userInfo.userInfo.verified,
-                });
-                setAvailableApis(userInfo.apiInfo.availableApis || {});
-                setAvailableModels(userInfo.apiInfo.availableModels || {});
-                setStatus(userInfo.verified ? 'verified' : 'unverified');
-
-                if (!userInfo.userInfo.verified) {
-                    navigate('/verify');
-                }
-
-            } catch (err: unknown) {
-                if (isUnauthorizedError(err)) {
-                    setStatus('unverified');
-                    navigate('/verify');
-                    return;
-                }
-                throw err;
+                await login(email, password);
             }
         } catch (err) {
             setError('❌ Échec de la connexion ou de la création du compte.');

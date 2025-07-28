@@ -78,7 +78,6 @@ const ChatPage: React.FC = () => {
         }
     };
 
-
     const handleMessageEdit = async (newContent: string | null, msgId: string | null) => {
         if (!newContent?.trim()) return;
         if (!msgId) {
@@ -92,9 +91,6 @@ const ChatPage: React.FC = () => {
             setError(err instanceof Error ? err.message : "Une erreur est survenue.");
         }
     };
-
-
-
 
     const handleBotMessageReload = async (msgId: string | null) => {
         try {

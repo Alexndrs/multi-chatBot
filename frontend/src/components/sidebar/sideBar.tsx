@@ -23,18 +23,18 @@ const FloatingUserMenu = forwardRef<HTMLDivElement, { x: number, y: number, onCl
             style={{ top: y, left: x }}
         >
             <div
-                className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
+                className="hover:bg-white/2 border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
                     navigate("/settings");
                     onClose();
 
                 }}>Settings</div>
             <div
-                className="hover:bg-white/2 hover:border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
+                className="hover:bg-white/2 border-t-2 border-transparent hover:border-white/5 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100" onClick={() => {
                     navigate("/contact");
                     onClose();
                 }}>Contact</div>
             <div
-                className="hover:bg-red-300/2 hover:border-t-2 border-transparent hover:border-white/5 hover:text-red-400 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100"
+                className="hover:bg-red-300/2 border-t-2 border-transparent hover:border-white/5 hover:text-red-400 hover:shadow-md px-6 py-3 cursor-pointer transition-all ease-in-out duration-100"
                 onClick={() => {
                     logoutUser();
                     onClose();

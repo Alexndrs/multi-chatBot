@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
-import { serverUrl, getToken, getUserInfo, getUserConversations, resendVerificationEmail, removeToken } from '../api';
 import { useUser } from '../hooks/useUser';
 import { AnimatePresence, motion } from 'framer-motion';
 import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
+import { useAuthLogic } from '../hooks/useAuthLogic';
 
 const VerifyPage = () => {
-    const { setStatus, setUserData, setAvailableApis, setAvailableModels } = useUser();
+    const { setStatus } = useUser();
+    const { verifyUser, resetStatus, sendEmail } = useAuthLogic();
     const [code, setCode] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -16,42 +17,13 @@ const VerifyPage = () => {
             return;
         }
         setLoading(true);
+
         try {
-            const res = await fetch(`${serverUrl}/user/verify/${code}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${getToken()}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-            if (!res.ok) {
-                setMessage("❌ invalid code");
-                return;
-            }
-
-            setMessage("✅ Successfully verified !");
-
-
-            try {
-                const userInfo = await getUserInfo();
-                const conversations = await getUserConversations();
-
-                setUserData({
-                    token: getToken(),
-                    name: userInfo.userInfo.name,
-                    email: userInfo.userInfo.email,
-                    conversations,
-                    userApis: userInfo.apiInfo.userApis || [],
-                });
-                setAvailableApis(userInfo.apiInfo.availableApis || {});
-                setAvailableModels(userInfo.apiInfo.availableModels || {});
-                setStatus('verified');
-
-            } catch {
-                setStatus('verified');
-            }
-
-        } catch {
+            await verifyUser(code);
+            setMessage("✅ Successfully verified!");
+            setStatus('verified');
+        } catch (error) {
+            console.error('Verification error:', error);
             setMessage("❌ Error during verification");
         } finally {
             setLoading(false);
@@ -61,7 +33,7 @@ const VerifyPage = () => {
     const handleResend = async () => {
         setLoading(true);
         try {
-            await resendVerificationEmail();
+            await sendEmail();
             setMessage("✅ Verification email resent successfully!");
         } catch (error) {
             console.error('Error resending verification email:', error);
@@ -69,12 +41,6 @@ const VerifyPage = () => {
         } finally {
             setLoading(false);
         }
-    }
-
-    const resetStatus = () => {
-        setStatus('unauthenticated');
-        setUserData(null);
-        removeToken();
     }
 
     const shuffleArray = <T,>(array: T[]): T[] => {

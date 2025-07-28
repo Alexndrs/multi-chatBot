@@ -75,7 +75,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="w-[90vw] md:w-[75vw] rounded-lg bg-linear-to-t from-[#171c23] to-[#ffffff69] shadow-lg p-[1px] z-9 flex flex-col relative"
+                className="w-[90vw] md:w-[75vw] rounded-lg bg-linear-to-t shadow-lg border-t-2 border-white/20 z-9 flex flex-col relative"
             >
                 {isGlowingLoop && (
                     <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
