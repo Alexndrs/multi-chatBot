@@ -155,7 +155,9 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                         <div className="flex flex-wrap px-6 justify-between mt-0 pt-5 border-t-2 border-white/7">
                             <div className="flex items-center gap-2 flex-wrap flex-1">
                                 <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
-                                <div className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{selectedModel}</div>
+                                {selectedModel.map((model, index) => (
+                                    <div key={`${model}-${index}`} className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{model}</div>
+                                ))}
                             </div>
                             {/* Hide example on sm screen */}
                             <div className="hidden md:flex items-center gap-2 max-w-[50%] flex-shrink-0">

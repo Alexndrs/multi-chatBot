@@ -24,8 +24,8 @@ export interface ConversationContextType {
     setConversation: React.Dispatch<React.SetStateAction<ConversationData | null>>;
     modalOpen: boolean;
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    selectedModel: string;
-    setSelectedModel: React.Dispatch<React.SetStateAction<string>>;
+    selectedModel: string[];
+    setSelectedModel: React.Dispatch<React.SetStateAction<string[]>>;
     task: string;
     setTask: React.Dispatch<React.SetStateAction<string>>;
 }

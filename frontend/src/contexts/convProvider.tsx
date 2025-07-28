@@ -9,7 +9,7 @@ interface Props {
 export const ConvProvider: React.FC<Props> = ({ children }) => {
     const [conversation, setConversation] = useState<ConversationData | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedModel, setSelectedModel] = useState('llama-3.1-8b-instant');
+    const [selectedModel, setSelectedModel] = useState(['llama-3.1-8b-instant']);
     const [task, setTask] = useState('text-2-text');
 
     return (

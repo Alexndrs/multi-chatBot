@@ -2,13 +2,14 @@ import { useEffect, useRef } from "react";
 import { useConv } from "../../hooks/useConv";
 import { useUser } from "../../hooks/useUser";
 
-interface FloatingMenuProps {
+interface DropMenuProps {
     onSelect: (value: string) => void;
     onClose: () => void;
+    containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 
-export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
+export default function DropMenu({ onSelect, onClose, containerRef }: DropMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
     const { setTask, setSelectedModel, selectedModel } = useConv();
     const { availableModels, availableApis, userData } = useUser();
@@ -44,22 +45,28 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+            const targetNode = event.target as Node;
+
+            const isOutsideMenu = menuRef.current && !menuRef.current.contains(targetNode);
+            const isOutsideContainer = containerRef?.current && !containerRef.current.contains(targetNode);
+
+            if (isOutsideMenu && isOutsideContainer) {
                 onClose();
             }
         };
+
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [onClose]);
+    }, [onClose, containerRef]);
 
 
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-700/5 text-gray-200 shadow-lg rounded-xl text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-3xl flex flex-row"
+            className="left-0 z-50 bg-slate-700/5 text-gray-200 shadow-lg rounded-xl text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-3xl flex flex-row"
         >
 
             {items.map((section, idx) => (

@@ -250,7 +250,7 @@ export function useChatLogic() {
         try {
             const convId = await createConversation(
                 message,
-                selectedModel,
+                selectedModel[0],
                 (conv) => {
                     newConv = createConvHandler(conv);
                     return newConv;
@@ -288,7 +288,7 @@ export function useChatLogic() {
             await sendMessage(
                 convId,
                 message,
-                selectedModel,
+                selectedModel[0],
                 (userMsg, botMsg) => {
                     appendUserMessage(userMsg);
                     botMsgId = appendBotMessage(botMsg);
@@ -331,7 +331,7 @@ export function useChatLogic() {
         if (!convId) return;
 
         keepMessagesUpTo(msgId, newContent);
-        await updateMessage(convId, msgId, newContent, selectedModel, appendBotMessage, appendToBotContent, updateTokenCount, updateBotThinkingContent);
+        await updateMessage(convId, msgId, newContent, selectedModel[0], appendBotMessage, appendToBotContent, updateTokenCount, updateBotThinkingContent);
     }
 
     /**
@@ -358,7 +358,7 @@ export function useChatLogic() {
             conversation.convId,
             userMsg.msgId,
             userMsg.content,
-            selectedModel,
+            selectedModel[0],
             appendBotMessage,
             appendToBotContent,
             updateTokenCount,
