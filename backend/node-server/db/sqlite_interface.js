@@ -40,7 +40,9 @@ export async function initDB() {
         CREATE TABLE IF NOT EXISTS messages (
             msgId TEXT PRIMARY KEY,
             convId TEXT,
+            parentId TEXT,
             role TEXT,
+            author TEXT,
             content TEXT,
             timestamp TEXT,
             token INTEGER,

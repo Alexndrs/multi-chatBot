@@ -35,7 +35,7 @@ router.post('/', authenticateToken, async (req, res) => {
         };
 
         const onToken = (chunk) => {
-            res.write(chunk); // stream vers le client
+            res.write(chunk);
         };
 
         const { conv } = await chatAPI.createConversation(userId, messageContent, onToken, onIdGenerated, model_name);
