@@ -18,28 +18,16 @@ const JWT_SECRET = process.env.JWT_SECRET
  */
 export async function createUser(mail, name, pass, code) {
     // Verify if user already exists
-    const existingUser = await db.getUserByMail(mail); // <-- important
+    const existingUser = await db.getUserByMail(mail);
     if (existingUser) {
         throw new Error('Email already exists');
     }
+    const hashPass = await bcrypt.hash(pass, saltRounds);
+    const userId = uuidv4();
+    await db.addUser(userId, name, mail, hashPass, code);
 
-
-    // Create a new user
-    const newUser = {
-        userId: uuidv4(),
-        userInfo: {
-            name: name,
-            email: mail,
-            password: await bcrypt.hash(pass, saltRounds),
-            preferences: {}
-        },
-        conversations: []
-    };
-
-
-    await db.addUser(newUser, code);
-    const token = jwt.sign({ userId: newUser.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
-    return { userId: newUser.userId, token };
+    const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '6h' });
+    return { userId, token };
 }
 
 /**

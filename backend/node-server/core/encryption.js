@@ -7,9 +7,6 @@ import { getUserKeys, getUserKeysForApi, addUserKey, deleteKey } from "../db/sql
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 
-// export const generateSecretKey = () => crypto.randomBytes(32).toString('hex');
-// secret placed in .env
-
 export function encrypt(text, secretKey) {
     const iv = crypto.randomBytes(IV_LENGTH);
     const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(secretKey, 'hex'), iv);
