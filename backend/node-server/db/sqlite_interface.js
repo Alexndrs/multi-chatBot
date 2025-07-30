@@ -1,3 +1,4 @@
+/// <reference path="../core/types.js" />
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { v4 as uuidv4 } from 'uuid';
@@ -112,6 +113,16 @@ export async function initDB() {
 
 // --- USERS ---
 
+/**
+ * Add a new user to the database
+ * @param {string} userId 
+ * @param {string} name 
+ * @param {string} email 
+ * @param {string} password - hashed password
+ * @param {string} code 
+ * @param {Object} preferences 
+ * @returns {string} userId
+ */
 export async function addUser(userId, name, email, password, code, preferences = {}) {
     const db = await getDB();
 
@@ -134,6 +145,11 @@ export async function addUser(userId, name, email, password, code, preferences =
     return userId;
 }
 
+/**
+ * Check if the user is verified
+ * @param {string} userId 
+ * @returns {boolean} 
+ */
 export async function isVerified(userId) {
     const db = await getDB();
     const user = await db.get(`SELECT isVerified FROM users WHERE userId = ?`, userId);
@@ -141,6 +157,11 @@ export async function isVerified(userId) {
     return user.isVerified === 1;
 }
 
+/**
+ * Set the user as verified and remove the verification code
+ * @param {string} userId 
+ * @returns {boolean} true if the user was verified successfully
+ */
 export async function setUserVerified(userId) {
     const db = await getDB();
     const res = await db.run(`UPDATE users SET isVerified = 1 WHERE userId = ?`, userId);
@@ -149,6 +170,11 @@ export async function setUserVerified(userId) {
     return true;
 }
 
+/**
+ * Get the verification code for a user, or generate a new one if it doesn't exist
+ * @param {string} userId 
+ * @returns {Promise<string>} 
+ */
 export async function getUserVerificationCode(userId) {
     const db = await getDB();
     const verification = await db.get(`SELECT code FROM verifications WHERE userId = ?`, userId);
@@ -160,7 +186,11 @@ export async function getUserVerificationCode(userId) {
     return verification.code;
 }
 
-
+/**
+ * Get a user by their ID
+ * @param {string} userId
+ * @return {Promise<{ userId: string, name: string, email: string, password: string, preferences: Object, isVerified: boolean> } | undefined>}
+ */
 export async function getUserById(userId) {
     const db = await getDB();
     const userRow = await db.get(`SELECT * FROM users WHERE userId = ?`, userId);
@@ -172,10 +202,14 @@ export async function getUserById(userId) {
         password: userRow.password,
         preferences: JSON.parse(userRow.preferences || '{}'),
         isVerified: userRow.isVerified === 1,
-        conversations: await getUserConversations(userRow.userId)
     };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ name: string, email: string, preferences: Object }>}
+ */
 export async function getUserInfo(userId) {
     const db = await getDB();
     const user = await db.get(`SELECT name, email, preferences FROM users WHERE userId = ?`, userId);
@@ -187,6 +221,11 @@ export async function getUserInfo(userId) {
     };
 }
 
+/**
+ * 
+ * @param {string} email 
+ * @returns {Promise<{ userId: string, name: string, email: string, password: string, preferences: Object, isVerified: boolean> } | undefined>}
+ */
 export async function getUserByMail(email) {
     const db = await getDB();
     const userRow = await db.get(`SELECT * FROM users WHERE email = ?`, email);
@@ -198,10 +237,14 @@ export async function getUserByMail(email) {
         password: userRow.password,
         preferences: JSON.parse(userRow.preferences || '{}'),
         isVerified: userRow.isVerified === 1,
-        conversations: await getUserConversations(userRow.userId)
     };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ keyId: string, key: string, api: string, date: string }[]>}
+ */
 export async function getUserKeys(userId) {
     const db = await getDB();
     const keys = await db.all(`SELECT keyId, key, api, date FROM keys WHERE userId = ?`, userId);
@@ -213,6 +256,12 @@ export async function getUserKeys(userId) {
     }));
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} api_name 
+ * @returns {Promise<{ keyId: string, key: string, date: string } | undefined>}
+ */
 export async function getUserKeysForApi(userId, api_name) {
     const db = await getDB();
     // The key is supposed to be unique per user and API, so we can use a simple query
@@ -225,6 +274,13 @@ export async function getUserKeysForApi(userId, api_name) {
     };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} encrypted_key 
+ * @param {string} api_name 
+ * @returns {Promise<void>}
+ */
 export async function addUserKey(userId, encrypted_key, api_name) {
     // Hash the key before storing it
     const db = await getDB();
@@ -254,18 +310,36 @@ export async function addUserKey(userId, encrypted_key, api_name) {
     );
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} api_name
+ * @returns {Promise<void>} 
+ */
 export async function deleteKey(userId, api_name) {
     const db = await getDB();
     const res = await db.run(`DELETE FROM keys WHERE userId = ? AND api = ?`, userId, api_name);
     if (res.changes === 0) throw new Error('Clé non trouvée');
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newName
+ * @returns {Promise<void>} 
+ */
 export async function updateUserName(userId, newName) {
     const db = await getDB();
     const res = await db.run(`UPDATE users SET name = ? WHERE userId = ?`, newName, userId);
     if (res.changes === 0) throw new Error('Utilisateur non trouvé');
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newEmail
+ * @returns {Promise<void>}
+ */
 export async function updateUserMail(userId, newEmail) {
     const db = await getDB();
     const existingUser = await getUserByMail(newEmail);
@@ -277,12 +351,24 @@ export async function updateUserMail(userId, newEmail) {
     await db.run(`UPDATE users SET isVerified = 0 WHERE userId = ?`, userId);
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newHashedPassword 
+ * @returns {Promise<void>}
+ */
 export async function updateUserPassword(userId, newHashedPassword) {
     const db = await getDB();
     const res = await db.run(`UPDATE users SET password = ? WHERE userId = ?`, newHashedPassword, userId);
     if (res.changes === 0) throw new Error('Utilisateur non trouvé');
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newPreferences 
+ * @returns {Promise<void>}
+ */
 export async function updateUserPreferences(userId, newPreferences) {
     const db = await getDB();
     const res = await db.run(`UPDATE users SET preferences = ? WHERE userId = ?`, JSON.stringify(newPreferences), userId);
@@ -291,6 +377,15 @@ export async function updateUserPreferences(userId, newPreferences) {
 
 // --- CONVERSATIONS ---
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} convName 
+ * @param {string} date 
+ * @param {string} token 
+ * @returns {Promise<string>} convId
+ */
 export async function addConversation(userId, convId, convName, date = new Date().toISOString(), token = 0) {
     const db = await getDB();
     await db.run(
@@ -304,7 +399,11 @@ export async function addConversation(userId, convId, convName, date = new Date(
     return convId;
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ convId: string, convName: string, date: string, token: number, messages: Promise<Graph>}[]>}
+ */
 export async function getUserConversations(userId) {
     const db = await getDB();
     const convRows = await db.all(`SELECT * FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
@@ -322,7 +421,7 @@ export async function getUserConversations(userId) {
 /**
  * Get only the metadata of the conversations of a user (used for listing conversations)
  * @param {string} userId 
- * @returns [{ convId, convName, date }]
+ * @returns {Promise<{ convId: string, convName: string, date: string }[]>}
  */
 export async function getUserConversationsMetadata(userId) {
     const db = await getDB();
@@ -331,9 +430,9 @@ export async function getUserConversationsMetadata(userId) {
 
 /**
  * Get the full conversation content (including messages) (used for displaying a conversation)
- * @param {*} userId 
- * @param {*} convId 
- * @returns 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @returns {Promise<{ convId: string, convName: string, date: string, token: number, messages: Graph }>}
  */
 export async function getConversationById(userId, convId) {
     const db = await getDB();
@@ -349,6 +448,12 @@ export async function getConversationById(userId, convId) {
     };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId
+ * @returns {Promise<void>}
+ */
 export async function deleteConversation(userId, convId) {
     const db = await getDB();
     await db.run(`DELETE FROM messages WHERE convId = ?`, convId);
@@ -357,13 +462,25 @@ export async function deleteConversation(userId, convId) {
     if (res.changes === 0) throw new Error('Conversation non trouvée');
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} newName 
+ * @return {Promise<void>}
+ */
 export async function changeConversationName(userId, convId, newName) {
     const db = await getDB();
     const res = await db.run(`UPDATE conversations SET convName = ? WHERE userId = ? AND convId = ?`, newName, userId, convId);
     if (res.changes === 0) throw new Error('Conversation non trouvée');
 }
 
+/**
+ * @param {string} userId
+ * @param {string} convId
+ * @param {number} tokenToAdd
+ * @returns {Promise<void>}
+ */
 export async function addToken(userId, convId, tokenToAdd) {
     const db = await getDB();
     await db.run(`
@@ -389,8 +506,8 @@ export async function addToken(userId, convId, tokenToAdd) {
  * @param {string} timestamp 
  * @param {number} token 
  * @param {number} historyTokens 
+ * @return {Promise<void>}
  */
-
 export async function addMessage(userId, convId, msgId, parentId, role, content, author, timestamp = new Date().toISOString(), token = 0, historyTokens = 0) {
     const db = await getDB();
     await getConversationById(userId, convId); // Ensure the conversation exists
@@ -416,7 +533,13 @@ export async function addMessage(userId, convId, msgId, parentId, role, content,
     }
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId 
+ * @returns {Promise<Message>}
+ */
 export async function getMessageById(userId, convId, msgId) {
     const db = await getDB();
 
@@ -430,6 +553,12 @@ export async function getMessageById(userId, convId, msgId) {
     return message;
 }
 
+/**
+ * Get the parents of a message
+ * @param {string} userId
+ * @param {string} msgId
+ * @return {Promise<Message[]>}
+ */
 export async function getMessageParents(userId, msgId) {
     const db = await getDB();
     const parents = await db.all(`
@@ -443,10 +572,10 @@ export async function getMessageParents(userId, msgId) {
 
 /**
  * Return the messages of a conversation with the graph structure encoded in an object
- * @param {*} userId 
- * @param {*} convId 
+ * @param {string} userId 
+ * @param {string} convId
+ * @return {Promise<Graph>}
  */
-
 export async function getAllMessagesGraph(userId, convId) {
     const db = await getDB();
 
@@ -472,7 +601,7 @@ export async function getAllMessagesGraph(userId, convId) {
 
     for (const msg of messages) {
         graph[msg.msgId] = {
-            ...msg,
+            message: msg,
             parents: parentMap[msg.msgId] || [],
             children: childrenMap[msg.msgId] || []
         };
@@ -487,7 +616,14 @@ export async function getAllMessagesGraph(userId, convId) {
         messages: graph
     }
 }
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId 
+ * @param {string} newContent
+ * @return {Promise<void>} 
+ */
 export async function editMessage(userId, convId, msgId, newContent) {
     const db = await getDB();
     await getMessageById(userId, convId, msgId);
@@ -501,7 +637,13 @@ export async function editMessage(userId, convId, msgId, newContent) {
     await db.run(`UPDATE conversations SET date = ? WHERE convId = ?`, new Date().toISOString(), convId);
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId
+ * @returns {Promise<void>} 
+ */
 export async function deleteMessage(userId, convId, msgId) {
     const db = await getDB();
     await getMessageById(userId, convId, msgId);

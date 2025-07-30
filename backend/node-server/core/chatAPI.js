@@ -5,6 +5,14 @@ import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getKeyForApi } from './encryption.js';
 
+
+
+
+
+
+
+
+
 export async function getAllConvIdsAndNameAndDate(userId) {
     const convMetadatas = await db.getUserConversationsMetadata(userId);
     if (!convMetadatas) {
@@ -116,7 +124,6 @@ async function generateResponseForMessages({
 }
 
 
-
 /**
  * 
  * @param {string} userId 
@@ -128,7 +135,7 @@ async function generateResponseForMessages({
  * @param {string[]} model_name // We can pass multiple models, for now only the first one, but later we will be able to use multiple models for agentic brainstorming or multi-agent conversations
  * @returns {Promise<{userMsg, newMsg}>}
  */
-export async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, parentId = null, model_name = ['llama-3.1-8b-instant']) {
+export async function handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name = ['llama-3.1-8b-instant']) {
     const convData = await db.getConversationById(userId, convId);
     if (!convData) {
         console.error(`Conversation with ID ${convId} not found for user ${userId}`);
@@ -178,6 +185,22 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
         model_name
     });
 }
+
+
+/**
+ * Generate a reply for a non linear conversation (e.g: for exemple merging several messages or brainstorming..., or multi-agent answers with several models...)
+ * @param {object} params
+ * @param {string} params.userId
+ * @param {string} params.convId
+ * @param {Message[]} params.inputMessages
+ * @param {string[]} params.modelNames
+ * @param {(chunk: string) => void} params.onToken
+ * @param {(userMsg: object, newMsg: object) => void} params.onIdGenerated
+ */
+async function generateReply({ userId, convId, inputMessages, modelNames, onToken, onIdGenerated }) {
+
+}
+
 
 
 /**
