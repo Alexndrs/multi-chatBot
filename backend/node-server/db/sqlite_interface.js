@@ -572,11 +572,10 @@ export async function getMessageParents(userId, msgId) {
 
 /**
  * Return the messages of a conversation with the graph structure encoded in an object
- * @param {string} userId 
  * @param {string} convId
  * @return {Promise<Graph>}
  */
-export async function getAllMessagesGraph(userId, convId) {
+export async function getAllMessagesGraph(convId) {
     const db = await getDB();
 
     const messages = await db.all(`SELECT * FROM messages WHERE convId = ? ORDER BY timestamp ASC`, convId);
@@ -613,9 +612,10 @@ export async function getAllMessagesGraph(userId, convId) {
 
     return {
         rootId,
-        messages: graph
+        messagesMap: graph
     }
 }
+
 /**
  * 
  * @param {string} userId 

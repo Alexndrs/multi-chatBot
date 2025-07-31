@@ -51,6 +51,6 @@
 /**
  * @typedef {object} Graph
  * @property {string[]} rootId - Array of root message IDs
- * @property {Record<string, MessageWithRelations>} messages - Object mapping message IDs to their relations
+ * @property {Record<string, MessageWithRelations>} messagesMap - Object mapping message IDs to their relations
  * 
  */

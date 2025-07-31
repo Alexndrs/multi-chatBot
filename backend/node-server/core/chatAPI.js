@@ -1,3 +1,47 @@
+/*
+Algorithm : 
+
+___________________________________________________
+generateReply
+params : 
+userId, convId, inputMessage, modelNames, onToken, onIdGenerated
+-------------
+    // 1. generate linear history for the inputMessage
+
+    // 2. apply context window to the linear history to fit the models's context length
+
+    // 3. generate multiple id and messages container for each model in modelNames and send it to client with onIdGenerated
+
+    // 4. for each model in modelNames, call the corresponding chat function with the linear history and the model name and stream the response with onToken
+
+
+____________________________________________________
+mergeReply
+params :
+userId, convId, inputMessages, modelName, onToken, onIdGenerated
+-------------
+    // 1. generate a linear history containing just the inputMessages well ordoned and a good merging prompt
+
+    // 2. generate an id and a message container for the merged reply and send it to client with onIdGenerated
+
+    // 3. call the chat function with the linear history and the model name and stream the response with onToken
+
+_____________________________________________________
+generateLinearHistory
+params :
+
+
+*/
+
+
+
+
+
+
+
+
+
+/// <reference path="./types.js" />
 import 'dotenv/config';
 import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude, testGroq, testGemini, testOpenAI, testMistral, testClaude } from '../services/api_providers.js';
 import { applySlidingWindow, getMaxTokenInput, models, apis } from '../services/utils.js';
@@ -5,14 +49,13 @@ import * as db from '../db/sqlite_interface.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getKeyForApi } from './encryption.js';
 
-
-
-
-
-
-
-
-
+/**
+ * Get all conversation IDs, names, and dates for a user
+ * (used to display the list of conversations in the UI)
+ * @param {string} userId 
+ * @returns {Promise<{convId: string,convName: string, date: string}[]>}
+}>}
+ */
 export async function getAllConvIdsAndNameAndDate(userId) {
     const convMetadatas = await db.getUserConversationsMetadata(userId);
     if (!convMetadatas) {
@@ -23,6 +66,13 @@ export async function getAllConvIdsAndNameAndDate(userId) {
 }
 
 
+/**
+ * Test an API key for a specific API and return a message indicating success or failure : usefull for testing if a key is valid before saving it
+ * 
+ * @param {string} key 
+ * @param {string} apiName 
+ * @returns {Promise<{message: string, error: boolean}>}
+ */
 export async function testKey(key, apiName) {
     let answer;
     switch (apiName) {
@@ -43,32 +93,45 @@ export async function testKey(key, apiName) {
 
 
 /**
- * Get parents of a message in the conversation : stoping at the first merging of several parents
- * @param {string} userId 
+ * Generate linear context for a conversation, if we have a workflow : 
+ * [user question] -> [chatGPT answer, claude answer] -> [merge answer] -> [new user question : inputMessage]
+ * we linearise to [
+ *      {role: 'user', content: 'user question'},
+ *      {role: 'assistant', content: 'chatGPT answer'}, //choose randomly one of the parallel branches and go depth first
+ *      {role: 'assistant', content: 'merge answer'},
+ *      {role: 'user', content: 'new user question : inputMessage'}
+ *  ]
+ * 
  * @param {string} convId 
- * @param {string} msgId 
- * @return {Promise<object[]>} [{msgId, convId, role, content, author, timestamp, token, historyTokens}]
+ * @param {Message} inputMessage
+ * @return {Promise<{role: string, content: string}[]>}
  */
-export async function getMessageHistory(userId, convId, msgId) {
-    const { messages } = await db.getAllMessagesGraph(userId, convId)
+export async function generateLinearHistory(convId, inputMessage) {
+    const { messagesMap } = await db.getAllMessagesGraph(convId);
+    if (!messagesMap) {
+        console.error(`Error getting messages for conversation ${convId}`);
+        throw new Error('Conversation not found');
+    }
 
-    let msg = messages[msgId];
-    if (!msg) {
-        console.error(`Message with ID ${msgId} not found in conversation ${convId} for user ${userId}`);
+    let node = messagesMap[inputMessage.msgId];
+    if (!node) {
+        console.error(`Message with ID ${inputMessages.msgId} not found in conversation ${convId}`);
         throw new Error('Message not found');
     }
-    const history = [msg];
-    while (msg.parents.length === 1) {
-        const parentId = msg.parents[0];
-        msg = messages[parentId];
-        if (!msg) {
-            console.error(`Parent message with ID ${parentId} not found in conversation ${convId} for user ${userId}`);
+    const linearHistory = [];
+    linearHistory.push({ role: node.message.role, content: node.message.content });
+    while (node.parents.length > 0) {
+        const parentId = node.parents[0]; // arbitrarily choose the first parent
+        node = messagesMap[parentId];
+        if (!node) {
+            console.error(`Parent message with ID ${parentId} not found in conversation ${convId}`);
             throw new Error('Parent message not found');
         }
-        history.unshift(msg);
+        linearHistory.unshift({ role: node.message.role, content: node.message.content });
     }
-    return history;
+
 }
+
 
 async function generateResponseForMessages({
     userId,
@@ -198,6 +261,19 @@ export async function handleMessage(userId, convId, messageContent, onToken, onI
  * @param {(userMsg: object, newMsg: object) => void} params.onIdGenerated
  */
 async function generateReply({ userId, convId, inputMessages, modelNames, onToken, onIdGenerated }) {
+    if (!inputMessages || inputMessages.length === 0) {
+        throw new Error('No input messages provided');
+    }
+    if (!modelNames || modelNames.length === 0) {
+        throw new Error('No model names provided');
+    }
+
+
+
+
+
+
+
 
 }
 
