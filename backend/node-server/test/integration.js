@@ -5,7 +5,7 @@ import * as chatAPI from '../core/chatAPI_v2.js';
 import { generateMermaidGraph } from '../services/utils.js';
 
 
-async function testIntegration() {
+async function testFullWorkflow() {
     await db.initDB();
 
     // Create a user
@@ -43,7 +43,7 @@ async function testIntegration() {
     console.log(`User message added :\n\t${JSON.stringify(userMessage)}\n\n`);
 
     // Generate a reply for the conversation
-    const linearHistory = await chatAPI.generateLinearHistoryForOneMessage(convo.convId, userMessage);
+    const linearHistory = await chatAPI.generateLinearHistoryForOneMessage(convo.convId, userMessage.msgId);
     console.log(`Linear history for the conversation:\n\t${JSON.stringify(linearHistory)}\n\n`);
 
     // const onToken = (token, modelName) => { console.log(`Token received from ${modelName}: ${token}`); };
@@ -77,14 +77,55 @@ async function testIntegration() {
     await db.addMessage(userId, mergedMessage.convId, mergedMessage.msgId, msgIds, mergedMessage.role, mergedMessage.content, mergedMessage.author, mergedMessage.timestamp, mergedMessage.token, mergedMessage.historyToken);
 
 
-    // Check the graph of the conversation
 
-    const graph = await db.getAllMessagesGraph(convo.convId);
-    console.log(`Graph of the conversation:\n\t${JSON.stringify(graph)}\n\n`);
-    const markdown = generateMermaidGraph(graph);
+    // User ask a follow-up question with the same models
+    const followUpContent = "Donne moi la formule de l'eau";
+    const followUpMessage = await chatAPI.addUserMessage(userId, convo.convId, [mergedMessage.msgId], followUpContent);
+    const followUpLinearHistory = await chatAPI.generateLinearHistoryForOneMessage(convo.convId, followUpMessage.msgId);
+    console.log(`Linear history for the follow-up message:\n\t${JSON.stringify(followUpLinearHistory)}\n\n`);
+    const followUpReply = await chatAPI.generateReply(userId, convo.convId, followUpLinearHistory, models, null, null);
+    for (const modelName in followUpReply) {
+        const message = followUpReply[modelName];
+        await db.addMessage(userId, message.convId, message.msgId, [followUpMessage.msgId], message.role, message.content, message.author, message.timestamp, message.token, message.historyToken);
+    }
+
+    let graph = await db.getAllMessagesGraph(convo.convId);
+    let markdown = generateMermaidGraph(graph);
+    console.log(`Mermaid graph for the conversation:\n\t${markdown}\n\n`);
+
+
+
+    // Now just keep the answer from the first model
+    await chatAPI.chooseReply(userId, convo.convId, followUpReply[models[0]].msgId);
+
+
+
+
+    // graph = await db.getAllMessagesGraph(convo.convId);
+    // markdown = generateMermaidGraph(graph);
+    // console.log(`Mermaid graph for the conversation:\n\t${markdown}\n\n`);
+
+
+
+    // Let's edit the second user message in the conversation
+
+    const newContent = "Comment on dit bonjour en portugais ?";
+    await chatAPI.editUserMessage(userId, convo.convId, followUpMessage.msgId, newContent, models, null, null);
+
+    // graph = await db.getAllMessagesGraph(convo.convId);
+    // markdown = generateMermaidGraph(graph);
+    // console.log(`Mermaid graph for the conversation:\n\t${markdown}\n\n`);
+
+
+    // Let's regenerate the reply of gemma to the name question with model gemini-2.5-flash
+    await chatAPI.regenerateReply(userId, convo.convId, reply[models[0]].msgId, 'gemini-2.5-flash', null, null);
+
+
+    graph = await db.getAllMessagesGraph(convo.convId);
+    markdown = generateMermaidGraph(graph);
     console.log(`Mermaid graph for the conversation:\n\t${markdown}\n\n`);
 
 }
 
 
-testIntegration();
+testFullWorkflow();

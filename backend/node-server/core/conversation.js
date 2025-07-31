@@ -1,31 +1,32 @@
 /*
 
-/Conversation router :
-    > get /list :
-        -> getConvList
+=================== Conversation endpoints ===================
+
+> get /
+    * just retrieve the conv list then send (no streaming needed)
 
 
-    > get /:convId :
-    ---- params contain the convId
-        -> getConversationById
+
+> get /:convId
+    * retrieve a specific conversation by ID then send (no streaming needed)
 
 
-    > post
-    ---- body contain the userId, content, modelName
-        -> generate convId
-        -> generate convName using generateReply without streaming
-        -> add conversation to the database using db.addConversation
-        -> addUserMessage 
-        -> return conversation metadata (convId, convName, userMessage)
-        // Then frontend will post a message/reply to add the first reply message to the conversation
-    
-    > delete /:convId :
-    ---- params contain the convId
-        -> deleteConversation using db.deleteConversation
-    
-    > put /:convId/name :
-    ---- params contain the convId and body contain the newName
-        -> changeConversationName using db.changeConversationName
+> post /
+    * create a new conversation with conv.createConversation -> stream (convId, convName)
+    * create the first user message with chatAPI.addUserMessage --> stream (msgId, token, content, author, timestamp)
+    * generate a reply chatAPI.generateLinearHistoryForOneMessage and chatAPI.generateReply --> stream (1. (msgId, author) when msgId is generated, 2. (msgId, token, author) during the generation)
+    * add the reply to the database with db.addMessage
+
+
+
+> put /:convId
+    * change the conversation name with conv.changeConversationName --> no streaming needed
+
+
+
+> delete /:convId
+    * delete the conversation with conv.deleteConversation --> no streaming needed
+
 
 
 */
@@ -67,7 +68,8 @@ export async function getConversationById(convId) {
  * 
  * @param {string} userId 
  * @param {string} content 
- * @param {string} modelName 
+ * @param {string} modelName
+ * @return {Promise<{convId: string, convName: string}>}
  */
 export async function createConversation(userId, content, modelName) {
     // TODO

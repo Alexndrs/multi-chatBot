@@ -121,11 +121,11 @@ convId, msgId, onToken, modelNames, onToken, onIdGenerated
 /// <reference path="./types.js" />
 import 'dotenv/config';
 import * as db from '../db/sqlite_interface.js';
-import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude, testGroq, testGemini, testOpenAI, testMistral, testClaude, computeTokenStats, systemPrompt } from '../services/api_providers.js';
-
+import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude } from '../services/api_providers.js';
 import { v4 as uuidv4 } from 'uuid';
 import { models, apis } from '../services/utils.js';
 import { getKeyForApi } from './encryption.js';
+import { UserMessage$inboundSchema } from '@mistralai/mistralai/models/components/usermessage.js';
 
 
 
@@ -168,12 +168,12 @@ export async function addUserMessage(userId, convId, parentId, content) {
 /**
  * 
  * @param {string} convId 
- * @param {Message} inputMessage
+ * @param {string} inputMessageId
  * @return {Promise<{role: "user" | "assistant", content: string}[]>}
  */
-export async function generateLinearHistoryForOneMessage(convId, inputMessage) {
+export async function generateLinearHistoryForOneMessage(convId, inputMessageId) {
     const graph = await db.getAllMessagesGraph(convId);
-    let node = graph.messagesMap[inputMessage.msgId];
+    let node = graph.messagesMap[inputMessageId];
     const linearHistory = [];
     while (node) {
         // We kwnow the graph is acyclic so we can safely traverse it without worrying about cycles
@@ -199,11 +199,11 @@ export async function generateLinearHistoryForOneMessage(convId, inputMessage) {
  */
 export async function generateLinearHistoryForMultipleMessages(convId, inputMessages) {
     if (inputMessages.length === 0) {
-        throw new Error('No input messages provided');
+        return [];
     }
 
     if (inputMessages.length === 1) {
-        return generateLinearHistoryForOneMessage(convId, inputMessages[0]);
+        return generateLinearHistoryForOneMessage(convId, inputMessages[0].msgId);
     }
 
     /*
@@ -246,10 +246,10 @@ export async function generateLinearHistoryForMultipleMessages(convId, inputMess
 
     const mergePrompt = `
 ### Role
-You are a specialized aggregator LLM. Your job is to synthesize independent responses into one enriched, coherent, and logically structured answer.
+You are a specialized aggregator LLM. Your job is to synthesize independent responses into one enriched, coherent, and logically structured answer. You always answer in the same language as the original messages unless the user specifies a different language
 
 ### Context
-All contributors responded to the same question:
+All contributors responded to the same message:
 
 "${question}"
 
@@ -259,21 +259,21 @@ ${formattedResponses}
 ### Task
 1. Identify the unique strengths and key ideas from each author.
 2. Merge them into a single, high-quality response that:
+   - keeps the same language as the original messages,
    - fully answers the original question,
    - integrates all relevant and complementary points,
    - resolves or harmonizes differences in tone or content.
 
 ### Output Guidelines
-- Start with a short intro that reframes the question and your objective.
-- Then present the merged answer using smooth transitions (e.g., "In addition", "However", "Another perspective…").
-- End with a concise conclusion.
-- Keep the tone clear, neutral, and professional.
+- IMPORTANT : Talk in the same language as the message to merge except if the user asked for a specific language.
+- Present the merged answer using smooth transitions (e.g., "In addition", "However", "Another perspective…").
+- Keep the tone clear, simple and neutral.
 - Do not simply summarize. Actively rephrase and integrate.
 `;
 
 
     return [
-        { role: 'user', content: mergePrompt },
+        { role: 'system', content: mergePrompt },
     ];
 }
 
@@ -282,13 +282,12 @@ ${formattedResponses}
  * @param {string} userId 
  * @param {string} convId 
  * @param {{role: "user" | "assistant", content: string}[]} linearHistory
- * @param {string} modelNames 
+ * @param {string[]} modelNames 
  * @param {(token:string,modelName:string)=>promise<void>} onToken 
  * @param {(Record<string, Message>)=>promise<void>} onIdGenerated
  * @return {Promise<Record<string, Message>>}
  */
 export async function generateReply(userId, convId, linearHistory, modelNames, onToken, onIdGenerated) {
-
     // TODO later : apply context window to the linear history to fit the models's context length
 
     // Generate id and messages container for each model in modelNames and stream it
@@ -361,32 +360,81 @@ export async function generateReply(userId, convId, linearHistory, modelNames, o
  * @return {Promise<void>} 
  */
 export async function chooseReply(userId, convId, chosenMessageId) {
+    const graph = await db.getAllMessagesGraph(convId);
+    let node = graph.messagesMap[chosenMessageId];
+    let parentNode;
+    while (node.parents.length > 0) {
+        const parentId = node.parents[0];
+        parentNode = graph.messagesMap[parentId];
+        if (parentNode.children.length > 1) break;
+        node = parentNode;
+    }
 
+    console.log(`Parent found : ${JSON.stringify(parentNode)} with children : ${parentNode.children.join(', ')}`);
+
+    if (parentNode.children.length > 1) {
+        for (const childId of parentNode.children) {
+            if (childId === chosenMessageId) continue;
+            console.log(`Deleting child ${childId} of parent ${parentNode.message.msgId}`);
+            await db.deleteMessageAndChildren(userId, convId, childId);
+        }
+    }
 }
 
 /**
- * 
+ * @param {string} userId
  * @param {string} convId 
- * @param {string} msgId 
+ * @param {string} msgId // userMsg that is being edited
  * @param {string} newContent 
  * @param {string[]} modelNames
  * @param {(token:string)=>void} onToken 
  * @param {(msgContainer : Object)=>void} onIdGenerated
- * @return {Promise<void>}
+ * @return {Promise<Record<string, Message>>}
  */
-export async function editUserMessage(convId, msgId, newContent, modelNames, onToken, onIdGenerated) {
+export async function editUserMessage(userId, convId, msgId, newContent, modelNames, onToken, onIdGenerated) {
 
+    // Safety first : we generate before deleting anything
+    const parentMessages = await db.getMessageParents(userId, msgId);
+    const parentIds = parentMessages.map(msg => msg.msgId);
+
+    const history = await generateLinearHistoryForMultipleMessages(convId, parentMessages);
+    console.log(`History for editing message ${msgId}:\n\t${JSON.stringify(history)}\n\n`);
+    history.push({ role: 'user', content: newContent });
+
+    const reply = await generateReply(userId, convId, history, modelNames, onToken, onIdGenerated);
+    await db.deleteMessageAndChildren(userId, convId, msgId);
+
+    const editedMessage = await addUserMessage(userId, convId, parentIds, newContent);
+
+    for (const modelName in reply) {
+        const msg = reply[modelName];
+        await db.addMessage(userId, msg.convId, msg.msgId, [editedMessage.msgId], msg.role, msg.content, msg.author, msg.timestamp, msg.token, msg.historyToken);
+    }
 }
 /**
- * 
+ * @param {string} userId
  * @param {string} convId 
- * @param {string} msgId 
- * @param {string} newContent 
- * @param {string[]} modelNames
+ * @param {string} msgId // assistant msg that is being regenerated
+ * @param {string} modelName
  * @param {(token:string)=>void} onToken 
  * @param {(msgContainer : Object)=>void} onIdGenerated
  * @return {Promise<void>}
  */
-export async function regenerateReply(convId, msgId, newContent, modelNames, onToken, onIdGenerated) {
+export async function regenerateReply(userId, convId, msgId, modelName, onToken, onIdGenerated) {
+
+    // Safety first : we generate before deleting anything
+
+    const parentMessages = await db.getMessageParents(userId, msgId);
+    const parentIds = parentMessages.map(msg => msg.msgId);
+
+    const history = await generateLinearHistoryForMultipleMessages(convId, parentMessages);
+
+    const replies = await generateReply(userId, convId, history, [modelName], onToken, onIdGenerated, onIdGenerated);
+    const reply = replies[modelName];
+
+    await db.deleteMessageAndChildren(userId, convId, msgId);
+
+    const newMsgId = uuidv4();
+    await db.addMessage(userId, convId, newMsgId, parentIds, 'assistant', reply.content, reply.author, reply.timestamp, reply.token, reply.historyToken);
 
 }

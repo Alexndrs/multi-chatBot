@@ -31,31 +31,3 @@ export function decrypt(encryptedData, secretKey) {
 
     return decrypted;
 }
-
-export async function addKey(key, api_name, userId) {
-    console.log("Adding the key : ", key, "for api:", api_name);
-
-    const encryptedKey = encrypt(key, mySecret);
-    await addUserKey(userId, encryptedKey, api_name);
-}
-
-export async function deleteKeyForApi(userId, api_name) {
-    await deleteKey(userId, api_name);
-}
-
-export async function getKeys(userId) {
-    const keys = await getUserKeys(userId);
-    return keys.map(key => ({
-        ...key,
-        key: decrypt(key.key, mySecret)
-    }));
-}
-
-export async function getKeyForApi(userId, api_name) {
-    const key = await getUserKeysForApi(userId, api_name);
-    if (!key) return undefined;
-    return {
-        ...key,
-        key: decrypt(key.key, mySecret)
-    };
-}

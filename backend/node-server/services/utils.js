@@ -82,9 +82,10 @@ export function generateMermaidGraph(graphData) {
         const node = messagesMap[msgId];
         const content = node.message.content;
         // replace " to ' 
-        const shortMsg = content.substring(0, 250).replace(/"/g, "'");
+        const shortMsg = content.substring(0, 450).replace(/"/g, "'");
+        const shortId = msgId.substring(0, 8); // 
         // Définit le texte du nœud (ex: "a7151e99...")
-        mermaidLines.push(`    ${msgId}["${shortMsg}"];`);
+        mermaidLines.push(`    ${msgId}["${shortMsg}\n${shortId}"];`);
 
         // Crée les liens vers les enfants
         if (node.children && node.children.length > 0) {

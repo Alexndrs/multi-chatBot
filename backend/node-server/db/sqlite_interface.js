@@ -469,8 +469,8 @@ export async function getConversationById(userId, convId) {
  */
 export async function deleteConversation(userId, convId) {
     const db = await getDB();
-    await db.run(`DELETE FROM messages WHERE convId = ?`, convId);
     await db.run(`DELETE FROM message_parents WHERE childId IN (SELECT msgId FROM messages WHERE convId = ?)`, convId);
+    await db.run(`DELETE FROM messages WHERE convId = ?`, convId);
     const res = await db.run(`DELETE FROM conversations WHERE userId = ? AND convId = ?`, userId, convId);
     if (res.changes === 0) throw new Error('Conversation non trouvée');
 }
@@ -659,9 +659,25 @@ export async function editMessage(userId, convId, msgId, newContent) {
  */
 export async function deleteMessage(userId, convId, msgId) {
     const db = await getDB();
+    console.log(`Deleting message ${msgId}`);
     await getMessageById(userId, convId, msgId);
 
     await db.run(`DELETE FROM messages WHERE msgId = ? AND convId = ?`, msgId, convId);
     await db.run(`DELETE FROM message_parents WHERE childId = ? OR parentId = ?`, msgId, msgId);
 }
 
+
+export async function deleteMessageAndChildren(userId, convId, msgId) {
+    const graph = await getAllMessagesGraph(convId);
+    const toDelete = [msgId];
+    const deleted = new Set();
+    while (toDelete.length > 0) {
+        const curId = toDelete.pop();
+        const curNode = graph.messagesMap[curId];
+        if (curNode && !deleted.has(curId)) {
+            toDelete.push(...curNode.children);
+            await deleteMessage(userId, convId, curId);
+            deleted.add(curId);
+        }
+    }
+}

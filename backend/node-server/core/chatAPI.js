@@ -67,32 +67,6 @@ export async function getAllConvIdsAndNameAndDate(userId) {
 
 
 /**
- * Test an API key for a specific API and return a message indicating success or failure : usefull for testing if a key is valid before saving it
- * 
- * @param {string} key 
- * @param {string} apiName 
- * @returns {Promise<{message: string, error: boolean}>}
- */
-export async function testKey(key, apiName) {
-    let answer;
-    switch (apiName) {
-        case 'groq':
-            answer = await testGroq(key); break;
-        case 'gemini':
-            answer = await testGemini(key); break;
-        case 'openai':
-            answer = await testOpenAI(key); break;
-        case 'mistral':
-            answer = await testMistral(key); break;
-        case 'claude':
-            answer = await testClaude(key); break;
-        default: answer = { message: `API ${apiName} is not supported`, error: true };
-    }
-    return answer;
-}
-
-
-/**
  * Generate linear context for a conversation, if we have a workflow : 
  * [user question] -> [chatGPT answer, claude answer] -> [merge answer] -> [new user question : inputMessage]
  * we linearise to [
