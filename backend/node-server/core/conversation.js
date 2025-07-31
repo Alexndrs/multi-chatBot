@@ -15,7 +15,8 @@
         -> generate convId
         -> generate convName using generateReply without streaming
         -> add conversation to the database using db.addConversation
-        -> return conversation metadata (convId, convName)
+        -> addUserMessage 
+        -> return conversation metadata (convId, convName, userMessage)
         // Then frontend will post a message/reply to add the first reply message to the conversation
     
     > delete /:convId :
@@ -32,6 +33,8 @@
 
 /// <reference path="./types.js" />
 import * as db from '../db/sqlite_interface.js';
+import { generateReply } from './chatAPI_v2.js';
+import { v4 as uuidv4 } from 'uuid';
 
 
 /**
@@ -68,6 +71,40 @@ export async function getConversationById(convId) {
  */
 export async function createConversation(userId, content, modelName) {
     // TODO
+
+    const convId = uuidv4();
+
+    const createConvPrompt = `
+### Role 
+Your are a title generator LLM, you generate a title for a conversation based on the first user message.
+
+### Context
+The user has sent the following message : "${content}"
+
+### Task
+Generate a title for the conversation based on the user message.
+
+### Output Guidelines
+- Return raw text without any formatting
+- The title should be concise (less than 10 words)
+- The title should be relevant to the user message
+- Choose the language  accordingly to the user message
+
+`
+
+    const createConvHistory = [{ role: 'user', content: createConvPrompt }];
+
+    const replies = await generateReply(userId, convId, createConvHistory, [modelName], null, null)
+
+    await db.addConversation(
+        userId,
+        convId,
+        replies[modelName].content,
+        replies[modelName].timestamp,
+        replies[modelName].token
+    )
+
+    return { convId, convName: replies[modelName].content }
 }
 
 

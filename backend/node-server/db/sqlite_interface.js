@@ -47,7 +47,7 @@ export async function initDB() {
             timestamp TEXT,
             token INTEGER,
             historyTokens INTEGER,
-            FOREIGN KEY (convId) REFERENCES conversations(convId),
+            FOREIGN KEY (convId) REFERENCES conversations(convId)
         );
 
         CREATE TABLE IF NOT EXISTS message_parents (
@@ -56,7 +56,7 @@ export async function initDB() {
             PRIMARY KEY (childId, parentId),
             FOREIGN KEY (childId) REFERENCES messages(msgId),
             FOREIGN KEY (parentId) REFERENCES messages(msgId)
-        )
+        );
 
         CREATE TABLE IF NOT EXISTS keys (
             keyId TEXT PRIMARY KEY,
@@ -107,7 +107,6 @@ export async function initDB() {
         DELETE FROM keys
         WHERE userId NOT IN (SELECT userId FROM users)
     `);
-
 }
 
 
@@ -121,7 +120,7 @@ export async function initDB() {
  * @param {string} password - hashed password
  * @param {string} code 
  * @param {Object} preferences 
- * @returns {string} userId
+ * @returns {Promise<string}
  */
 export async function addUser(userId, name, email, password, code, preferences = {}) {
     const db = await getDB();
@@ -144,6 +143,20 @@ export async function addUser(userId, name, email, password, code, preferences =
 
     return userId;
 }
+
+/**
+ * @param {string} userId
+ * @returns {Promise<void>} 
+ */
+export async function deleteUser(userId) {
+    const db = await getDB();
+    await db.run(`DELETE FROM users WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM verifications WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM conversations WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM messages WHERE convId IN (SELECT convId FROM conversations WHERE userId = ?)`, userId);
+    await db.run(`DELETE FROM message_parents WHERE childId IN (SELECT msgId FROM messages WHERE convId IN (SELECT convId FROM conversations WHERE userId = ?))`, userId);
+}
+
 
 /**
  * Check if the user is verified

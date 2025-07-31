@@ -10,67 +10,66 @@ import Anthropic from "@anthropic-ai/sdk";
 
 
 export const tokenizer = new LlamaTokenizer();
+export const systemPrompt = (modelName) => `
+You are part of a multi-chatbot system designed to meet the diverse needs of our users.
+Your specific role is to assist as a representative of the ${modelName} model.
+Always keep in mind that you are ${modelName} and provide responses that reflect the strengths and characteristics of this model.
+Collaborate seamlessly with other chatbots to ensure the user receives comprehensive and accurate assistance.
+Your primary goal is to provide helpful, respectful, and concise information.
+If a question or request is outside your capabilities, acknowledge it and suggest seeking assistance from another chatbot in the system.
+`;
 
 
 /**
  * 
- * @param {Array<{role: string, content: string}>} messages
- * @returns {Promise<{promptTokens: number, currentMessageTokens: number, historyTokens: number}>}
+ * @param {Array<{role: string, content: string}>} linearHistory
+ * @returns {Promise<{lastMessageToken: number, fullHistoryToken: number, fullPrompt: string}>}
  */
-function computeTokenStats(messages) {
-    let promptTokens = 0;
-    let currentMessageTokens = 0;
-    let historyTokens = 0;
+export function computeTokenStats(linearHistory) {
+    let lastMessageToken = 0;
+    let fullHistoryToken = 0;
     let fullPrompt = "";
 
-    for (let i = 0; i < messages.length; i++) {
-        const msg = messages[i];
+    for (let i = 0; i < linearHistory.length; i++) {
+        const msg = linearHistory[i];
         const formatted = `<|start_header_id|>${msg.role}<|end_header_id|>\n${msg.content}<|eot_id|>`;
 
-        const tokenCount = tokenizer.encode(formatted).length;
+        const msgTokenCount = tokenizer.encode(formatted).length;
         fullPrompt += "\n" + formatted;
 
-        if (i === messages.length - 1) {
-            currentMessageTokens = tokenCount;
+        if (i === linearHistory.length - 1) {
+            lastMessageToken = msgTokenCount;
         } else {
-            historyTokens += tokenCount;
+            fullHistoryToken += msgTokenCount;
         }
-
-        promptTokens += tokenCount;
     }
 
-    return { promptTokens, currentMessageTokens, historyTokens, fullPrompt };
+    return { lastMessageToken, fullHistoryToken, fullPrompt };
 }
 
 
 
-export async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5-flash', apiKey = null) {
-    const { promptTokens, currentMessageTokens, historyTokens, fullPrompt: promptText } = computeTokenStats(messages);
+export async function chatWithGemini(linearHistory, onToken, modelName = 'gemini-2.5-flash', apiKey = null) {
+    linearHistory.unshift({ role: 'system', content: systemPrompt(modelName) });
+    const { lastMessageToken, fullHistoryToken, fullPrompt } = computeTokenStats(linearHistory);
 
     // Gemini can use images but we will implement it later
     // const image = await google.files.upload({
     // file: "./test_img.png",
     // });
-    // const contents = createUserContent([promptText, createPartFromUri(image.uri, image.mimeType)]);
-    const contents = createUserContent([promptText]);
+    // const contents = createUserContent([fullPrompt, createPartFromUri(image.uri, image.mimeType)]);
+    const contents = createUserContent([fullPrompt]);
     if (!apiKey) {
-
         apiKey = process.env.GEMINI_API;
     }
     const google = new GoogleGenAI({ apiKey });
-    let actualPromptTokens, response;
+    let response;
     try {
-        const tokenResponse = await google.models.countTokens({
-            model: model_name,
-            contents: contents,
-        });
-        actualPromptTokens = tokenResponse.totalTokens;
-
         response = await google.models.generateContentStream({
-            model: model_name,
+            model: modelName,
             contents: contents,
             temperature: 0.2,
-            maxOutputTokens: getMaxModelOutput(model_name),
+            maxOutputTokens: getMaxModelOutput(modelName),
         });
     } catch (error) {
         throw new Error(`Error creating Gemini chat completion: ${error.message}`);
@@ -79,25 +78,24 @@ export async function chatWithGemini(messages, onToken, model_name = 'gemini-2.5
     let generatedText = '';
     for await (const chunk of response) {
         const content = chunk.text || '';
-        if (onToken) onToken(content);
+        if (onToken) onToken(content, modelName);
         generatedText += content;
     }
 
     const completionTokens = tokenizer.encode(generatedText).length;
     return {
         generatedText,
-        promptTokens: actualPromptTokens,
-        currentMessageTokens,
-        historyTokens,
+        fullHistoryToken,
+        lastMessageToken,
         completionTokens,
     };
 }
 
-export async function testGemini(key, model_name = 'gemini-2.5-flash') {
+export async function testGemini(key, modelName = 'gemini-2.5-flash') {
     try {
         const google = new GoogleGenAI({ apiKey: key });
         const message = await google.models.generateContent({
-            model: model_name,
+            model: modelName,
             contents: "Say hello originaly and in less than 8 words!",
         });
         return { message: message.text, error: false };
@@ -107,32 +105,27 @@ export async function testGemini(key, model_name = 'gemini-2.5-flash') {
 }
 
 
-export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b-instant', apiKey = null) {
-    const { promptTokens, currentMessageTokens, historyTokens } = computeTokenStats(messages);
+export async function chatWithGroq(linearHistory, onToken, modelName = 'llama-3.1-8b-instant', apiKey = null) {
+    linearHistory.unshift({ role: 'user', content: systemPrompt(modelName) });
+    const { lastMessageToken, fullHistoryToken } = computeTokenStats(linearHistory);
 
     if (!apiKey) {
         apiKey = process.env.GROQ_API;
     }
     const groq = new Groq({ apiKey });
 
-    let stream;
-    // try {
-    stream = await groq.chat.completions.create({
-        messages: messages,
-        model: model_name,
+    const stream = await groq.chat.completions.create({
+        messages: linearHistory,
+        model: modelName,
         temperature: 0.2,
-        max_completion_tokens: getMaxModelOutput(model_name),
+        max_completion_tokens: getMaxModelOutput(modelName),
         stream: true,
     });
-
-    // } catch (error) {
-    //     throw new Error(`Error creating Groq chat completion: ${error.message}, messages : ${JSON.stringify(messages)}`);
-    // }
 
     let generatedText = '';
     for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || '';
-        if (onToken) onToken(content);
+        if (onToken) onToken(content, modelName);
         generatedText += content;
     }
 
@@ -140,14 +133,13 @@ export async function chatWithGroq(messages, onToken, model_name = 'llama-3.1-8b
 
     return {
         generatedText,
-        promptTokens,
-        currentMessageTokens,
-        historyTokens,
+        fullHistoryToken,
+        lastMessageToken,
         completionTokens,
     };
 }
 
-export async function testGroq(key, model_name = 'llama-3.1-8b-instant') {
+export async function testGroq(key, modelName = 'llama-3.1-8b-instant') {
     try {
         const groq = new Groq({ apiKey: key });
         const response = await groq.chat.completions.create({
@@ -157,7 +149,7 @@ export async function testGroq(key, model_name = 'llama-3.1-8b-instant') {
                     content: "Say hello originaly and in less than 8 words!",
                 },
             ],
-            model: model_name,
+            model: modelName,
         });
         const message = response.choices[0].message.content;
         return { message, error: false };
@@ -168,16 +160,17 @@ export async function testGroq(key, model_name = 'llama-3.1-8b-instant') {
 
 
 
-export async function chatWithOpenAI(messages, onToken, model_name = "gpt-3.5-turbo", apiKey = null) {
+export async function chatWithOpenAI(linearHistory, onToken, modelName = "gpt-3.5-turbo", apiKey = null) {
+    linearHistory.unshift({ role: 'system', content: systemPrompt(modelName) });
     if (!apiKey) throw new Error("API key for OpenAI is required");
     const openai = new OpenAI({ apiKey });
-    const { promptTokens, currentMessageTokens, historyTokens, fullPrompt } = computeTokenStats(messages);
+    const { lastMessageToken, fullHistoryToken } = computeTokenStats(linearHistory);
 
     let stream;
     try {
         stream = await openai.responses.create({
-            model: model_name,
-            messages,
+            model: modelName,
+            messages: linearHistory,
             stream: true
         });
     } catch (error) {
@@ -187,19 +180,24 @@ export async function chatWithOpenAI(messages, onToken, model_name = "gpt-3.5-tu
     for await (const event of stream) {
         if (event.type === "response.output_text.delta") {
             const delta = event.delta || "";
-            if (onToken) onToken(delta);
+            if (onToken) onToken(delta, modelName);
             generatedText += delta;
         }
     }
     const completionTokens = tokenizer.encode(generatedText).length;
-    return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
+    return {
+        generatedText,
+        fullHistoryToken,
+        lastMessageToken,
+        completionTokens,
+    };
 }
 
-export async function testOpenAI(key, model_name = "gpt-3.5-turbo") {
+export async function testOpenAI(key, modelName = "gpt-3.5-turbo") {
     try {
         const openai = new OpenAI({ apiKey: key });
         const response = await openai.responses.create({
-            model: "gpt-3.5-turbo",
+            model: modelName,
             input: "Say hello originaly and in less than 8 words!",
         });
         const message = response.output_text;
@@ -211,16 +209,16 @@ export async function testOpenAI(key, model_name = "gpt-3.5-turbo") {
 }
 
 
-export async function chatWithMistral(messages, onToken, model_name = "mistral-small-latest", apiKey = null) {
+export async function chatWithMistral(linearHistory, onToken, modelName = "mistral-small-latest", apiKey = null) {
+    linearHistory.unshift({ role: 'system', content: systemPrompt(modelName) });
     if (!apiKey) throw new Error("API key for Mistral is required");
     const mistral = new Mistral({ apiKey });
-    const { promptTokens, currentMessageTokens, historyTokens } = computeTokenStats(messages);
+    const { lastMessageToken, fullHistoryToken } = computeTokenStats(linearHistory);
     let stream;
     try {
-
         stream = await mistral.chat.stream({
-            model: model_name,
-            messages
+            model: modelName,
+            messages: linearHistory
         });
     } catch (error) {
         throw new Error(`Error creating Mistral chat completion: ${error.message}`);
@@ -230,19 +228,24 @@ export async function chatWithMistral(messages, onToken, model_name = "mistral-s
     for await (const chunk of stream) {
         const delta = chunk.data.choices?.[0]?.delta?.content;
         if (typeof delta === "string") {
-            if (onToken) onToken(delta);
+            if (onToken) onToken(delta, modelName);
             generatedText += delta;
         }
     }
     const completionTokens = tokenizer.encode(generatedText).length;
-    return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
+    return {
+        generatedText,
+        fullHistoryToken,
+        lastMessageToken,
+        completionTokens
+    };
 }
 
-export async function testMistral(key, model_name = "mistral-small-latest") {
+export async function testMistral(key, modelName = "mistral-small-latest") {
     try {
         const mistral = new Mistral({ apiKey: key });
         const response = await mistral.chat.complete({
-            model: model_name,
+            model: modelName,
             messages: [{ role: 'user', content: 'Say hello originaly and in less than 8 words!' }],
         });
 
@@ -254,16 +257,17 @@ export async function testMistral(key, model_name = "mistral-small-latest") {
 }
 
 
-export async function chatWithClaude(messages, onToken, model_name = "claude-3.5-sonnet-20240620", apiKey = null) {
+export async function chatWithClaude(linearHistory, onToken, modelName = "claude-3.5-sonnet-20240620", apiKey = null) {
+    linearHistory.unshift({ role: 'system', content: systemPrompt(modelName) });
     if (!apiKey) throw new Error("API key for Anthropic is required");
-    const { promptTokens, currentMessageTokens, historyTokens } = computeTokenStats(messages);
+    const { lastMessageToken, fullHistoryToken } = computeTokenStats(linearHistory);
     const anthropic = new Anthropic({ apiKey });
     let stream;
     try {
         stream = await anthropic.messages.create({
-            model: model_name,
-            messages,
-            max_tokens: getMaxModelOutput(model_name),
+            model: modelName,
+            messages: linearHistory,
+            max_tokens: getMaxModelOutput(modelName),
             stream: true
         });
     } catch (error) {
@@ -275,20 +279,25 @@ export async function chatWithClaude(messages, onToken, model_name = "claude-3.5
         if (evt.type === "content_block_delta") {
             const text = evt.delta?.text;
             if (text) {
-                if (onToken) onToken(text);
+                if (onToken) onToken(text, modelName);
                 generatedText += text;
             }
         }
     }
     const completionTokens = tokenizer.encode(generatedText).length;
-    return { generatedText, promptTokens, currentMessageTokens, historyTokens, completionTokens };
+    return {
+        generatedText,
+        fullHistoryToken,
+        lastMessageToken,
+        completionTokens
+    };
 }
 
-export async function testClaude(key, model_name = "claude-3.5-sonnet-20240620") {
+export async function testClaude(key, modelName = "claude-3.5-sonnet-20240620") {
     try {
         const anthropic = new Anthropic({ apiKey: key });
         const response = await anthropic.messages.create({
-            model: model_name,
+            model: modelName,
             messages: [{ role: 'user', content: [{ type: "text", "text": 'Say hello originaly and in less than 8 words!' }] }],
         });
 

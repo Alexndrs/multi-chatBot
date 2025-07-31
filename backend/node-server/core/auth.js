@@ -24,9 +24,14 @@ export async function createUser(mail, name, pass, code) {
     }
     const hashPass = await bcrypt.hash(pass, saltRounds);
     const userId = uuidv4();
-    await db.addUser(userId, name, mail, hashPass, code);
-
-    const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '6h' });
+    await db.addUser(
+        userId,
+        name,
+        mail,
+        hashPass,
+        code,
+    );
+    const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
     return { userId, token };
 }
 
@@ -44,7 +49,7 @@ export async function loginUser(mail, pass) {
     }
 
     // Verify password
-    const match = await bcrypt.compare(pass, user.userInfo.password);
+    const match = await bcrypt.compare(pass, user.password);
     if (!match) {
         throw new Error('Invalid password');
     }
@@ -74,7 +79,6 @@ export async function getUserApis(userId) {
 
 export async function verifyUserCode(userId, enteredCode) {
     const realCode = await db.getUserVerificationCode(userId);
-    console.log('realCode:', realCode, 'enteredCode:', enteredCode);
     if (!realCode) {
         throw new Error('Verification code not found');
     }
