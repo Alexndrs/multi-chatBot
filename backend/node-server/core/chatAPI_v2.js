@@ -233,7 +233,7 @@ export async function generateLinearHistoryForMultipleMessages(convId, inputMess
     }
 
     const parentNode = graph.messagesMap[node.parents[0]];
-    if (!parentNode || parentNode.parents.length !== inputMessages.length) {
+    if (!parentNode || parentNode.parents.length == inputMessages.length) {
         throw new Error('Input messages do not have a common parent with the expected number of children');
     }
 
