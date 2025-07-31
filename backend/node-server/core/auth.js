@@ -1,5 +1,5 @@
 import * as db from '../db/sqlite_interface.js';
-import { getKeys } from './encryption.js';
+import { getKeys } from './keys.js';
 import { apis, models } from '../services/utils.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
@@ -13,8 +13,9 @@ const JWT_SECRET = process.env.JWT_SECRET
  * 
  * @param {string} mail 
  * @param {string} name 
- * @param {string} hpass 
- * @returns {Promise<{import('../db/interface').userObject}>}
+ * @param {string} pass 
+ * @param {string} code
+ * @returns {Promise<{userId: string, token: string}>}
  */
 export async function createUser(mail, name, pass, code) {
     // Verify if user already exists
@@ -29,7 +30,7 @@ export async function createUser(mail, name, pass, code) {
         name,
         mail,
         hashPass,
-        code,
+        code
     );
     const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
     return { userId, token };
@@ -39,7 +40,7 @@ export async function createUser(mail, name, pass, code) {
  * 
  * @param {string} mail 
  * @param {string} pass 
- * @returns 
+ * @returns {Promise<{userId: string, token: string}>}
  */
 export async function loginUser(mail, pass) {
     // Verify if user exists
@@ -59,6 +60,11 @@ export async function loginUser(mail, pass) {
     return { userId: user.userId, token };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{name: string, email: string, preferences}>}
+ */
 export async function getUserInfo(userId) {
     const userInfo = await db.getUserInfo(userId);
     if (!userInfo) {
@@ -67,6 +73,11 @@ export async function getUserInfo(userId) {
     return userInfo;
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{userApis: string[], availableApis: Object, availableModels: Object}>}
+ */
 export async function getUserApis(userId) {
     const userKeys = await getKeys(userId);
     const userApis = userKeys.map(k => k.api);
@@ -76,7 +87,12 @@ export async function getUserApis(userId) {
         availableModels: models,
     }
 }
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} enteredCode 
+ * @returns {Promise<boolean>}
+ */
 export async function verifyUserCode(userId, enteredCode) {
     const realCode = await db.getUserVerificationCode(userId);
     if (!realCode) {

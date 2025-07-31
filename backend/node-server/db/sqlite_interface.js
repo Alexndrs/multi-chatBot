@@ -161,7 +161,7 @@ export async function deleteUser(userId) {
 /**
  * Check if the user is verified
  * @param {string} userId 
- * @returns {boolean} 
+ * @returns {Promise<boolean>} 
  */
 export async function isVerified(userId) {
     const db = await getDB();
@@ -173,7 +173,7 @@ export async function isVerified(userId) {
 /**
  * Set the user as verified and remove the verification code
  * @param {string} userId 
- * @returns {boolean} true if the user was verified successfully
+ * @returns {Promise<boolean>} true if the user was verified successfully
  */
 export async function setUserVerified(userId) {
     const db = await getDB();
