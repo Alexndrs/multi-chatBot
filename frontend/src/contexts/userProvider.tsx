@@ -13,7 +13,7 @@ export const UserProvider: React.FC<Props> = ({ children }) => {
     const [availableModels, setAvailableModels] = useState<Models | null>(null);
     const [status, setStatus] = useState<'unverified' | 'verified' | 'unauthenticated'>('unauthenticated');
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<string[]>([]);
+    const [selectedModel, setSelectedModel] = useState<string[]>(['llama-3.1-8b-instant']);
 
 
 

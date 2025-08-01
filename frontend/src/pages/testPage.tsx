@@ -16,8 +16,13 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
 const TestPage: React.FC = () => {
     // Data management hooks
-    const { conversation, getLinearizedGraph } = useConversationLogic();
+    const { conversation, getLinearizedGraph, addConversation } = useConversationLogic();
     const { modalOpen, setModalOpen } = useUser();
+
+    // useEffect(() => {
+    //     // console.log("Graph updated, re-render triggered");
+    // }, [graph]);
+
 
 
 
@@ -28,7 +33,7 @@ const TestPage: React.FC = () => {
     return (
         <div className="relative flex flex-col overflow-hidden h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a] text-gray-200">
 
-            {modalOpen && (<ModalInput open={modalOpen} onClose={() => setModalOpen(false)} onSend={() => { }} />)}
+            {modalOpen && (<ModalInput open={modalOpen} onClose={() => setModalOpen(false)} onSend={addConversation} />)}
 
 
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full py-5 flex justify-center items-center z-20">
@@ -77,18 +82,20 @@ const TestPage: React.FC = () => {
                 )} */}
             </div>
 
+            <div className="flex flex-col gap-2 overflow-y-auto px-4 pt-[150px] pb-[300px] w-full hide-scrollbar mask-fade-bottom">
 
-            {getLinearizedGraph().map((multiMessage, index) => (
-                <div className="flex p-4 bg-white/5" key={index}>
-                    {multiMessage.messages.map((message, msgIndex) => (
-                        <div key={msgIndex} className="flex flex-col py-4 px-6 m-2 gap-2 bg-white/5 rounded-lg">
-                            <div className="text-sm font-semibold pb-2 border-b-1 border-white/5">{message.role === 'user' ? 'user' : message.author}</div>
-                            <div className="text-sm text-blue-300">[THINK CONTENT] {message.thinkContent}</div>
-                            <div className="text-sm">[MAIN CONTENT] {message.mainContent}</div>
-                        </div>
-                    ))}
-                </div>
-            ))}
+                {getLinearizedGraph().map((multiMessage, index) => (
+                    <div className="flex p-2 bg-white/5 rounded-xl" key={index}>
+                        {multiMessage.messages.map((message, msgIndex) => (
+                            <div key={msgIndex} className="flex flex-col py-4 px-6 m-2 gap-2 bg-white/5 rounded-lg">
+                                <div className="text-sm font-semibold pb-2 border-b-1 border-white/5">{message.role === 'user' ? 'user' : message.author}</div>
+                                <div className="text-sm text-blue-300">[THINK CONTENT] {message.thinkContent}</div>
+                                <div className="text-sm">[MAIN CONTENT] {message.mainContent}</div>
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
 
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 mb-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent shadow-xl">
                 <Input onSend={async (message: string) => { console.log('Sending message', message) }} />

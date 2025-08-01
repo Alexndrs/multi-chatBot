@@ -1,10 +1,12 @@
 import { useConversation } from "./useConversation";
-import type { splittedMessage, Node, linearConversation } from "../api/types";
-import { getConversation } from "../api/conversation";
+import { type splittedMessage, type Node, type linearConversation, type Message, type Graph } from "../api/types";
+import { getConversation, addConversation as addConversationAPI } from "../api/conversation";
 import { splitThinkContent } from "../utils";
+import { useUser } from "./useUser";
 
 export function useConversationLogic() {
     const { conversation, setConversation, graph, setGraph } = useConversation();
+    const { selectedModel } = useUser();
 
     const openConversation = async (convId: string) => {
         const { graph, conversation } = await getConversation(convId);
@@ -62,13 +64,108 @@ export function useConversationLogic() {
         return result;
     }
 
+    const addMessageToGraph = (message: Message, parentId: string[]): void => {
+        if (parentId.length === 0) {
+            // New conv:
+            const newGraph: Graph = {
+                rootId: [message.msgId],
+                messagesMap: {
+                    [message.msgId]: {
+                        message,
+                        parents: [],
+                        children: []
+                    }
+                }
+            };
+            setGraph(newGraph);
+            return;
+        }
+        // Find the parent id and add the new message as a child
+        setGraph((prevGraph) => {
+            const newMessagesMap = { ...prevGraph.messagesMap };
 
+            for (const parent of parentId) {
+                const parentNode = newMessagesMap[parent];
+                if (parentNode) {
+                    newMessagesMap[parent] = {
+                        ...parentNode,
+                        children: [...parentNode.children, message.msgId] // <- pas de mutation
+                    };
+                }
+            }
+
+            newMessagesMap[message.msgId] = {
+                message,
+                parents: parentId,
+                children: []
+            };
+
+            return {
+                ...prevGraph,
+                messagesMap: newMessagesMap
+            };
+        });
+
+    }
+
+    const addTokenToGraph = (model: string, token: string, replyContainer: Record<string, Message>) => {
+        // console.log(`Adding token for model ${model}:`, token);
+        const targetId = replyContainer[model].msgId;
+        setGraph((prevGraph) => {
+            const newMessagesMap = { ...prevGraph.messagesMap };
+            const targetNode = newMessagesMap[targetId];
+
+            if (targetNode) {
+                // Append the token to the existing content
+                const updatedMessage: Message = {
+                    ...targetNode.message,
+                    content: targetNode.message.content + token
+                };
+
+                newMessagesMap[targetId] = {
+                    ...targetNode,
+                    message: updatedMessage
+                };
+            } else {
+                console.warn(`Target message with ID ${targetId} not found in graph.`);
+            }
+
+            return {
+                ...prevGraph,
+                messagesMap: newMessagesMap
+            };
+        });
+    }
+
+
+    const addConversation = (firstMessage: string) => {
+
+        addConversationAPI(
+            firstMessage,
+            selectedModel,
+            setConversation,
+            (message: Message) => {
+                addMessageToGraph(message, []);
+            },
+            (replyContainer: Record<string, Message>, firstMessageId: string) => {
+                for (const modelName in replyContainer) {
+                    const message = replyContainer[modelName];
+                    addMessageToGraph(message, [firstMessageId]);
+                }
+            },
+            addTokenToGraph,
+            () => {
+                // Final replies received callback (no parameters needed)
+            }
+        );
+    }
 
 
     return {
         conversation,
         graph,
         getLinearizedGraph,
-        openConversation
+        openConversation,
+        addConversation
     }
 }

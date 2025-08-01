@@ -67,7 +67,7 @@ export async function getConversationById(convId) {
  * @param {string} userId 
  * @param {string} content 
  * @param {string} modelName
- * @return {Promise<{convId: string, convName: string}>}
+ * @return {Promise<{userId:string, convId: string, convName: string, date: string, token: number}>}
  */
 export async function createConversation(userId, content, modelName) {
     // TODO
@@ -104,7 +104,7 @@ Generate a title for the conversation based on the user message.
         replies[modelName].token
     )
 
-    return { convId, convName: replies[modelName].content }
+    return { userId, convId, convName: replies[modelName].content, date: replies[modelName].timestamp, token: replies[modelName].token }
 }
 
 

@@ -2,6 +2,7 @@ import express from 'express';
 import * as chatAPI from '../core/chatAPI_v2.js';
 import { getUserConversationMetadata } from '../db/sqlite_interface.js';
 import * as conv from '../core/conversation.js';
+import * as db from '../db/sqlite_interface.js';
 import authenticateToken from '../middleware/auth.js';
 import { handleStreamError } from './message.js';
 
@@ -27,15 +28,18 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!userId || !messageContent || !modelNames) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
+    if (modelNames.length === 0) {
+        return res.status(400).json({ error: 'Please select at least one model' });
+    }
 
     try {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Transfer-Encoding', 'chunked');
 
 
-        const { convId, convName } = await conv.createConversation(userId, messageContent, modelNames[0]);
+        const { convId, convName, date, token } = await conv.createConversation(userId, messageContent, modelNames[0]);
 
-        res.write(`\n<<convContainer>>${JSON.stringify({ convId, convName })}\n`);
+        res.write(`\n<<convContainer>>${JSON.stringify({ userId, convId, convName, date, token })}\n`);
 
         const firstMessage = await chatAPI.addUserMessage(userId, convId, [], messageContent);
 
@@ -57,7 +61,12 @@ router.post('/', authenticateToken, async (req, res) => {
             }
         );
 
-        res.write(`\n<<finalReplies>>${JSON.stringify({ replies })}\n`);
+        for (const modelName in replies) {
+            const message = replies[modelName];
+            await db.addMessage(userId, message.convId, message.msgId, [firstMessage.msgId], message.role, message.content, message.author, message.timestamp, message.token, message.historyToken);
+        }
+
+        res.write(`\n<<finalReplies>>${JSON.stringify(replies)}\n`);
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error creating conversation:');
