@@ -30,8 +30,6 @@
 
 
 */
-
-
 /// <reference path="./types.js" />
 import * as db from '../db/sqlite_interface.js';
 import { generateReply } from './chatAPI_v2.js';
@@ -116,7 +114,8 @@ Generate a title for the conversation based on the user message.
  * 
  * @param {string} userId 
  * @param {string} convId 
- * @param {string} newName 
+ * @param {string} newName
+ * @returns {Promise<void>}
  */
 export async function changeConversationName(userId, convId, newName) {
     await db.changeConversationName(userId, convId, newName)
@@ -127,6 +126,7 @@ export async function changeConversationName(userId, convId, newName) {
  * 
  * @param {string} userId 
  * @param {string} convId 
+ * @returns {Promise<void>}
  */
 export async function deleteConversation(userId, convId) {
     try {

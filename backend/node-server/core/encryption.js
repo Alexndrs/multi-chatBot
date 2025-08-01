@@ -1,8 +1,4 @@
 import crypto from "crypto";
-import 'dotenv/config';
-const mySecret = process.env.ENCRYPT_SECRET;
-
-import { getUserKeys, getUserKeysForApi, addUserKey, deleteKey } from "../db/sqlite_interface.js";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;

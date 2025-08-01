@@ -2,7 +2,7 @@
 import 'dotenv/config';
 const mySecret = process.env.ENCRYPT_SECRET;
 import { getUserKeys, getUserKeysForApi, addUserKey, deleteKey } from "../db/sqlite_interface.js";
-import { testGroq, testClaude, testGemini, testMistral, testOpenAI } from "../services/api_providers";
+import { testGroq, testClaude, testGemini, testMistral, testOpenAI } from "../services/api_providers.js";
 import { encrypt, decrypt } from "./encryption.js";
 
 /**

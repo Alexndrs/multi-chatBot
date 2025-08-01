@@ -1,6 +1,6 @@
 import express from 'express';
 import authenticateToken from '../middleware/auth.js';
-import * as k from '../core/keys.js';
+import * as k from '../core/key.js';
 
 const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {

@@ -112,7 +112,6 @@ convId, msgId, onToken, modelNames, onToken, onIdGenerated
 
         -> regenerateReply (and stream the updates and the new reply to the client)
 
-
 */
 
 
@@ -124,9 +123,7 @@ import * as db from '../db/sqlite_interface.js';
 import { chatWithGemini, chatWithGroq, chatWithOpenAI, chatWithMistral, chatWithClaude } from '../services/api_providers.js';
 import { v4 as uuidv4 } from 'uuid';
 import { models, apis } from '../services/utils.js';
-import { getKeyForApi } from './encryption.js';
-import { UserMessage$inboundSchema } from '@mistralai/mistralai/models/components/usermessage.js';
-
+import { getKeyForApi } from './key.js';
 
 
 
@@ -284,7 +281,7 @@ ${formattedResponses}
  * @param {{role: "user" | "assistant", content: string}[]} linearHistory
  * @param {string[]} modelNames 
  * @param {(token:string,modelName:string)=>promise<void>} onToken 
- * @param {(Record<string, Message>)=>promise<void>} onIdGenerated
+ * @param {(replyContainer:Record<string, Message>)=>promise<void>} onIdGenerated
  * @return {Promise<Record<string, Message>>}
  */
 export async function generateReply(userId, convId, linearHistory, modelNames, onToken, onIdGenerated) {
@@ -387,8 +384,8 @@ export async function chooseReply(userId, convId, chosenMessageId) {
  * @param {string} msgId // userMsg that is being edited
  * @param {string} newContent 
  * @param {string[]} modelNames
- * @param {(token:string)=>void} onToken 
- * @param {(msgContainer : Object)=>void} onIdGenerated
+ * @param {(token:string,modelName:string)=>promise<void>} onToken 
+ * @param {(replyContainer:Record<string, Message>)=>promise<void>} onIdGenerated
  * @return {Promise<Record<string, Message>>}
  */
 export async function editUserMessage(userId, convId, msgId, newContent, modelNames, onToken, onIdGenerated) {
@@ -398,7 +395,6 @@ export async function editUserMessage(userId, convId, msgId, newContent, modelNa
     const parentIds = parentMessages.map(msg => msg.msgId);
 
     const history = await generateLinearHistoryForMultipleMessages(convId, parentMessages);
-    console.log(`History for editing message ${msgId}:\n\t${JSON.stringify(history)}\n\n`);
     history.push({ role: 'user', content: newContent });
 
     const reply = await generateReply(userId, convId, history, modelNames, onToken, onIdGenerated);
@@ -410,15 +406,16 @@ export async function editUserMessage(userId, convId, msgId, newContent, modelNa
         const msg = reply[modelName];
         await db.addMessage(userId, msg.convId, msg.msgId, [editedMessage.msgId], msg.role, msg.content, msg.author, msg.timestamp, msg.token, msg.historyToken);
     }
+    return reply;
 }
 /**
  * @param {string} userId
  * @param {string} convId 
  * @param {string} msgId // assistant msg that is being regenerated
  * @param {string} modelName
- * @param {(token:string)=>void} onToken 
- * @param {(msgContainer : Object)=>void} onIdGenerated
- * @return {Promise<void>}
+ * @param {(token:string,modelName:string)=>promise<void>} onToken 
+ * @param {(replyContainer:Record<string, Message>)=>promise<void>} onIdGenerated
+ * @return {Promise<Message>}
  */
 export async function regenerateReply(userId, convId, msgId, modelName, onToken, onIdGenerated) {
 
@@ -437,4 +434,5 @@ export async function regenerateReply(userId, convId, msgId, modelName, onToken,
     const newMsgId = uuidv4();
     await db.addMessage(userId, convId, newMsgId, parentIds, 'assistant', reply.content, reply.author, reply.timestamp, reply.token, reply.historyToken);
 
+    return reply;
 }
