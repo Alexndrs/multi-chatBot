@@ -5,7 +5,7 @@ import cors from 'cors';
 import messageRouter from './routes/message.js';
 import userRouter from './routes/auth.js';
 import conversationRouter from './routes/conversation.js';
-import apiKeyRouter from './routes/keys.js';
+import apiKeyRouter from './routes/key.js';
 import { initDB } from './db/sqlite_interface.js';
 
 
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use('/message', messageRouter);
 app.use('/user', userRouter);
 app.use('/conversation', conversationRouter);
-app.use('/Keys', apiKeyRouter);
+app.use('/key', apiKeyRouter);
 
 const PORT = process.env.PORT || 8000;
 async function startServer() {

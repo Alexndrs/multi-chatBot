@@ -5,17 +5,18 @@ import { faEllipsisVertical, faSpinner, faArrowUp } from "@fortawesome/free-soli
 import FloatingMenu from "./floatingMenu";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useConv } from "../../hooks/useConv";
+import { useUser } from "../../hooks/useUser";
 
 import { motion } from "framer-motion";
 
 
 export default function ModalInput({ open, onClose, onSend }: { open: boolean; onClose: () => void, onSend: (message: string) => void; }) {
-    const { task, selectedModel } = useConv();
-    const [openMenu, setOpenMenu] = useState<"task" | "upload" | null>(null);
+    const { selectedModel } = useUser();
+
+    const [openMenu, setOpenMenu] = useState<boolean>(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-    const taskButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
-    // const uploadButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+
+    const modelSelectorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
 
     useEffect(() => {
@@ -57,7 +58,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
         }
     };
 
-    const handleMenuOpen = (menuType: "task" | "upload", buttonRef: React.RefObject<HTMLDivElement>) => {
+    const handleMenuOpen = (buttonRef: React.RefObject<HTMLDivElement>) => {
         if (buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
             setMenuPosition({
@@ -65,7 +66,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                 y: rect.top - 10 // Ajustement pour positionner au-dessus
             });
         }
-        setOpenMenu(openMenu === menuType ? null : menuType);
+        setOpenMenu(true);
     };
 
 
@@ -115,10 +116,10 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                     <div className="flex flex-col ml-auto mr-auto">
                         <div className="flex gap-2 w-full mb-0 items-center justify-between rounded-lg focus:outline-none p-2 border-b-[3px] border-b-black/20">
 
-                            <div ref={taskButtonRef} className="ml-2 shrink-0">
+                            <div ref={modelSelectorRef} className="ml-2 shrink-0">
                                 <ButtonIcon
                                     icon={<FontAwesomeIcon icon={faEllipsisVertical} />}
-                                    onClick={() => handleMenuOpen("task", taskButtonRef)}
+                                    onClick={() => handleMenuOpen(modelSelectorRef)}
                                     type="transparent"
                                 />
                             </div>
@@ -154,7 +155,6 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                         {/* Infos */}
                         <div className="flex flex-wrap px-6 justify-between mt-0 pt-5 border-t-2 border-white/7">
                             <div className="flex items-center gap-2 flex-wrap flex-1">
-                                <div className="bg-amber-400 hover:bg-amber-300 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{task}</div>
                                 {selectedModel.map((model, index) => (
                                     <div key={`${model}-${index}`} className="bg-pink-300 hover:bg-pink-200 text-gray-800 px-3 py-1 rounded-lg text-xs transition duration-150 cursor-default">{model}</div>
                                 ))}
@@ -180,7 +180,7 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                 </div>
             </motion.div>
 
-            {openMenu === "task" && createPortal(
+            {openMenu && createPortal(
                 <div
                     style={{
                         position: 'fixed',
@@ -191,10 +191,8 @@ export default function ModalInput({ open, onClose, onSend }: { open: boolean; o
                     }}
                 >
                     <FloatingMenu
-                        onSelect={() => {
-                            setOpenMenu(null);
-                        }}
-                        onClose={() => setOpenMenu(null)}
+                        onSelect={() => { }}
+                        onClose={() => setOpenMenu(false)}
                     />
                 </div>,
                 document.body

@@ -12,11 +12,13 @@ export const UserProvider: React.FC<Props> = ({ children }) => {
     const [availableApis, setAvailableApis] = useState<Apis | null>(null);
     const [availableModels, setAvailableModels] = useState<Models | null>(null);
     const [status, setStatus] = useState<'unverified' | 'verified' | 'unauthenticated'>('unauthenticated');
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedModel, setSelectedModel] = useState<string[]>([]);
 
 
 
     return (
-        <UserContext.Provider value={{ userData, setUserData, loading, setLoading, availableApis, setAvailableApis, availableModels, setAvailableModels, status, setStatus }}>
+        <UserContext.Provider value={{ userData, setUserData, loading, setLoading, availableApis, setAvailableApis, availableModels, setAvailableModels, status, setStatus, modalOpen, setModalOpen, selectedModel, setSelectedModel }}>
             {children}
         </UserContext.Provider>
     );

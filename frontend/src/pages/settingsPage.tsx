@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getApiKeys } from '../api';
-import type { ApiKey } from '../api';
+import { getApiKeys } from '../api/key';
+import type { ApiKey } from '../api/types';
 import { ApiKeyInput } from '../components/apiKeyInput';
 import { useUser } from '../hooks/useUser';
 import type { ApiInfo } from '../contexts/userContext';

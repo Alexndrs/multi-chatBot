@@ -4,27 +4,27 @@ import type { Apis, Models, UserData } from "./contexts/userContext";
 // export const serverUrl = 'http://localhost:8000';
 export const serverUrl = '/api';
 
-export const getToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
+// export const getToken = () => {
+//     const token = localStorage.getItem('token');
+//     if (!token) return null;
 
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('token');
-            return null;
-        }
-    } catch {
-        localStorage.removeItem('token');
-        return null;
-    }
+//     try {
+//         const payload = JSON.parse(atob(token.split('.')[1]));
+//         if (payload.exp * 1000 < Date.now()) {
+//             localStorage.removeItem('token');
+//             return null;
+//         }
+//     } catch {
+//         localStorage.removeItem('token');
+//         return null;
+//     }
 
-    return token;
-}
+//     return token;
+// }
 
-export const removeToken = () => {
-    localStorage.removeItem('token');
-}
+// export const removeToken = () => {
+//     localStorage.removeItem('token');
+// }
 
 async function jsonRequest<T>(input: RequestInfo, init: RequestInit): Promise<T> {
     const res = await fetch(input, init);
@@ -121,100 +121,100 @@ async function streamJson<T, R = void>(
     }
 }
 
-export const createUser = async (name: string, mail: string, password: string) => {
-    const json = await jsonRequest<{ token: string }>(
-        `${serverUrl}/user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, mail, password })
-    })
-    localStorage.setItem('token', json.token);
-}
+// export const createUser = async (name: string, mail: string, password: string) => {
+//     const json = await jsonRequest<{ token: string }>(
+//         `${serverUrl}/user`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ name, mail, password })
+//     })
+//     localStorage.setItem('token', json.token);
+// }
 
-export const verifyCode = async (code: string) => {
-    await jsonRequest<{ error: string }>(
-        `${serverUrl}/user/verify/${code}`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${getToken()}`,
-            'Content-Type': 'application/json',
-        }
-    })
-}
+// export const verifyCode = async (code: string) => {
+//     await jsonRequest<{ error: string }>(
+//         `${serverUrl}/user/verify/${code}`, {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': `Bearer ${getToken()}`,
+//             'Content-Type': 'application/json',
+//         }
+//     })
+// }
 
-export const resendVerificationEmail = async () => {
-    const token = getToken();
-    if (!token) throw new Error('No token found');
+// export const resendVerificationEmail = async () => {
+//     const token = getToken();
+//     if (!token) throw new Error('No token found');
 
-    const json = await jsonRequest<{ message: string }>(
-        `${serverUrl}/user/resend`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        }
-    });
+//     const json = await jsonRequest<{ message: string }>(
+//         `${serverUrl}/user/resend`, {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//         }
+//     });
 
-    return json;
-}
+//     return json;
+// }
 
-export const loginUser = async (mail: string, password: string) => {
+// export const loginUser = async (mail: string, password: string) => {
 
-    const json = await jsonRequest<{ token: string }>(
-        `${serverUrl}/user/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mail, password })
-    });
-    localStorage.setItem('token', json.token);
-}
+//     const json = await jsonRequest<{ token: string }>(
+//         `${serverUrl}/user/login`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ mail, password })
+//     });
+//     localStorage.setItem('token', json.token);
+// }
 
-export const logoutUser = () => {
-    removeToken();
-    window.location.reload();
-}
+// export const logoutUser = () => {
+//     removeToken();
+//     window.location.reload();
+// }
 
-interface allUserInfo {
-    userInfo: UserData;
-    apiInfo: { userApis: string[], availableApis: Apis, availableModels: Models };
-    verified: boolean;
-}
+// interface allUserInfo {
+//     userInfo: UserData;
+//     apiInfo: { userApis: string[], availableApis: Apis, availableModels: Models };
+//     verified: boolean;
+// }
 
-export const getUserInfo = async (): Promise<allUserInfo> => {
-    const json = await jsonRequest<allUserInfo>(
-        `${serverUrl}/user`,
-        { headers: { 'Authorization': `Bearer ${getToken()}` } }
-    );
-    return json
-}
+// export const getUserInfo = async (): Promise<allUserInfo> => {
+//     const json = await jsonRequest<allUserInfo>(
+//         `${serverUrl}/user`,
+//         { headers: { 'Authorization': `Bearer ${getToken()}` } }
+//     );
+//     return json
+// }
 
 
-export const getUserConversations = async () => {
-    const json = await jsonRequest<{ conversationsIdsAndNameAndDate: ConversationItem[] }>(
-        `${serverUrl}/conversation`,
-        { headers: { 'Authorization': `Bearer ${getToken()}` } }
-    );
-    return json.conversationsIdsAndNameAndDate
-}
+// export const getUserConversations = async () => {
+//     const json = await jsonRequest<{ conversationsIdsAndNameAndDate: ConversationItem[] }>(
+//         `${serverUrl}/conversation`,
+//         { headers: { 'Authorization': `Bearer ${getToken()}` } }
+//     );
+//     return json.conversationsIdsAndNameAndDate
+// }
 
-export const getConversation = async (id: string) => {
+// export const getConversation = async (id: string) => {
 
-    const json = await jsonRequest<{ response: ConversationData }>(
-        `${serverUrl}/conversation/${id}`,
-        { headers: { 'Authorization': `Bearer ${getToken()}` } }
-    );
-    return json.response;
-}
+//     const json = await jsonRequest<{ response: ConversationData }>(
+//         `${serverUrl}/conversation/${id}`,
+//         { headers: { 'Authorization': `Bearer ${getToken()}` } }
+//     );
+//     return json.response;
+// }
 
-export const deleteConversation = async (id: string) => {
-    const response = await fetch(
-        `${serverUrl}/conversation/${id}`,
-        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }
-    );
-    if (!response.ok) {
-        throw new Error(`Failed to delete conversation: ${response.statusText}`);
-    }
-}
+// export const deleteConversation = async (id: string) => {
+//     const response = await fetch(
+//         `${serverUrl}/conversation/${id}`,
+//         { method: 'DELETE', headers: { 'Authorization': `Bearer ${getToken()}` } }
+//     );
+//     if (!response.ok) {
+//         throw new Error(`Failed to delete conversation: ${response.statusText}`);
+//     }
+// }
 
 async function convoStream<T, R = void>(
     path: string,
@@ -327,42 +327,42 @@ export const updateMessage = (
 }
 
 
-type apiAnswer = {
-    message: string;
-    error?: boolean;
-}
-export const addApiKey = async (api: string, key: string) => {
-    try {
-        const answer = await jsonRequest<apiAnswer>(
-            `${serverUrl}/apiKeys`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api, key })
-        })
-        if (answer.error) {
-            throw new Error(answer.message);
-        }
-        return answer.message;
-    } catch (error) {
-        console.error('Error adding API key:', error);
-        throw new Error(`Failed to add API key for ${api}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-}
+// type apiAnswer = {
+//     message: string;
+//     error?: boolean;
+// }
+// export const addApiKey = async (api: string, key: string) => {
+//     try {
+//         const answer = await jsonRequest<apiAnswer>(
+//             `${serverUrl}/apiKeys`, {
+//             method: 'POST',
+//             headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ api, key })
+//         })
+//         if (answer.error) {
+//             throw new Error(answer.message);
+//         }
+//         return answer.message;
+//     } catch (error) {
+//         console.error('Error adding API key:', error);
+//         throw new Error(`Failed to add API key for ${api}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+//     }
+// }
 
 // Delete an API key for a given api name
-export const deleteApiKey = async (api: string) => {
-    await jsonRequest<void>(
-        `${serverUrl}/apiKeys/${api}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-    })
-}
+// export const deleteApiKey = async (api: string) => {
+//     await jsonRequest<void>(
+//         `${serverUrl}/apiKeys/${api}`, {
+//         method: 'DELETE',
+//         headers: { 'Authorization': `Bearer ${getToken()}` }
+//     })
+// }
 
-export type ApiKey = { keyId: string; key: string; api: string; date: string };
+// export type ApiKey = { keyId: string; key: string; api: string; date: string };
 
-export const getApiKeys = async () => {
-    const json = await jsonRequest<ApiKey[]>(
-        `${serverUrl}/apiKeys`, { headers: { 'Authorization': `Bearer ${getToken()}` } }
-    );
-    return json;
-}
+// export const getApiKeys = async () => {
+//     const json = await jsonRequest<ApiKey[]>(
+//         `${serverUrl}/apiKeys`, { headers: { 'Authorization': `Bearer ${getToken()}` } }
+//     );
+//     return json;
+// }

@@ -1,5 +1,6 @@
 import express from 'express';
 import * as chatAPI from '../core/chatAPI_v2.js';
+import { getUserConversationMetadata } from '../db/sqlite_interface.js';
 import * as conv from '../core/conversation.js';
 import authenticateToken from '../middleware/auth.js';
 import { handleStreamError } from './message.js';
@@ -13,7 +14,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
     try {
         const convMetadatas = await conv.getConvList(userId);
-        res.status(200).json({ convMetadatas });
+        res.status(200).json(convMetadatas);
     } catch (error) {
         console.error('Error fetching conversations:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -71,8 +72,9 @@ router.get(`/:convId`, authenticateToken, async (req, res) => {
     }
 
     try {
-        const graph = await conv.getConversationById(userId, convId);
-        res.status(200).json({ graph });
+        const graph = await conv.getConversationById(convId);
+        const conversation = await getUserConversationMetadata(userId, convId);
+        res.status(200).json({ graph, conversation });
     } catch (error) {
         console.error('Error handling message:', error);
         res.status(500).json({ error: 'Internal server error' });

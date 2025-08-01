@@ -1,17 +1,24 @@
 import { useEffect, useMemo, useState, useRef, forwardRef } from "react";
+import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
+
+import { useUser } from '../../hooks/useUser';
+// import { useConv } from "../../hooks/useConv";
+import { deleteConversation } from "../../api/conversation";
+import { logoutUser } from "../../api/user";
+import { useConversationLogic } from "../../hooks/useConversationLogic";
+
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser, faSquarePlus } from "@fortawesome/free-regular-svg-icons";
 import LogoIcon from "../icons/LogoIcon";
 import SideBarConvItem from "./sideBarConvItem";
 import { SideBarItem } from "./sideBarItem";
-import { useUser } from '../../hooks/useUser';
-import { useConv } from "../../hooks/useConv";
-import { getConversation, deleteConversation, logoutUser } from "../../api";
+
+
 import { stripThinkTags } from "../../utils";
-import { splitThinkContent } from "../../utils";
-import type { Message } from "../../contexts/convContext";
-import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+// import { splitThinkContent } from "../../utils";
+// import type { Message } from "../../contexts/convContext";
 
 const FloatingUserMenu = forwardRef<HTMLDivElement, { x: number, y: number, onClose: () => void }>(({ x, y, onClose }, ref) => {
     const navigate = useNavigate();
@@ -52,8 +59,9 @@ export type ConversationItem = {
 
 const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void }>(({ open, onClose }, ref) => {
     const navigate = useNavigate();
-    const { userData, setUserData } = useUser();
-    const { setConversation, setModalOpen } = useConv();
+    const { userData, setUserData, setModalOpen } = useUser();
+    // const { setConversation, setModalOpen } = useConv();
+    const { openConversation } = useConversationLogic();
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -133,33 +141,41 @@ const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void 
 
 
     // Function to open a conversation
+    // const openConv = async (convId: string) => {
+    //     const convData = await getConversation(convId);
+    //     const cleanedMsgList = convData.msgList?.map((msg: Message) => {
+    //         const { content: initialContent, thinkContent } = splitThinkContent(msg.content);
+    //         let content = initialContent;
+    //         if ((content === null || content.trim() === "") && (thinkContent)) {
+    //             content = "should I continue thinking?";
+    //         }
+    //         const historyTokens = msg.historyTokens || 0;
+    //         const token = msg.token || 0;
+    //         return {
+    //             ...msg,
+    //             historyTokens,
+    //             token,
+    //             content,
+    //             thinkContent,
+    //         };
+    //     }) || [];
+
+    //     setConversation({
+    //         ...convData,
+    //         msgList: cleanedMsgList,
+    //     });
+    //     navigate("/");
+
+    //     setModalOpen(false);
+    // };
+
     const openConv = async (convId: string) => {
-        const convData = await getConversation(convId);
-        const cleanedMsgList = convData.msgList?.map((msg: Message) => {
-            const { content: initialContent, thinkContent } = splitThinkContent(msg.content);
-            let content = initialContent;
-            if ((content === null || content.trim() === "") && (thinkContent)) {
-                content = "should I continue thinking?";
-            }
-            const historyTokens = msg.historyTokens || 0;
-            const token = msg.token || 0;
-            return {
-                ...msg,
-                historyTokens,
-                token,
-                content,
-                thinkContent,
-            };
-        }) || [];
-
-        setConversation({
-            ...convData,
-            msgList: cleanedMsgList,
-        });
+        await openConversation(convId);
         navigate("/");
-
         setModalOpen(false);
-    };
+    }
+
+
     const deleteConv = async (convId: string) => {
         await deleteConversation(convId);
         // We should remove the right conv from the UI i.e : remove the conv in userData.conversations:
@@ -170,8 +186,6 @@ const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void 
                 conversations: prevUserData.conversations.filter(conv => conv.convId !== convId),
             };
         });
-
-        setModalOpen(false);
     };
 
 
@@ -179,7 +193,7 @@ const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void 
     const onCreateConv = async () => {
         navigate("/");
         setModalOpen(true);
-        setConversation(null);
+        // setConversation(null);
     }
 
 

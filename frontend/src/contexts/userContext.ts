@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { ConversationItem } from '../components/sidebar/sideBar';
+import type { ConversationMetadata } from '../api/types';
 
 
 export type ApiInfo = {
@@ -29,7 +29,7 @@ export interface UserData {
     name: string | null;
     email: string | null;
     token: string | null;
-    conversations: ConversationItem[] | null;
+    conversations: ConversationMetadata[] | null;
     userApis: string[] | null;
     verified?: boolean;
 }
@@ -48,6 +48,12 @@ export interface UserContextType {
 
     status: 'unverified' | 'verified' | 'unauthenticated';
     setStatus: React.Dispatch<React.SetStateAction<'unverified' | 'verified' | 'unauthenticated'>>;
+
+    modalOpen: boolean;
+    setModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+
+    selectedModel: string[];
+    setSelectedModel: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 

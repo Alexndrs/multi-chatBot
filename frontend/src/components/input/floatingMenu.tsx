@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { useConv } from "../../hooks/useConv";
 import { useUser } from "../../hooks/useUser";
 
 interface FloatingMenuProps {
@@ -10,8 +9,7 @@ interface FloatingMenuProps {
 
 export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { setTask, setSelectedModel, selectedModel } = useConv();
-    const { availableModels, availableApis, userData } = useUser();
+    const { availableModels, availableApis, userData, setSelectedModel, selectedModel } = useUser();
 
     type ModelItem = { modelName: string; isAvailableForUser: boolean };
     type SectionItem = { task: string; models: ModelItem[] };
@@ -95,7 +93,6 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
                                                 }`}
                                             onClick={() => {
                                                 if (!model.isAvailableForUser) return;
-                                                setTask(section.task);
                                                 if (selectedModel.includes(model.modelName)) {
                                                     setSelectedModel(selectedModel.filter(m => m !== model.modelName));
                                                 }

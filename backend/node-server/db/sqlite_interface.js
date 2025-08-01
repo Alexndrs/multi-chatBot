@@ -434,11 +434,22 @@ export async function getUserConversations(userId) {
 /**
  * Get only the metadata of the conversations of a user (used for listing conversations)
  * @param {string} userId 
- * @returns {Promise<{ convId: string, convName: string, date: string }[]>}
+ * @returns {Promise<{ userId:string, convId: string, convName: string, date: string, token: number }[]>}
  */
 export async function getUserConversationsMetadata(userId) {
     const db = await getDB();
-    return db.all(`SELECT convId, convName, date FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
+    return db.all(`SELECT userId, convId, convName, token date FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
+}
+
+/**
+ * Get only the metadata of one conversations
+ * @param {string} userId 
+ * @param {string} convId 
+ * @returns {Promise<{ userId:string, convId: string, convName: string, date: string, token: number }>}
+ */
+export async function getUserConversationMetadata(userId, convId) {
+    const db = await getDB();
+    return db.get(`SELECT userId, convId, convName, token date FROM conversations WHERE userId = ?  AND convId = ? ORDER BY date DESC`, userId, convId);
 }
 
 /**

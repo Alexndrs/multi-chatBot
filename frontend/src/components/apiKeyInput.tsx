@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { addApiKey, deleteApiKey } from '../api';
+import { addKey, deleteKey } from '../api/key';
 import dayjs from 'dayjs';
 
 interface ApiKeyInputProps {
@@ -44,7 +44,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
         setMessage(null);
 
         try {
-            const msg = await addApiKey(apiName, value.trim());
+            const msg = await addKey(apiName, value.trim());
             setMessage({ text: msg || "Clé ajoutée avec succès !", type: 'success' });
             setTimeout(() => {
                 onSave?.();
@@ -96,7 +96,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                                         e.preventDefault();
                                         if (!currentKey) return;
                                         try {
-                                            await deleteApiKey(apiName);
+                                            await deleteKey(apiName);
                                             setValue('');
                                             setHasChanged(false);
                                             onSave?.();

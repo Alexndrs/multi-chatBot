@@ -26,7 +26,7 @@ const LoginPage = () => {
                 await login(email, password);
             }
         } catch (err) {
-            setError('❌ Échec de la connexion ou de la création du compte.');
+            setError(`${err instanceof Error ? err.message : 'An unexpected error occurred'}`);
             console.error(err);
         }
     };

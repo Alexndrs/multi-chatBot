@@ -40,7 +40,7 @@ import { v4 as uuidv4 } from 'uuid';
  * Get all conversation IDs, names, and dates for a user
  * (used to display the list of conversations in the UI)
  * @param {string} userId 
- * @returns {Promise<{convId: string,convName: string, date: string}[]>}
+ * @returns {Promise<{userId, convId: string,convName: string, date: string, token: number}[]>}
  */
 export async function getConvList(userId) {
     const convMetadatas = await db.getUserConversationsMetadata(userId);

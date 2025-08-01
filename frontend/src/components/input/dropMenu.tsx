@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { useConv } from "../../hooks/useConv";
 import { useUser } from "../../hooks/useUser";
 
 interface DropMenuProps {
@@ -11,8 +10,7 @@ interface DropMenuProps {
 
 export default function DropMenu({ onSelect, onClose, containerRef }: DropMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { setTask, setSelectedModel, selectedModel } = useConv();
-    const { availableModels, availableApis, userData } = useUser();
+    const { availableModels, availableApis, userData, setSelectedModel, selectedModel } = useUser();
 
     type ModelItem = { modelName: string; isAvailableForUser: boolean };
     type SectionItem = { task: string; models: ModelItem[] };
@@ -102,7 +100,6 @@ export default function DropMenu({ onSelect, onClose, containerRef }: DropMenuPr
                                                 }`}
                                             onClick={() => {
                                                 if (!model.isAvailableForUser) return;
-                                                setTask(section.task);
                                                 if (selectedModel.includes(model.modelName)) {
                                                     setSelectedModel(selectedModel.filter(m => m !== model.modelName));
                                                 }
