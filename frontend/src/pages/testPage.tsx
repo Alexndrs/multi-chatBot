@@ -16,7 +16,7 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
 const TestPage: React.FC = () => {
     // Data management hooks
-    const { conversation, getLinearizedGraph, addConversation } = useConversationLogic();
+    const { conversation, getLinearizedGraph, addConversation, replyToMessage, mergeMessages } = useConversationLogic();
     const { modalOpen, setModalOpen } = useUser();
 
     // useEffect(() => {
@@ -85,7 +85,7 @@ const TestPage: React.FC = () => {
             <div className="flex flex-col gap-2 overflow-y-auto px-4 pt-[150px] pb-[300px] w-full hide-scrollbar mask-fade-bottom">
 
                 {getLinearizedGraph().map((multiMessage, index) => (
-                    <div className="flex p-2 bg-white/5 rounded-xl" key={index}>
+                    <div className="relative flex p-2 bg-white/5 rounded-xl" key={index}>
                         {multiMessage.messages.map((message, msgIndex) => (
                             <div key={msgIndex} className="flex flex-col py-4 px-6 m-2 gap-2 bg-white/5 rounded-lg">
                                 <div className="text-sm font-semibold pb-2 border-b-1 border-white/5">{message.role === 'user' ? 'user' : message.author}</div>
@@ -93,12 +93,21 @@ const TestPage: React.FC = () => {
                                 <div className="text-sm">[MAIN CONTENT] {message.mainContent}</div>
                             </div>
                         ))}
+                        {multiMessage.messages.length > 1 && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-[10px] bg-blue-500 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-blue-600 transition-all"
+                                onClick={() => {
+                                    const parentIds = multiMessage.messages.map(msg => msg.msgId);
+                                    mergeMessages(parentIds);
+                                }}>
+                                Merge Messages
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>
 
             <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 mb-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent shadow-xl">
-                <Input onSend={async (message: string) => { console.log('Sending message', message) }} />
+                <Input onSend={async (message: string) => { replyToMessage(message, []) }} />
             </div>
 
         </div>

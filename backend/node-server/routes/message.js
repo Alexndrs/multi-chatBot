@@ -1,6 +1,7 @@
 import express from 'express';
 import * as chatAPI from '../core/chatAPI_v2.js';
 import authenticateToken from '../middleware/auth.js';
+import * as db from '../db/sqlite_interface.js';
 
 export function handleStreamError(res, error, logPrefix = '') {
     console.error(`${logPrefix} ${error.message}`, error);
@@ -46,6 +47,12 @@ router.post('/reply', authenticateToken, async (req, res) => {
         );
 
         res.write(`\n<<finalReplies>>${JSON.stringify({ replies })}\n`);
+
+        for (const modelName in replies) {
+            const message = replies[modelName];
+            await db.addMessage(userId, convId, message.msgId, [userMessage.msgId], message.role, message.content, message.author, message.timestamp, message.token, message.historyToken);
+        }
+
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error sending/streaming message:');
@@ -82,6 +89,10 @@ router.post('/merge', authenticateToken, async (req, res) => {
         );
 
         res.write(`\n<<finalMerge>>${JSON.stringify(replies[modelName])}\n`);
+
+
+        const mergedMessage = replies[modelName];
+        await db.addMessage(userId, mergedMessage.convId, mergedMessage.msgId, parentId, mergedMessage.role, mergedMessage.content, mergedMessage.author, mergedMessage.timestamp, mergedMessage.token, mergedMessage.historyToken);
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error sending/streaming message:');

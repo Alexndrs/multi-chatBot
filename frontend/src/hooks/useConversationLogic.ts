@@ -1,6 +1,7 @@
 import { useConversation } from "./useConversation";
 import { type splittedMessage, type Node, type linearConversation, type Message, type Graph } from "../api/types";
 import { getConversation, addConversation as addConversationAPI } from "../api/conversation";
+import { replyToMessage as replyToMessageAPI, mergeMessages as mergeMessagesAPI } from "../api/message";
 import { splitThinkContent } from "../utils";
 import { useUser } from "./useUser";
 
@@ -138,7 +139,7 @@ export function useConversationLogic() {
     }
 
 
-    const addConversation = (firstMessage: string) => {
+    const addConversation = (firstMessage: string): void => {
 
         addConversationAPI(
             firstMessage,
@@ -161,11 +162,68 @@ export function useConversationLogic() {
     }
 
 
+    const replyToMessage = (userMessage: string, parentId: string[]): void => {
+
+        if (parentId.length === 0) {
+            // set last messages as parents :
+            const linearized = getLinearizedGraph();
+            if (linearized.length === 0) {
+                addConversation(userMessage);
+                return;
+            }
+            const lastLevelMessages = linearized[linearized.length - 1].messages as splittedMessage[];
+            parentId = lastLevelMessages.map(msg => msg.msgId);
+        }
+
+        replyToMessageAPI(
+            conversation.convId,
+            userMessage,
+            selectedModel,
+            parentId,
+            (message: Message) => {
+                addMessageToGraph(message, parentId);
+            },
+            (replyContainer: Record<string, Message>, firstMessageId: string) => {
+                for (const modelName in replyContainer) {
+                    const message = replyContainer[modelName];
+                    addMessageToGraph(message, [firstMessageId]);
+                }
+            },
+            addTokenToGraph,
+            () => { }
+        )
+
+    }
+
+    const mergeMessages = (parentId: string[]): void => {
+        if (parentId.length < 2) {
+            console.warn('Merge requires at least two parent messages');
+            return;
+        }
+        const modelName = selectedModel[0];
+
+        mergeMessagesAPI(
+            conversation.convId,
+            modelName,
+            parentId,
+            (message: Message) => {
+                addMessageToGraph(message, parentId);
+            },
+            (token: string, mergeContainer: Message) => {
+                addTokenToGraph(modelName, token, { [modelName]: mergeContainer });
+            },
+            () => { }
+        )
+    }
+
+
     return {
         conversation,
         graph,
         getLinearizedGraph,
         openConversation,
-        addConversation
+        addConversation,
+        replyToMessage,
+        mergeMessages,
     }
 }
