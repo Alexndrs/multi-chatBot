@@ -100,7 +100,7 @@ code {
 }
 
 .gradientMove {
-  /* animation: gradientMovement 30s ease-in-out infinite; */ /*Too laggy*/
+  animation: gradientMovement 30s ease-in-out infinite; /*Too laggy*/
   background: #0015ff;
 background: linear-gradient(90deg, rgba(0, 21, 255, 0) 0%, rgba(54, 184, 255, 1) 25%, rgba(166, 255, 0, 1) 50%, rgba(54, 184, 255, 1) 75%, rgba(0, 43, 255, 0) 100%);
   background-size: 300% 300%; 
@@ -108,8 +108,8 @@ background: linear-gradient(90deg, rgba(0, 21, 255, 0) 0%, rgba(54, 184, 255, 1)
 }
 
 .mask-fade-bottom {
-  mask-image: linear-gradient(to top, white 0%, white 85%, rgba(255, 255, 255, 0.266) 90%, transparent 99%);
-  -webkit-mask-image: linear-gradient(to top,white 0%, white 80%, rgba(255, 255, 255, 0.1) 85%, transparent 99%);
+  mask-image: linear-gradient(to top, white 0px, white calc(100% - 70px), rgba(255, 255, 255, 0.266)  calc(100% - 35px), transparent calc(100% - 5px));
+  /* -webkit-mask-image: gradient(to top, white 0px, white calc(100% - 40px), rgba(255, 255, 255, 0.266)  calc(100% - 20px), transparent calc(100% - 5px)); */
 }
 
 .katex-html {

@@ -13,18 +13,19 @@ import { stripThinkTags } from "../utils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 
+import { MultiMessage } from "../components/message/multiMessage";
+
 
 const TestPage: React.FC = () => {
     // Data management hooks
-    const { conversation, getLinearizedGraph, addConversation, replyToMessage, mergeMessages } = useConversationLogic();
+    const { conversation, getLinearizedGraph, addConversation, replyToMessage } = useConversationLogic();
     const { modalOpen, setModalOpen } = useUser();
 
-    // useEffect(() => {
-    //     // console.log("Graph updated, re-render triggered");
-    // }, [graph]);
 
+    const linearizedGraph = getLinearizedGraph();
+    const lastMessage = linearizedGraph[linearizedGraph.length - 1];
 
-
+    const showInput = lastMessage && lastMessage.messages.length > 1;
 
     // UI state management
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,13 +37,13 @@ const TestPage: React.FC = () => {
             {modalOpen && (<ModalInput open={modalOpen} onClose={() => setModalOpen(false)} onSend={addConversation} />)}
 
 
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full py-5 flex justify-center items-center z-20">
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full py-1 flex justify-center items-center z-20">
 
                 {/* Position a dropdown menu on top left for selecting model */}
 
-                <div className="absolute top-8 left-20 z-30" ref={dropdownRef}>
+                <div className="absolute top-2 left-15 z-30" ref={dropdownRef}>
                     <button
-                        className="px-4 py-2 bg-white/3 text-white rounded-lg hover:bg-white/8 transition-all text-sm"
+                        className="px-4 py-2 bg-white/3 text-white rounded-lg hover:bg-white/8 transition-all text-sm backdrop-blur-md"
                         onClick={() => {
                             setOpenMenu(!openMenu);
                         }}
@@ -65,48 +66,36 @@ const TestPage: React.FC = () => {
 
 
                 <div className="flex-1 flex justify-center">
-                    <h1 className="text-3xl font-medium text-white font-playfair">
+                    <h1 className="text-xl font-medium text-white font-playfair">
                         {conversation ? stripThinkTags(conversation.convName) : "Hello, ask me anything!"}
                     </h1>
                 </div>
-                {/* {conversation && (
+                {conversation && (
                     <div className="absolute top-5 right-6">
                         <span className="text-sm text-gray-400 font-normal">
-                            {
-                                conversation.msgList?.reduce((acc, msg) => {
-                                    return acc + (msg.token + (msg.historyTokens ?? 0))
-                                }, 0)
-                            } tokens used
+                            {'TODO'} tokens used
                         </span>
                     </div>
-                )} */}
+                )}
             </div>
 
-            <div className="flex flex-col gap-2 overflow-y-auto px-4 pt-[150px] pb-[300px] w-full hide-scrollbar mask-fade-bottom">
+            <div className="flex flex-col gap-10 overflow-y-auto px-4 pt-[120px] pb-[300px] w-full hide-scrollbar mask-fade-bottom">
 
-                {getLinearizedGraph().map((multiMessage, index) => (
-                    <div className="relative flex p-2 bg-white/5 rounded-xl" key={index}>
-                        {multiMessage.messages.map((message, msgIndex) => (
-                            <div key={msgIndex} className="flex flex-col py-4 px-6 m-2 gap-2 bg-white/5 rounded-lg">
-                                <div className="text-sm font-semibold pb-2 border-b-1 border-white/5">{message.role === 'user' ? 'user' : message.author}</div>
-                                <div className="text-sm text-blue-300">[THINK CONTENT] {message.thinkContent}</div>
-                                <div className="text-sm">[MAIN CONTENT] {message.mainContent}</div>
-                            </div>
-                        ))}
-                        {multiMessage.messages.length > 1 && (
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-[10px] bg-blue-500 text-white px-3 py-1 rounded-lg cursor-pointer hover:bg-blue-600 transition-all"
-                                onClick={() => {
-                                    const parentIds = multiMessage.messages.map(msg => msg.msgId);
-                                    mergeMessages(parentIds);
-                                }}>
-                                Merge Messages
-                            </div>
-                        )}
-                    </div>
-                ))}
+                {linearizedGraph.map((multiMessage, index) =>
+                    <MultiMessage
+                        key={index}
+                        multiMessage={multiMessage}
+                        isLast={index === linearizedGraph.length - 1}
+                    />
+                )}
+
             </div>
 
-            <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 mb-4 z-20 bg-gradient-to-t from-[#12141b] to-transparent shadow-xl">
+            {/* Show the input only if there is one message to answer (else user should merge or choose among the multiple message to continue) */}
+            <div className={`absolute left-1/2 transform -translate-x-1/2 mb-4 z-20 shadow-xl
+            ${showInput ? 'bottom-[-200px]' : 'bottom-5'}
+            transition-all duration-300 ease-in-out
+            `}>
                 <Input onSend={async (message: string) => { replyToMessage(message, []) }} />
             </div>
 

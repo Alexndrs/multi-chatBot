@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {!sidebarOpen && (
                 <button
-                    className="fixed top-2 left-2 md:top-4 md:left-4 z-40 text-white text-3xl p-5 hover:text-gray-400 transition-colors duration-200 active:scale-105 cursor-pointer"
+                    className="fixed left-2 md:left-4 z-40 text-white text-3xl p-2 hover:text-gray-400 transition-colors duration-200 active:scale-105 cursor-pointer"
                     onClick={() => setSidebarOpen(true)}
                 >
                     &#9776;

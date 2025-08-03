@@ -1,0 +1,92 @@
+import type { splittedMessage } from "../../api/types";
+import { useState } from "react";
+import ReactMarkdown from 'react-markdown';
+import { CodeBlock } from '../codeBlock';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import type { ComponentPropsWithoutRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRotateRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+
+type CodeComponentProps = ComponentPropsWithoutRef<'code'> & {
+    inline?: boolean;
+};
+
+
+export function BotMessageV2({ splittedMessage, isMulti }: { splittedMessage: splittedMessage, isMulti?: boolean }) {
+
+    const [showThinking, setShowThinking] = useState(false);
+
+
+    return (
+        <div key={splittedMessage.msgId} className={`flex flex-col text-sm py-4 gap-2 ${isMulti ? 'bg-white/5 rounded-lg px-8' : 'px-4 md:px-40'}`}>
+
+            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author}</div>}
+            <div className={'text-white pb-2 whitespace-pre-wrap flex-1}'}>
+                {splittedMessage.thinkContent && (<button className="bg-white/5 px-4 py-2 rounded-lg" onClick={() => setShowThinking(!showThinking)}>Thinking</button>)}
+                {showThinking && splittedMessage.thinkContent && (
+                    <div className="text-blue-300 mb-2">
+                        {splittedMessage.thinkContent}
+                    </div>
+                )}
+                <div className={`hide-scrollbar overflow-y-auto ${isMulti ? 'overflow-x-auto max-h-[50vh]' : ''}`}>
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                        components={{
+                            code({ className, children, inline }: CodeComponentProps) {
+
+                                const match = /language-(\w+)/.exec(className || '');
+                                const codeContent = String(children).replace(/\n$/, '');
+
+                                if (!inline && match) {
+                                    return <CodeBlock language={match[1]} value={codeContent} />;
+                                }
+
+                                return <code className="bg-gray-800 px-1 rounded">{children}</code>;
+                            },
+                        }}
+
+                    >
+                        {splittedMessage.mainContent}
+                    </ReactMarkdown>
+                </div>
+            </div>
+            <div className="text-xs text-gray-400 pt-2 border-t border-white/10 mt-auto">
+                <div className="flex">
+                    <div
+                        className="flex-1 flex gap-5"
+                    >
+                        <span>
+                            {splittedMessage.token || 'N/A'} Tokens
+                        </span>
+                        <span>
+                            {new Date(splittedMessage.timestamp).toLocaleDateString('fr-FR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                            })
+                            }
+                        </span>
+                    </div>
+                    <div
+                        className="text-right"
+                    >
+                        <button
+                            className="text-gray-400 hover:text-white transition-colors mr-1"
+                            onClick={() => {
+                                navigator.clipboard.writeText(splittedMessage.mainContent);
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faRotateRight} size="md" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
