@@ -438,7 +438,7 @@ export async function getUserConversations(userId) {
  */
 export async function getUserConversationsMetadata(userId) {
     const db = await getDB();
-    return db.all(`SELECT userId, convId, convName, token date FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
+    return db.all(`SELECT userId, convId, convName, date, token FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
 }
 
 /**
@@ -572,7 +572,7 @@ export async function getMessageById(userId, convId, msgId) {
         FROM messages m
         JOIN conversations c ON m.convId = c.convId
         WHERE m.msgId = ? AND m.convId = ? AND c.userId = ?`, msgId, convId, userId);
-    if (!message) throw new Error('Message non trouvé');
+    if (!message) throw new Error(`Message with ID ${msgId} not found`);
 
     return message;
 }
@@ -681,6 +681,21 @@ export async function deleteMessage(userId, convId, msgId) {
 export async function deleteMessageAndChildren(userId, convId, msgId) {
     const graph = await getAllMessagesGraph(convId);
     const toDelete = [msgId];
+    const deleted = new Set();
+    while (toDelete.length > 0) {
+        const curId = toDelete.pop();
+        const curNode = graph.messagesMap[curId];
+        if (curNode && !deleted.has(curId)) {
+            toDelete.push(...curNode.children);
+            await deleteMessage(userId, convId, curId);
+            deleted.add(curId);
+        }
+    }
+}
+
+export async function deleteChildren(userId, convId, msgId) {
+    const graph = await getAllMessagesGraph(convId);
+    const toDelete = graph.messagesMap[msgId]?.children || [];
     const deleted = new Set();
     while (toDelete.length > 0) {
         const curId = toDelete.pop();

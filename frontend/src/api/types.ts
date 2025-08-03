@@ -26,8 +26,8 @@ export const defaultGraph: Graph = {
 }
 
 export type Conversation = {
-    convId: string;
     userId: string;
+    convId: string;
     convName: string;
     date: string;
     token: number;
@@ -39,14 +39,6 @@ export const defaultConversation: Conversation = {
     convName: 'Hello, ask me anything!',
     date: '',
     token: 0,
-}
-
-export type ConversationMetadata = {
-    userId: string;
-    convId: string;
-    convName: string;
-    date: string;
-    token: number;
 }
 
 export type ApiKey = {

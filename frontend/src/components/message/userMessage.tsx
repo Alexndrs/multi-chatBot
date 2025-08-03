@@ -5,13 +5,13 @@ export function UserMessage({
     onEdit,
     token,
     historyTokens }: {
-        message: string | null;
-        onEdit: (newMessage: string | null) => void;
+        message: string;
+        onEdit: (newMessage: string) => void;
         token: number;
         historyTokens?: number;
     }) {
     return (
-        <div className="self-end sm:mr-0 md:mr-15 mt-5">
+        <div className="self-end sm:mr-0 md:mr-40 mt-5">
             <EditableMessage
                 message={message}
                 onEdit={onEdit}

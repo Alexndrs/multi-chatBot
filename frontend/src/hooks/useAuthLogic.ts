@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
  * Provides methods for login, registration, verification, and user initialization.
  */
 export function useAuthLogic() {
-    const { setUserData, setAvailableApis, setAvailableModels, setStatus, setLoading } = useUser();
+    const { setUserData, setAvailableApis, setAvailableModels, setStatus, setLoading, setConvList } = useUser();
     const navigate = useNavigate();
 
     const applyUserData = async () => {
@@ -21,10 +21,10 @@ export function useAuthLogic() {
             token: localStorage.getItem('token'),
             name: userData.userInfo.name,
             email: userData.userInfo.mail,
-            conversations,
             userApis: userData.apiInfo.userApis || [],
             verified: userData.verified,
         });
+        setConvList(conversations);
 
         setAvailableApis(userData.apiInfo.availableApis || {});
         setAvailableModels(userData.apiInfo.availableModels || {});

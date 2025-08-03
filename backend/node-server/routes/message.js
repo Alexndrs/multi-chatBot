@@ -46,7 +46,7 @@ router.post('/reply', authenticateToken, async (req, res) => {
             }
         );
 
-        res.write(`\n<<finalReplies>>${JSON.stringify({ replies })}\n`);
+        res.write(`\n<<finalReplies>>${JSON.stringify(replies)}\n`);
 
         for (const modelName in replies) {
             const message = replies[modelName];
@@ -99,8 +99,21 @@ router.post('/merge', authenticateToken, async (req, res) => {
     }
 });
 
+router.post('/choose', authenticateToken, async (req, res) => {
+    const { convId, msgId } = req.body;
+    const userId = req.user.userId;
+    if (!userId || !convId || !msgId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-
+    try {
+        chatAPI.chooseReply(userId, convId, msgId);
+        res.status(200).json({ message: 'Reply chosen successfully' });
+    } catch (error) {
+        console.error('Error choosing reply:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 router.put('/edit', authenticateToken, async (req, res) => {
     const { convId, msgId, newContent, modelNames } = req.body;
@@ -127,7 +140,7 @@ router.put('/edit', authenticateToken, async (req, res) => {
             }
         );
 
-        res.write(`\n<<finalReplies>>${JSON.stringify({ replies })}\n`);
+        res.write(`\n<<finalReplies>>${JSON.stringify(replies)}\n`);
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error editing/streaming message:');
@@ -137,13 +150,12 @@ router.put('/edit', authenticateToken, async (req, res) => {
 router.put('/regenerate', authenticateToken, async (req, res) => {
     const { convId, msgId, modelName } = req.body;
     const userId = req.user.userId;
-    if (!userId || !convId || !msgId || !newContent || !modelName) {
+    if (!userId || !convId || !msgId || !modelName) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     try {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Transfer-Encoding', 'chunked');
-
         const reply = await chatAPI.regenerateReply(
             userId,
             convId,
@@ -154,7 +166,7 @@ router.put('/regenerate', authenticateToken, async (req, res) => {
             },
             (replyContainer) => {
                 // When client receives this, it should replace the old assistant message with the new one
-                res.write(`\n<<replyContainer>>${JSON.stringify(replyContainer)}\n`);
+                res.write(`\n<<replyContainer>>${JSON.stringify(replyContainer[modelName])}\n`);
             }
         );
 

@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Edit, Check, Undo2 } from 'lucide-react';
 
 
-export function EditableMessage({ message, onEdit, }: { message: string | null; onEdit: (newMessage: string | null) => void; }) {
+export function EditableMessage({ message, onEdit, }: { message: string; onEdit: (newMessage: string) => void; }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedMessage, setEditedMessage] = useState(message)
     const [displayMessage, setDisplayMessage] = useState(message)
@@ -11,7 +11,7 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
 
     const handleEdit = () => {
         // TODO : Forbid empty messages
-        if (editedMessage === null || editedMessage.trim() === "") {
+        if (editedMessage.trim() === "") {
             setEditedMessage(displayMessage);
             return;
         }
@@ -69,7 +69,7 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
                     </div>
                 </div>
             ) : (
-                <div className="relative flex flex-col w-full">
+                <div className="flex flex-col w-full">
                     <p
                         className="w-auto p-2 rounded-lg text-gray-200 break-words whitespace-pre-line">
 

@@ -392,19 +392,17 @@ export async function editUserMessage(userId, convId, msgId, newContent, modelNa
 
     // Safety first : we generate before deleting anything
     const parentMessages = await db.getMessageParents(userId, msgId);
-    const parentIds = parentMessages.map(msg => msg.msgId);
 
     const history = await generateLinearHistoryForMultipleMessages(convId, parentMessages);
     history.push({ role: 'user', content: newContent });
 
     const reply = await generateReply(userId, convId, history, modelNames, onToken, onIdGenerated);
-    await db.deleteMessageAndChildren(userId, convId, msgId);
-
-    const editedMessage = await addUserMessage(userId, convId, parentIds, newContent);
+    await db.deleteChildren(userId, convId, msgId);
+    await db.editMessage(userId, convId, msgId, newContent);
 
     for (const modelName in reply) {
         const msg = reply[modelName];
-        await db.addMessage(userId, msg.convId, msg.msgId, [editedMessage.msgId], msg.role, msg.content, msg.author, msg.timestamp, msg.token, msg.historyToken);
+        await db.addMessage(userId, msg.convId, msg.msgId, [msgId], msg.role, msg.content, msg.author, msg.timestamp, msg.token, msg.historyToken);
     }
     return reply;
 }
@@ -431,8 +429,7 @@ export async function regenerateReply(userId, convId, msgId, modelName, onToken,
 
     await db.deleteMessageAndChildren(userId, convId, msgId);
 
-    const newMsgId = uuidv4();
-    await db.addMessage(userId, convId, newMsgId, parentIds, 'assistant', reply.content, reply.author, reply.timestamp, reply.token, reply.historyToken);
+    await db.addMessage(userId, convId, reply.msgId, parentIds, 'assistant', reply.content, reply.author, reply.timestamp, reply.token, reply.historyToken);
 
     return reply;
 }

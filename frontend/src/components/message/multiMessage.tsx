@@ -1,27 +1,8 @@
-import type { multiMessage, splittedMessage } from '../../api/types';
+import type { multiMessage } from '../../api/types';
 import { UserMessage } from './userMessage';
 import { useConversationLogic } from '../../hooks/useConversationLogic';
 import { BotMessageV2 } from './botMessage_v2';
 
-
-const tmpBotMessage = (splittedMessage: splittedMessage) => {
-
-    return (
-        <div key={splittedMessage.msgId} className="flex flex-col text-sm p-4 gap-2 bg-white/5 rounded-lg">
-            <div className="font-semibold pb-2 border-b border-white/5">{splittedMessage.author}</div>
-            <div className={'text-white whitespace-pre-wrap flex-1}'}>
-                {splittedMessage.thinkContent && (
-                    <div className="text-blue-300 mb-2">
-                        {splittedMessage.thinkContent}
-                    </div>
-                )}
-                <div>
-                    {splittedMessage.mainContent}
-                </div>
-            </div>
-        </div>
-    );
-};
 
 interface MultiMessageProps {
     multiMessage: multiMessage;
@@ -29,7 +10,7 @@ interface MultiMessageProps {
 }
 
 export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
-    const { mergeMessages } = useConversationLogic();
+    const { mergeMessages, editMessage } = useConversationLogic();
 
     if (multiMessage.messages.length === 0) return null;
 
@@ -40,7 +21,7 @@ export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
                 message={multiMessage.messages[0].content}
                 token={multiMessage.messages[0].token}
                 historyTokens={multiMessage.messages[0].historyToken}
-                onEdit={() => { }}
+                onEdit={(newMessage: string) => { editMessage(newMessage, multiMessage.messages[0].msgId) }}
             />
         ) : (
             <BotMessageV2 splittedMessage={multiMessage.messages[0]} />
@@ -60,7 +41,7 @@ export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
         <div className="flex flex-col w-full justify-center items-center gap-4">
             <div className={`grid ${getGridClass(multiMessage.messages.length)} gap-4 w-full items-stretch`}>
                 {multiMessage.messages.map((message) => (
-                    <BotMessageV2 splittedMessage={message} isMulti={true} key={message.msgId} />
+                    <BotMessageV2 splittedMessage={message} isMulti={true} key={message.msgId} isLast={isLast} />
                 ))}
             </div>
 

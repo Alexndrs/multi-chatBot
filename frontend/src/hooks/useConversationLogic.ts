@@ -1,13 +1,43 @@
 import { useConversation } from "./useConversation";
-import { type splittedMessage, type Node, type linearConversation, type Message, type Graph } from "../api/types";
-import { getConversation, addConversation as addConversationAPI } from "../api/conversation";
-import { replyToMessage as replyToMessageAPI, mergeMessages as mergeMessagesAPI } from "../api/message";
+import { type Conversation, defaultConversation, type splittedMessage, type Node, type linearConversation, type Message, type Graph, defaultGraph } from "../api/types";
+import { getConversation, addConversation as addConversationAPI, deleteConversation as deleteConversationAPI } from "../api/conversation";
+import { replyToMessage as replyToMessageAPI, mergeMessages as mergeMessagesAPI, regenerateMessage as regenerateMessageAPI, chooseReply as chooseReplyAPI, editMessage as editMessageAPI } from "../api/message";
 import { splitThinkContent } from "../utils";
 import { useUser } from "./useUser";
 
 export function useConversationLogic() {
     const { conversation, setConversation, graph, setGraph } = useConversation();
+    const { convList, setConvList } = useUser();
     const { selectedModel } = useUser();
+
+    const groupedConversations = (): Record<string, Conversation[]> => {
+        // Group conversations by Today, Yesterday, Last 7 days, Preceding conversations
+
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const yesterdayStr = new Date(Date.now() - 86400000).toDateString();
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000);
+
+        const groups = {
+            Today: [] as Conversation[],
+            Yesterday: [] as Conversation[],
+            Last7: [] as Conversation[],
+            Preceding: [] as Conversation[],
+        };
+
+        for (const conv of convList) {
+            const convDate = new Date(conv.date);
+            const convStr = convDate.toDateString();
+            if (convStr === todayStr) groups.Today.push(conv);
+            else if (convStr === yesterdayStr) groups.Yesterday.push(conv);
+            else if (convDate > sevenDaysAgo) groups.Last7.push(conv);
+            else groups.Preceding.push(conv);
+        }
+        Object.values(groups).forEach(list =>
+            list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        );
+        return groups;
+    }
 
     const openConversation = async (convId: string) => {
         const { graph, conversation } = await getConversation(convId);
@@ -61,6 +91,7 @@ export function useConversationLogic() {
                 thinkContent,
                 mainContent
             });
+            result[level].messages.sort((a, b) => a.author.localeCompare(b.author));
         })
         return result;
     }
@@ -109,8 +140,56 @@ export function useConversationLogic() {
 
     }
 
+
+    const removeChildrenFromGraph = (msgId: string): void => {
+        setGraph((prevGraph) => {
+
+            const newMessagesMap = { ...prevGraph.messagesMap };
+            if (!prevGraph.messagesMap[msgId]) {
+                console.warn(`Message with ID ${msgId} not found in graph.`);
+                return prevGraph;
+            }
+
+            const toDelete: string[] = newMessagesMap[msgId].children;
+            newMessagesMap[msgId].children = [];
+            const deleted = new Set();
+            while (toDelete.length > 0) {
+                const curId = toDelete.pop();
+                if (curId === undefined) continue;
+                const curNode = prevGraph.messagesMap[curId];
+                if (curNode && !deleted.has(curId)) {
+                    toDelete.push(...curNode.children);
+                    // Delete the current node
+                    delete newMessagesMap[curId];
+                    deleted.add(curId);
+                }
+            }
+
+            // Return the updated graph without the deleted messages
+            return {
+                ...prevGraph,
+                messagesMap: newMessagesMap
+            };
+        });
+    }
+
+    const removeMessageAndChildrenFromGraph = (msgId: string): void => {
+        removeChildrenFromGraph(msgId);
+        setGraph((prevGraph) => {
+            const newMessagesMap = { ...prevGraph.messagesMap };
+            const newRootId = prevGraph.rootId.filter(id => id !== msgId);
+            for (const parentId of newMessagesMap[msgId].parents) {
+                newMessagesMap[parentId].children = newMessagesMap[parentId].children.filter(childId => childId !== msgId);
+            }
+            delete newMessagesMap[msgId];
+            return {
+                messagesMap: newMessagesMap,
+                rootId: newRootId
+            };
+        })
+    }
+
     const addTokenToGraph = (model: string, token: string, replyContainer: Record<string, Message>) => {
-        // console.log(`Adding token for model ${model}:`, token);
         const targetId = replyContainer[model].msgId;
         setGraph((prevGraph) => {
             const newMessagesMap = { ...prevGraph.messagesMap };
@@ -138,13 +217,15 @@ export function useConversationLogic() {
         });
     }
 
-
     const addConversation = (firstMessage: string): void => {
 
         addConversationAPI(
             firstMessage,
             selectedModel,
-            setConversation,
+            (conv: Conversation) => {
+                setConversation(conv);
+                setConvList((prevList) => [...prevList, conv]);
+            },
             (message: Message) => {
                 addMessageToGraph(message, []);
             },
@@ -161,6 +242,10 @@ export function useConversationLogic() {
         );
     }
 
+    const deleteConversation = (convId: string): void => {
+        deleteConversationAPI(convId);
+        setConvList((prevList) => prevList.filter(conv => conv.convId !== convId));
+    }
 
     const replyToMessage = (userMessage: string, parentId: string[]): void => {
 
@@ -195,6 +280,34 @@ export function useConversationLogic() {
 
     }
 
+    const editMessage = (newContent: string, msgId: string): void => {
+        console.log("Editing message", msgId, "with content:", newContent);
+        editMessageAPI(
+            conversation.convId,
+            newContent,
+            msgId,
+            selectedModel,
+            (replyContainer: Record<string, Message>, firstMessageId: string) => {
+                // We can assume that at this point there will be no error an we can safely edit the userMessage in the UI...
+                const newGraph = { ...graph };
+                newGraph.messagesMap[msgId].message.content = newContent;
+                setGraph(newGraph);
+
+                // ... and delete the other children of the edited message
+                removeChildrenFromGraph(msgId);
+
+                // ... and add the replyContainer messages
+                for (const modelName in replyContainer) {
+                    const message = replyContainer[modelName];
+                    addMessageToGraph(message, [firstMessageId]);
+                }
+
+            },
+            addTokenToGraph,
+            () => { }
+        )
+    }
+
     const mergeMessages = (parentId: string[]): void => {
         if (parentId.length < 2) {
             console.warn('Merge requires at least two parent messages');
@@ -216,14 +329,51 @@ export function useConversationLogic() {
         )
     }
 
+    const regenerateMessage = (convId: string, msgId: string, modelName: string): void => {
+        regenerateMessageAPI(
+            convId,
+            msgId,
+            modelName,
+            (replyContainer: Message) => {
+                const parents = graph.messagesMap[msgId].parents;
+                addMessageToGraph(replyContainer, parents);
+                removeMessageAndChildrenFromGraph(msgId);
+            },
+            addTokenToGraph,
+            () => { }
+        )
+    }
+
+    const chooseReply = (convId: string, msgId: string) => {
+        chooseReplyAPI(convId, msgId);
+        // Delete other message in the same multiMessage
+        for (const parentId of graph.messagesMap[msgId].parents) {
+            const parentNode = graph.messagesMap[parentId];
+            for (const childId of parentNode.children) {
+                if (childId !== msgId) removeMessageAndChildrenFromGraph(childId)
+            };
+        }
+    }
+
+    const resetConversation = () => {
+        setConversation(defaultConversation);
+        setGraph(defaultGraph);
+    }
+
 
     return {
         conversation,
         graph,
         getLinearizedGraph,
-        openConversation,
         addConversation,
+        openConversation,
         replyToMessage,
+        editMessage,
         mergeMessages,
+        regenerateMessage,
+        chooseReply,
+        groupedConversations,
+        deleteConversation,
+        resetConversation
     }
 }

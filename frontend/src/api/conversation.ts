@@ -1,8 +1,8 @@
 import { serverUrl } from "./config";
 import { getToken } from "./user";
-import { type Conversation, type ConversationMetadata, type Graph, type Message } from "./types";
+import { type Conversation, type Graph, type Message } from "./types";
 
-export const getConversationList = async (): Promise<ConversationMetadata[]> => {
+export const getConversationList = async (): Promise<Conversation[]> => {
     const response = await fetch(`${serverUrl}/conversation`, {
         headers: { 'Authorization': `Bearer ${getToken()}` }
     });
@@ -12,7 +12,7 @@ export const getConversationList = async (): Promise<ConversationMetadata[]> => 
     }
 
     const json = await response.json();
-    return json as ConversationMetadata[];
+    return json as Conversation[];
 }
 
 export const getConversation = async (id: string): Promise<{ graph: Graph, conversation: Conversation }> => {

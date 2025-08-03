@@ -8,23 +8,26 @@ import rehypeKatex from 'rehype-katex';
 import type { ComponentPropsWithoutRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRotateRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { useConversationLogic } from '../../hooks/useConversationLogic';
 
 type CodeComponentProps = ComponentPropsWithoutRef<'code'> & {
     inline?: boolean;
 };
 
 
-export function BotMessageV2({ splittedMessage, isMulti }: { splittedMessage: splittedMessage, isMulti?: boolean }) {
+export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMessage: splittedMessage, isMulti?: boolean, isLast?: boolean }) {
 
     const [showThinking, setShowThinking] = useState(false);
+    const { regenerateMessage, chooseReply } = useConversationLogic();
 
 
     return (
-        <div key={splittedMessage.msgId} className={`flex flex-col text-sm py-4 gap-2 ${isMulti ? 'bg-white/5 rounded-lg px-8' : 'px-4 md:px-40'}`}>
-
-            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author}</div>}
+        <div key={splittedMessage.msgId} className={`flex flex-col text-sm py-4 gap-2 ${isMulti ? 'bg-white/1 rounded-lg px-8' : 'px-4 md:px-40'}`}>
+            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author} {splittedMessage.msgId}</div>}
             <div className={'text-white pb-2 whitespace-pre-wrap flex-1}'}>
-                {splittedMessage.thinkContent && (<button className="bg-white/5 px-4 py-2 rounded-lg" onClick={() => setShowThinking(!showThinking)}>Thinking</button>)}
+                {splittedMessage.thinkContent && (<button className="bg-white/5 px-4 py-2 my-5 rounded-lg" onClick={() => setShowThinking(!showThinking)}>{
+                    showThinking ? <FontAwesomeIcon icon={faChevronUp} size="sm" /> : <FontAwesomeIcon icon={faChevronDown} size="sm" />
+                } Thinking</button>)}
                 {showThinking && splittedMessage.thinkContent && (
                     <div className="text-blue-300 mb-2">
                         {splittedMessage.thinkContent}
@@ -82,11 +85,16 @@ export function BotMessageV2({ splittedMessage, isMulti }: { splittedMessage: sp
                                 navigator.clipboard.writeText(splittedMessage.mainContent);
                             }}
                         >
-                            <FontAwesomeIcon icon={faRotateRight} size="md" />
+                            <FontAwesomeIcon icon={faRotateRight} onClick={() => regenerateMessage(splittedMessage.convId, splittedMessage.msgId, splittedMessage.author)} />
                         </button>
                     </div>
                 </div>
             </div>
+            {isLast && isMulti && (
+                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 cursor-pointer transition-colors duration-200 w-fit mx-auto text-md" onClick={() => { chooseReply(splittedMessage.convId, splittedMessage.msgId) }}>
+                    Continue from this answer
+                </button>
+            )}
         </div>
     )
 }

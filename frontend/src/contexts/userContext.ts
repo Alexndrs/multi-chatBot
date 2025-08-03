@@ -1,6 +1,5 @@
 import { createContext } from 'react';
-import type { ConversationMetadata } from '../api/types';
-
+import type { Conversation } from "../api/types";
 
 export type ApiInfo = {
     isFree: boolean;
@@ -29,7 +28,6 @@ export interface UserData {
     name: string | null;
     email: string | null;
     token: string | null;
-    conversations: ConversationMetadata[] | null;
     userApis: string[] | null;
     verified?: boolean;
 }
@@ -54,6 +52,9 @@ export interface UserContextType {
 
     selectedModel: string[];
     setSelectedModel: React.Dispatch<React.SetStateAction<string[]>>;
+
+    convList: Conversation[];
+    setConvList: React.Dispatch<React.SetStateAction<Conversation[]>>;
 }
 
 
