@@ -17,7 +17,7 @@ export function UserMessage({
                 onEdit={onEdit}
             />
             {token > 0 && (
-                <div className="text-[10px] text-gray-500 italic text-right pr-2 mt-1">
+                <div className="smallText italic text-right pr-2 mt-1">
                     {token} tokens {(historyTokens !== undefined) && (historyTokens > 0) ? ` | ${historyTokens} tokens from history context` : ''}
                 </div>)
             }

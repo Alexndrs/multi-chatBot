@@ -22,7 +22,7 @@ const AppWrapper = () => {
 
     if (loading) return <LoadingPage />;
 
-    return <AppContent status={status} />
+    return (<AppContent status={status} />)
 };
 
 export default AppWrapper;

@@ -1,16 +1,16 @@
 export function SideBarItem({ name, onClick, icon }: { name: string, onClick?: () => void, icon?: React.ReactNode }) {
     return (
         <div
-            className="flex p-2 hover:bg-white/5 border-t-transparent border-t-2 hover:border-t-white/5 hover:shadow-md rounded-md cursor-pointer transition duration-100 ease-in-out text-gray-400 hover:text-gray-200"
+            className="px-5 py-3 bg-[var(--color-onTop)]/50 border-t-2 border-[var(--color-onTop)] shadow-md rounded-lg cursor-pointer transition duration-200 ease-in-out hover:bg-[var(--color-onTop)] flex items-center"
             onClick={onClick}
         >
-            {icon && <span className="text-lg mr-2">{icon}</span>}
-            <div
+            {icon && <span className="text-lg mr-4">{icon}</span>}
+            <h2
                 className="whitespace-nowrap overflow-hidden text-ellipsis"
                 title={name}
             >
                 {name}
-            </div>
+            </h2>
         </div>
     );
 }

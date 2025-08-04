@@ -22,14 +22,14 @@ export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMes
 
 
     return (
-        <div key={splittedMessage.msgId} className={`flex flex-col text-sm py-4 gap-2 ${isMulti ? 'bg-white/1 rounded-lg px-8' : 'px-4 md:px-40'}`}>
-            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author}</div>}
-            <div className={'text-white pb-2 whitespace-pre-wrap flex-1}'}>
+        <div key={splittedMessage.msgId} className={`flex flex-col py-4 gap-2 ${isMulti ? 'bg-white/1 rounded-lg px-8' : 'px-4 md:px-40'}`}>
+            {isMulti && <h2 className="pb-2 border-b border-[var(--color-separator)] text-center">{splittedMessage.author}</h2>}
+            <div className={'pb-2 whitespace-pre-wrap flex-1}'}>
                 {splittedMessage.thinkContent && (<button className="bg-white/5 px-4 py-2 my-5 rounded-lg" onClick={() => setShowThinking(!showThinking)}>{
                     showThinking ? <FontAwesomeIcon icon={faChevronUp} size="sm" /> : <FontAwesomeIcon icon={faChevronDown} size="sm" />
                 } Thinking</button>)}
                 {showThinking && splittedMessage.thinkContent && (
-                    <div className="text-blue-300 mb-2">
+                    <div className="text-blue-300 mb-2 thinkingText">
                         {splittedMessage.thinkContent}
                     </div>
                 )}
@@ -47,7 +47,7 @@ export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMes
                                     return <CodeBlock language={match[1]} value={codeContent} />;
                                 }
 
-                                return <code className="bg-gray-800 px-1 rounded">{children}</code>;
+                                return <code>{children}</code>;
                             },
                         }}
 
@@ -56,7 +56,7 @@ export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMes
                     </ReactMarkdown>
                 </div>
             </div>
-            <div className="text-xs text-gray-400 pt-2 border-t border-white/10 mt-auto">
+            <div className="smallText pt-2 border-t border-[var(--color-separator)] mt-auto">
                 <div className="flex">
                     <div
                         className="flex-1 flex gap-5"

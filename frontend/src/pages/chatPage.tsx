@@ -178,7 +178,7 @@ const ChatPage: React.FC = () => {
                     msg.role === "user" ? (
                         <UserMessage
                             key={msg.msgId}
-                            message={msg.content}
+                            message={msg.content ?? ""}
                             token={msg.token}
                             historyTokens={msg.historyTokens}
                             onEdit={(newContent: string | null) => handleMessageEdit(newContent, msg.msgId)}

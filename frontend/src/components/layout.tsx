@@ -25,7 +25,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 
     return (
-        <div className="relative min-h-screen flex flex-col overflow-auto h-screen bg-linear-to-tr from-[#12141b] to-[#191c2a]">
+        <div className="relative min-h-screen flex flex-col overflow-auto h-screen">
             {isMobile && sidebarOpen && (
                 <div
                     ref={overlayRef}
@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {!sidebarOpen && (
                 <button
-                    className="fixed left-2 md:left-4 z-40 text-white text-3xl p-2 hover:text-gray-400 transition-colors duration-200 active:scale-105 cursor-pointer"
+                    className="fixed left-2 top-4 md:left-4 z-40 opacity-50 hover:opacity-100 text-3xl transition-all duration-200 active:scale-120 cursor-pointer"
                     onClick={() => setSidebarOpen(true)}
                 >
                     &#9776;

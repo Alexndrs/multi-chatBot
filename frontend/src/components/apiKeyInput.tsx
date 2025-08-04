@@ -61,55 +61,52 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
     return (
         <form
             onSubmit={onSubmit}
-            className="flex flex-col items-start w-full pt-4 pb-2 px-6 md:px-10 transition-all border-b-4 border-b-black/15 border-t-2 border-t-white/5"
+            className="flex flex-col items-start w-full pt-4 pb-2 px-6 md:px-10 transition-all border-b-4 border-b-black/15 border-t-2 border-t-[var(--color-onTop)]"
         >
             <div className='flex flex-col md:flex-row md:items-center gap-3 w-full'>
                 {/* API name */}
-                <div className="w-full md:w-32 flex items-center text-white font-medium">
+                <h2 className="w-full md:w-32 flex items-center">
                     {displayName}
-                </div>
+                </h2>
 
 
                 {/* Input */}
-                <div className="w-full relative items-center">
+                <div className="w-full relative items-center flex rounded-lg bg-[var(--color-onTop)]">
                     <input
                         type={show ? 'text' : 'password'}
                         value={value}
                         onChange={e => setValue(e.target.value)}
-                        className="w-full bg-slate-200/3 border-t-4 border-black/30 text-white px-4 py-2 pr-15 rounded-lg outline-none"
-                        placeholder="API Key"
+                        className="flex-1 w-full text-white px-4 py-4 pr-5 outline-none"
+                        placeholder="Enter your API Key"
                     />
                     <button
-                        type="button"
                         onClick={() => setShow(!show)}
-                        className="absolute right-8 top-3 md:top-4 text-gray-400 hover:text-white transition-all duration-100 z-10 cursor-pointer"
+                        className="mr-5 opacity-30 hover:opacity-90 transition-all duration-100 z-10 cursor-pointer"
                     >
                         {show ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
-                    {
-                        // Show a delete button only if there's a current key
-                        currentKey && (
-                            <button
-                                type='button'
-                                onClick={
-                                    async (e) => {
-                                        e.preventDefault();
-                                        if (!currentKey) return;
-                                        try {
-                                            await deleteKey(apiName);
-                                            setValue('');
-                                            setHasChanged(false);
-                                            onSave?.();
-                                        } catch (err) {
-                                            console.error('Failed to delete API key:', err);
-                                        }
+                    {currentKey && (
+                        <button
+                            onClick={
+                                async (e) => {
+                                    e.preventDefault();
+                                    if (!currentKey) return;
+                                    try {
+                                        await deleteKey(apiName);
+                                        setValue('');
+                                        setHasChanged(false);
+                                        onSave?.();
+                                    } catch (err) {
+                                        console.error('Failed to delete API key:', err);
                                     }
                                 }
-                                className='absolute right-2 top-3 md:top-3.5 text-gray-400 hover:text-red-500 transition-all duration-100 z-10 cursor-pointer'
-                                aria-label="delete API key"
-                            ><FontAwesomeIcon icon={faTrash} size="sm" /></button>
-                        )
-                    }
+                            }
+                            className='mr-5 opacity-30 hover:opacity-90 hover:text-red-500 transition-all duration-100 z-10 cursor-pointer'
+                            aria-label="delete API key"
+                        >
+                            <FontAwesomeIcon icon={faTrash} size="sm" />
+                        </button>
+                    )}
                 </div>
 
                 {message && (
@@ -129,13 +126,10 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
                     {hasChanged && value.trim() && (
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded w-full md:w-auto"
+                            className="px-6 py-4 bg-[var(--color-onTop)] hover:bg-blue-500 hover:cursor-pointer rounded-lg transition-colors duration-200"
                         >
                             {currentKey ? 'Modifier' : 'Ajouter'}
                         </button>
-                    )}
-                    {!hasChanged && currentKey && (
-                        <div className="text-sm text-gray-400 text-center"></div>
                     )}
                 </div>
 
@@ -148,7 +142,7 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
             </div>
             {/* Site URL */}
             {siteUrl && (
-                <div className="text-xs text-gray-400 mt-2 flex flex-wrap">
+                <div className="smallText mt-2 flex flex-wrap w-full justify-center">
                     Find a key here : <a
                         href={siteUrl}
                         target="_blank"
