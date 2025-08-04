@@ -23,7 +23,7 @@ export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMes
 
     return (
         <div key={splittedMessage.msgId} className={`flex flex-col text-sm py-4 gap-2 ${isMulti ? 'bg-white/1 rounded-lg px-8' : 'px-4 md:px-40'}`}>
-            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author} {splittedMessage.msgId}</div>}
+            {isMulti && <div className="font-semibold pb-2 border-b border-white/5 text-center">{splittedMessage.author}</div>}
             <div className={'text-white pb-2 whitespace-pre-wrap flex-1}'}>
                 {splittedMessage.thinkContent && (<button className="bg-white/5 px-4 py-2 my-5 rounded-lg" onClick={() => setShowThinking(!showThinking)}>{
                     showThinking ? <FontAwesomeIcon icon={faChevronUp} size="sm" /> : <FontAwesomeIcon icon={faChevronDown} size="sm" />
@@ -80,7 +80,7 @@ export function BotMessageV2({ splittedMessage, isMulti, isLast }: { splittedMes
                         className="text-right"
                     >
                         <button
-                            className="text-gray-400 hover:text-white transition-colors mr-1"
+                            className="text-gray-400 hover:text-white transition-colors mr-1 cursor-pointer"
                             onClick={() => {
                                 navigator.clipboard.writeText(splittedMessage.mainContent);
                             }}

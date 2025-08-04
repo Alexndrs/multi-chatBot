@@ -99,13 +99,66 @@ code {
   100% { background-position: 0% 50%; }
 }
 
-.gradientMove {
-  animation: gradientMovement 30s ease-in-out infinite; /*Too laggy*/
-  background: #0015ff;
-background: linear-gradient(90deg, rgba(0, 21, 255, 0) 0%, rgba(54, 184, 255, 1) 25%, rgba(166, 255, 0, 1) 50%, rgba(54, 184, 255, 1) 75%, rgba(0, 43, 255, 0) 100%);
-  background-size: 300% 300%; 
-  background-repeat: no-repeat;
+@keyframes gradientMovement {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
+
+.neon-bar-enhanced {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    z-index: 20;
+}
+
+.neon-bar-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        rgba(0, 21, 255, 0) 0%,
+        rgba(54, 184, 255, 0.4) 8%,      /* ← Transition douce ajoutée */
+        rgba(54, 184, 255, 0.8) 15%,     /* ← Transition douce ajoutée */
+        rgba(54, 184, 255, 1) 25%, 
+        rgb(0, 255, 204) 50%, 
+        rgba(54, 184, 255, 1) 75%, 
+        rgba(54, 184, 255, 0.8) 85%,     /* ← Transition douce ajoutée */
+        rgba(54, 184, 255, 0.4) 92%,     /* ← Transition douce ajoutée */
+        rgba(0, 43, 255, 0) 100%);
+    background-size: 300% 100%;
+    animation: gradientMovement 8s ease-in-out infinite; /* Plus rapide = moins lag */
+    border-radius: 2px;
+    filter: blur(6px);
+    opacity: 0.9;
+}
+
+.neon-bar-enhanced::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -25%;
+    right: -25%;
+    bottom: -8px;
+    background: linear-gradient(90deg, 
+        rgba(0, 21, 255, 0) 0%,
+        rgba(54, 184, 255, 0.2) 15%,
+        rgba(54, 184, 255, 0.4) 30%,
+        rgba(0, 255, 217, 0.677) 50%,
+        rgba(54, 184, 255, 0.4) 70%,
+        rgba(54, 184, 255, 0.2) 85%,
+        rgba(0, 43, 255, 0) 100%);
+    background-size: 300% 100%;
+    animation: gradientMovement 8s ease-in-out infinite;
+    border-radius: 15px;
+    filter: blur(20px);
+    opacity: 0.7;
+    z-index: -1;
+}
+
 
 .mask-fade-bottom {
   mask-image: linear-gradient(to top, white 0px, white calc(100% - 70px), rgba(255, 255, 255, 0.266)  calc(100% - 35px), transparent calc(100% - 5px));

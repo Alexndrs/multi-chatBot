@@ -96,7 +96,7 @@ const TestPage: React.FC = () => {
             ${showInput ? 'bottom-[-200px]' : 'bottom-5'}
             transition-all duration-300 ease-in-out
             `}>
-                <Input onSend={async (message: string) => { replyToMessage(message, []) }} />
+                <Input onSend={async (message: string) => { await replyToMessage(message, []) }} />
             </div>
 
         </div>

@@ -1,15 +1,20 @@
 import ButtonIcon from "../buttonIcon";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUp, faSpinner, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 // import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useUser } from "../../hooks/useUser";
 import { motion } from "framer-motion";
+import FloatingMenu from "./floatingMenu";
+import { createPortal } from "react-dom";
 
 
-export default function Input({ onSend }: { onSend: (message: string) => Promise<void>; }) {
+export default function Input({ isNeon, onSend }: { isNeon?: boolean, onSend: (message: string) => Promise<void>; }) {
     const { selectedModel } = useUser();
     const [isGlowingLoop, setIsGlowingLoop] = useState(false);
+    const modelSelectorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+    const [openMenu, setOpenMenu] = useState<boolean>(false);
 
 
 
@@ -36,17 +41,53 @@ export default function Input({ onSend }: { onSend: (message: string) => Promise
         }
     };
 
+    const handleMenuOpen = (buttonRef: React.RefObject<HTMLDivElement>) => {
+        if (buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setMenuPosition({
+                x: rect.left,
+                y: rect.top - 10 // Ajustement pour positionner au-dessus
+            });
+        }
+        setOpenMenu(true);
+    };
+
 
     return (<>
 
         <motion.div
             className="flex flex-col ml-auto mr-auto rounded-lg bg-gradient-to-t from-neutral-500/20 to-neutral-500/5 py-4 z-10 border-t-2 border-white/7 backdrop-blur-2xl"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 40, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
         >
+            {isGlowingLoop && (
+                <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden">
+                    <div className="absolute w-[200%] h-[200%] bg-white opacity-10 blur-3xl rotate-45 animate-shineLoop" />
+                </div>
+            )}
+
+            {isNeon && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0, duration: 1, ease: "easeIn" }}
+                    className="absolute top-0 left-0 h-[2.5px] right-0 z-20 pointer-events-none translate-y-[-5px]"
+                >
+                    <div className="neon-bar-enhanced w-[100%] h-full absolute" />
+                </motion.div>
+
+            )}
             <div className="flex flex-col ml-auto mr-auto">
                 <div className="flex gap-2 px-6 ml-auto mr-auto mb-0 sm:w-[70vw] items-center justify-between rounded-lg focus:outline-none p-2 border-b-3 border-b-black/20">
+
+                    <div ref={modelSelectorRef} className="ml-2 shrink-0">
+                        <ButtonIcon
+                            icon={<FontAwesomeIcon icon={faEllipsisVertical} />}
+                            onClick={() => handleMenuOpen(modelSelectorRef)}
+                            type="transparent"
+                        />
+                    </div>
 
                     <input
                         type="text"
@@ -91,6 +132,23 @@ export default function Input({ onSend }: { onSend: (message: string) => Promise
                 </div>
             </div>
         </motion.div>
+        {openMenu && createPortal(
+            <div
+                style={{
+                    position: 'fixed',
+                    left: menuPosition.x,
+                    top: menuPosition.y,
+                    transform: 'translateY(-100%)',
+                    zIndex: 9999
+                }}
+            >
+                <FloatingMenu
+                    onSelect={() => { }}
+                    onClose={() => setOpenMenu(false)}
+                />
+            </div>,
+            document.body
+        )}
     </>
     );
 }

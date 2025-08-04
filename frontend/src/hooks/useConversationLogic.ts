@@ -140,7 +140,6 @@ export function useConversationLogic() {
 
     }
 
-
     const removeChildrenFromGraph = (msgId: string): void => {
         setGraph((prevGraph) => {
 
@@ -217,9 +216,25 @@ export function useConversationLogic() {
         });
     }
 
-    const addConversation = (firstMessage: string): void => {
+    const setTokenForMessage = (msgId: string, token: number, historyToken: number): void => {
+        setGraph((prevGraph) => {
+            const newMessagesMap = { ...prevGraph.messagesMap };
+            if (newMessagesMap[msgId]) {
+                newMessagesMap[msgId].message.token = token;
+                newMessagesMap[msgId].message.historyToken = historyToken;
+            } else {
+                console.warn(`Message with ID ${msgId} not found in graph.`);
+            }
+            return {
+                ...prevGraph,
+                messagesMap: newMessagesMap
+            };
+        });
+    }
 
-        addConversationAPI(
+    const addConversation = async (firstMessage: string): Promise<void> => {
+
+        await addConversationAPI(
             firstMessage,
             selectedModel,
             (conv: Conversation) => {
@@ -236,8 +251,10 @@ export function useConversationLogic() {
                 }
             },
             addTokenToGraph,
-            () => {
-                // Final replies received callback (no parameters needed)
+            (replies: Record<string, Message>) => {
+                for (const modelName in replies) {
+                    setTokenForMessage(replies[modelName].msgId, replies[modelName].token, replies[modelName].historyToken);
+                }
             }
         );
     }
@@ -247,7 +264,7 @@ export function useConversationLogic() {
         setConvList((prevList) => prevList.filter(conv => conv.convId !== convId));
     }
 
-    const replyToMessage = (userMessage: string, parentId: string[]): void => {
+    const replyToMessage = async (userMessage: string, parentId: string[]): Promise<void> => {
 
         if (parentId.length === 0) {
             // set last messages as parents :
@@ -260,7 +277,7 @@ export function useConversationLogic() {
             parentId = lastLevelMessages.map(msg => msg.msgId);
         }
 
-        replyToMessageAPI(
+        await replyToMessageAPI(
             conversation.convId,
             userMessage,
             selectedModel,
@@ -275,14 +292,18 @@ export function useConversationLogic() {
                 }
             },
             addTokenToGraph,
-            () => { }
+            (replies: Record<string, Message>) => {
+                for (const modelName in replies) {
+                    setTokenForMessage(replies[modelName].msgId, replies[modelName].token, replies[modelName].historyToken);
+                }
+            }
         )
 
     }
 
-    const editMessage = (newContent: string, msgId: string): void => {
+    const editMessage = async (newContent: string, msgId: string): Promise<void> => {
         console.log("Editing message", msgId, "with content:", newContent);
-        editMessageAPI(
+        await editMessageAPI(
             conversation.convId,
             newContent,
             msgId,
@@ -304,18 +325,22 @@ export function useConversationLogic() {
 
             },
             addTokenToGraph,
-            () => { }
+            (replies: Record<string, Message>) => {
+                for (const modelName in replies) {
+                    setTokenForMessage(replies[modelName].msgId, replies[modelName].token, replies[modelName].historyToken);
+                }
+            }
         )
     }
 
-    const mergeMessages = (parentId: string[]): void => {
+    const mergeMessages = async (parentId: string[]): Promise<void> => {
         if (parentId.length < 2) {
             console.warn('Merge requires at least two parent messages');
             return;
         }
         const modelName = selectedModel[0];
 
-        mergeMessagesAPI(
+        await mergeMessagesAPI(
             conversation.convId,
             modelName,
             parentId,
@@ -325,12 +350,15 @@ export function useConversationLogic() {
             (token: string, mergeContainer: Message) => {
                 addTokenToGraph(modelName, token, { [modelName]: mergeContainer });
             },
-            () => { }
+            (merge: Message) => {
+                setTokenForMessage(merge.msgId, merge.token, merge.historyToken);
+            }
+
         )
     }
 
-    const regenerateMessage = (convId: string, msgId: string, modelName: string): void => {
-        regenerateMessageAPI(
+    const regenerateMessage = async (convId: string, msgId: string, modelName: string): Promise<void> => {
+        await regenerateMessageAPI(
             convId,
             msgId,
             modelName,
@@ -340,7 +368,9 @@ export function useConversationLogic() {
                 removeMessageAndChildrenFromGraph(msgId);
             },
             addTokenToGraph,
-            () => { }
+            (replies: Message) => {
+                setTokenForMessage(replies.msgId, replies.token, replies.historyToken);
+            }
         )
     }
 
