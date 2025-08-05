@@ -7,8 +7,7 @@ import { useUser } from "./useUser";
 
 export function useConversationLogic() {
     const { conversation, setConversation, graph, setGraph } = useConversation();
-    const { convList, setConvList } = useUser();
-    const { selectedModel } = useUser();
+    const { convList, setConvList, selectedModel } = useUser();
 
     const groupedConversations = (): Record<string, Conversation[]> => {
         // Group conversations by Today, Yesterday, Last 7 days, Preceding conversations
@@ -257,6 +256,7 @@ export function useConversationLogic() {
     const deleteConversation = (convId: string): void => {
         deleteConversationAPI(convId);
         setConvList((prevList) => prevList.filter(conv => conv.convId !== convId));
+        if (conversation.convId === convId) resetConversation();
     }
 
     const replyToMessage = async (userMessage: string, parentId: string[]): Promise<void> => {
