@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import ChatPage from "./pages/chatPage";
+// import ChatPage from "./pages/chatPage";
 import SettingsPage from "./pages/settingsPage";
 import ContactPage from "./pages/contactPage";
 import VerifyPage from "./pages/verifyPage";
+import ChatPage from "./pages/chatPage";
 import Layout from "./components/layout";
 import LoginPage from "./pages/loginPage";
 

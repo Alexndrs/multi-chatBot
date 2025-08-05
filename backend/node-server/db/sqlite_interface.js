@@ -1,3 +1,4 @@
+/// <reference path="../core/types.js" />
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,11 +42,20 @@ export async function initDB() {
             msgId TEXT PRIMARY KEY,
             convId TEXT,
             role TEXT,
+            author TEXT,
             content TEXT,
             timestamp TEXT,
             token INTEGER,
             historyTokens INTEGER,
             FOREIGN KEY (convId) REFERENCES conversations(convId)
+        );
+
+        CREATE TABLE IF NOT EXISTS message_parents (
+            childId TEXT,
+            parentId TEXT,
+            PRIMARY KEY (childId, parentId),
+            FOREIGN KEY (childId) REFERENCES messages(msgId),
+            FOREIGN KEY (parentId) REFERENCES messages(msgId)
         );
 
         CREATE TABLE IF NOT EXISTS keys (
@@ -97,16 +107,23 @@ export async function initDB() {
         DELETE FROM keys
         WHERE userId NOT IN (SELECT userId FROM users)
     `);
-
 }
 
 
 // --- USERS ---
 
-export async function addUser(user, code) {
+/**
+ * Add a new user to the database
+ * @param {string} userId 
+ * @param {string} name 
+ * @param {string} email 
+ * @param {string} password - hashed password
+ * @param {string} code 
+ * @param {Object} preferences 
+ * @returns {Promise<string}
+ */
+export async function addUser(userId, name, email, password, code, preferences = {}) {
     const db = await getDB();
-    const { userId, userInfo, conversations } = user;
-    const { name, email, password, preferences } = userInfo;
 
     await db.run(
         `INSERT INTO users (userId, name, email, password, preferences, isVerified) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -124,22 +141,28 @@ export async function addUser(user, code) {
         code
     );
 
-    if (conversations && conversations.length > 0) {
-        for (const conv of conversations) {
-            await db.run(
-                `INSERT INTO conversations (convId, userId, convName, date, token) VALUES (?, ?, ?, ?, ?, ?)`,
-                conv.convId,
-                userId,
-                conv.convName || '',
-                conv.date || new Date().toISOString(),
-                conv.token || 0
-            );
-        }
-    }
-
     return userId;
 }
 
+/**
+ * @param {string} userId
+ * @returns {Promise<void>} 
+ */
+export async function deleteUser(userId) {
+    const db = await getDB();
+    await db.run(`DELETE FROM users WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM verifications WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM conversations WHERE userId = ?`, userId);
+    await db.run(`DELETE FROM messages WHERE convId IN (SELECT convId FROM conversations WHERE userId = ?)`, userId);
+    await db.run(`DELETE FROM message_parents WHERE childId IN (SELECT msgId FROM messages WHERE convId IN (SELECT convId FROM conversations WHERE userId = ?))`, userId);
+}
+
+
+/**
+ * Check if the user is verified
+ * @param {string} userId 
+ * @returns {Promise<boolean>} 
+ */
 export async function isVerified(userId) {
     const db = await getDB();
     const user = await db.get(`SELECT isVerified FROM users WHERE userId = ?`, userId);
@@ -147,6 +170,11 @@ export async function isVerified(userId) {
     return user.isVerified === 1;
 }
 
+/**
+ * Set the user as verified and remove the verification code
+ * @param {string} userId 
+ * @returns {Promise<boolean>} true if the user was verified successfully
+ */
 export async function setUserVerified(userId) {
     const db = await getDB();
     const res = await db.run(`UPDATE users SET isVerified = 1 WHERE userId = ?`, userId);
@@ -155,48 +183,46 @@ export async function setUserVerified(userId) {
     return true;
 }
 
+/**
+ * Get the verification code for a user, or generate a new one if it doesn't exist
+ * @param {string} userId 
+ * @returns {Promise<string>} 
+ */
 export async function getUserVerificationCode(userId) {
     const db = await getDB();
     const verification = await db.get(`SELECT code FROM verifications WHERE userId = ?`, userId);
-    if (!verification) throw new Error('Verification code not found');
+    if (!verification) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        await db.run(`INSERT INTO verifications (userId, code) VALUES (?, ?)`, userId, code);
+        return code;
+    };
     return verification.code;
 }
 
-
+/**
+ * Get a user by their ID
+ * @param {string} userId
+ * @return {Promise<{ userId: string, name: string, email: string, password: string, preferences: Object, isVerified: boolean> } | undefined>}
+ */
 export async function getUserById(userId) {
     const db = await getDB();
     const userRow = await db.get(`SELECT * FROM users WHERE userId = ?`, userId);
     if (!userRow) return undefined;
     return {
         userId: userRow.userId,
-        userInfo: {
-            name: userRow.name,
-            email: userRow.email,
-            password: userRow.password,
-            preferences: JSON.parse(userRow.preferences || '{}'),
-            verified: userRow.isVerified === 1
-        },
-        conversations: await getUserConversations(userRow.userId)
+        name: userRow.name,
+        email: userRow.email,
+        password: userRow.password,
+        preferences: JSON.parse(userRow.preferences || '{}'),
+        isVerified: userRow.isVerified === 1,
     };
 }
 
-
-export async function getUserByMail(email) {
-    const db = await getDB();
-    const userRow = await db.get(`SELECT * FROM users WHERE email = ?`, email);
-    if (!userRow) return undefined;
-    return {
-        userId: userRow.userId,
-        userInfo: {
-            name: userRow.name,
-            email: userRow.email,
-            password: userRow.password,
-            preferences: JSON.parse(userRow.preferences || '{}')
-        },
-        conversations: await getUserConversations(userRow.userId)
-    };
-}
-
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ name: string, email: string, preferences: Object }>}
+ */
 export async function getUserInfo(userId) {
     const db = await getDB();
     const user = await db.get(`SELECT name, email, preferences FROM users WHERE userId = ?`, userId);
@@ -208,6 +234,30 @@ export async function getUserInfo(userId) {
     };
 }
 
+/**
+ * 
+ * @param {string} email 
+ * @returns {Promise<{ userId: string, name: string, email: string, password: string, preferences: Object, isVerified: boolean> } | undefined>}
+ */
+export async function getUserByMail(email) {
+    const db = await getDB();
+    const userRow = await db.get(`SELECT * FROM users WHERE email = ?`, email);
+    if (!userRow) return undefined;
+    return {
+        userId: userRow.userId,
+        name: userRow.name,
+        email: userRow.email,
+        password: userRow.password,
+        preferences: JSON.parse(userRow.preferences || '{}'),
+        isVerified: userRow.isVerified === 1,
+    };
+}
+
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ keyId: string, key: string, api: string, date: string }[]>}
+ */
 export async function getUserKeys(userId) {
     const db = await getDB();
     const keys = await db.all(`SELECT keyId, key, api, date FROM keys WHERE userId = ?`, userId);
@@ -219,6 +269,12 @@ export async function getUserKeys(userId) {
     }));
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} api_name 
+ * @returns {Promise<{ keyId: string, key: string, date: string } | undefined>}
+ */
 export async function getUserKeysForApi(userId, api_name) {
     const db = await getDB();
     // The key is supposed to be unique per user and API, so we can use a simple query
@@ -231,6 +287,13 @@ export async function getUserKeysForApi(userId, api_name) {
     };
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} encrypted_key 
+ * @param {string} api_name 
+ * @returns {Promise<void>}
+ */
 export async function addUserKey(userId, encrypted_key, api_name) {
     // Hash the key before storing it
     const db = await getDB();
@@ -260,55 +323,84 @@ export async function addUserKey(userId, encrypted_key, api_name) {
     );
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} api_name
+ * @returns {Promise<void>} 
+ */
 export async function deleteKey(userId, api_name) {
     const db = await getDB();
     const res = await db.run(`DELETE FROM keys WHERE userId = ? AND api = ?`, userId, api_name);
     if (res.changes === 0) throw new Error('Clé non trouvée');
 }
 
-export async function updateUser(userId, updatedInfo) {
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newName
+ * @returns {Promise<void>} 
+ */
+export async function updateUserName(userId, newName) {
     const db = await getDB();
-    const fields = [];
-    const values = [];
-
-    for (const [key, val] of Object.entries(updatedInfo)) {
-        if (key === 'userInfo') {
-            if (val.name !== undefined) {
-                fields.push('name = ?');
-                values.push(val.name);
-            }
-            if (val.email !== undefined) {
-                fields.push('email = ?');
-                values.push(val.email);
-            }
-            if (val.password !== undefined) {
-                fields.push('password = ?');
-                values.push(val.password);
-            }
-            if (val.preferences !== undefined) {
-                fields.push('preferences = ?');
-                values.push(JSON.stringify(val.preferences));
-            }
-        } else {
-            fields.push(`${key} = ?`);
-            values.push(val);
-        }
-    }
-
-    if (fields.length === 0) return;
-
-    values.push(userId);
-    const sql = `UPDATE users SET ${fields.join(', ')} WHERE userId = ?`;
-    const res = await db.run(sql, ...values);
+    const res = await db.run(`UPDATE users SET name = ? WHERE userId = ?`, newName, userId);
     if (res.changes === 0) throw new Error('Utilisateur non trouvé');
 }
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newEmail
+ * @returns {Promise<void>}
+ */
+export async function updateUserMail(userId, newEmail) {
+    const db = await getDB();
+    const existingUser = await getUserByMail(newEmail);
+    if (existingUser && existingUser.userId !== userId) {
+        throw new Error('Email déjà utilisé par un autre utilisateur');
+    }
+    const res = await db.run(`UPDATE users SET email = ? WHERE userId = ?`, newEmail, userId);
+    if (res.changes === 0) throw new Error('Utilisateur non trouvé');
+    await db.run(`UPDATE users SET isVerified = 0 WHERE userId = ?`, userId);
+}
+
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newHashedPassword 
+ * @returns {Promise<void>}
+ */
+export async function updateUserPassword(userId, newHashedPassword) {
+    const db = await getDB();
+    const res = await db.run(`UPDATE users SET password = ? WHERE userId = ?`, newHashedPassword, userId);
+    if (res.changes === 0) throw new Error('Utilisateur non trouvé');
+}
+
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} newPreferences 
+ * @returns {Promise<void>}
+ */
+export async function updateUserPreferences(userId, newPreferences) {
+    const db = await getDB();
+    const res = await db.run(`UPDATE users SET preferences = ? WHERE userId = ?`, JSON.stringify(newPreferences), userId);
+    if (res.changes === 0) throw new Error('Utilisateur non trouvé');
+}
 
 // --- CONVERSATIONS ---
 
-export async function addConversation(userId, conversation) {
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} convName 
+ * @param {string} date 
+ * @param {string} token 
+ * @returns {Promise<string>} convId
+ */
+export async function addConversation(userId, convId, convName, date = new Date().toISOString(), token = 0) {
     const db = await getDB();
-    const { convId, convName, date, token } = conversation;
     await db.run(
         `INSERT INTO conversations (convId, userId, convName, date, token) VALUES (?, ?, ?, ?, ?)`,
         convId,
@@ -320,7 +412,11 @@ export async function addConversation(userId, conversation) {
     return convId;
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @returns {Promise<{ convId: string, convName: string, date: string, token: number, messages: Promise<Graph>}[]>}
+ */
 export async function getUserConversations(userId) {
     const db = await getDB();
     const convRows = await db.all(`SELECT * FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
@@ -330,48 +426,85 @@ export async function getUserConversations(userId) {
         convName: c.convName,
         date: c.date,
         token: c.token,
-        msgList: await getAllMessages(userId, c.convId)
+        messages: await getAllMessagesGraph(userId, c.convId)
     }));
 }
 
 
-export async function getUserConversationsIdAndNameAndDate(userId) {
+/**
+ * Get only the metadata of the conversations of a user (used for listing conversations)
+ * @param {string} userId 
+ * @returns {Promise<{ userId:string, convId: string, convName: string, date: string, token: number }[]>}
+ */
+export async function getUserConversationsMetadata(userId) {
     const db = await getDB();
-    return db.all(`SELECT convId, convName, date FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
+    return db.all(`SELECT userId, convId, convName, date, token FROM conversations WHERE userId = ? ORDER BY date DESC`, userId);
 }
 
+/**
+ * Get only the metadata of one conversations
+ * @param {string} userId 
+ * @param {string} convId 
+ * @returns {Promise<{ userId:string, convId: string, convName: string, date: string, token: number }>}
+ */
+export async function getUserConversationMetadata(userId, convId) {
+    const db = await getDB();
+    return db.get(`SELECT userId, convId, convName, token date FROM conversations WHERE userId = ?  AND convId = ? ORDER BY date DESC`, userId, convId);
+}
 
+/**
+ * Get the full conversation content (including messages) (used for displaying a conversation)
+ * @param {string} userId 
+ * @param {string} convId 
+ * @returns {Promise<{ convId: string, convName: string, date: string, token: number, messages: Graph }>}
+ */
 export async function getConversationById(userId, convId) {
     const db = await getDB();
     const conv = await db.get(`SELECT * FROM conversations WHERE userId = ? AND convId = ?`, userId, convId);
     if (!conv) throw new Error('Conversation non trouvée');
-    const messages = await db.all(`SELECT * FROM messages WHERE convId = ? ORDER BY timestamp ASC`, convId);
 
     return {
         convId: conv.convId,
         convName: conv.convName,
         date: conv.date,
         token: conv.token,
-        msgList: messages
+        messages: await getAllMessagesGraph(userId, convId)
     };
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId
+ * @returns {Promise<void>}
+ */
 export async function deleteConversation(userId, convId) {
     const db = await getDB();
+    await db.run(`DELETE FROM message_parents WHERE childId IN (SELECT msgId FROM messages WHERE convId = ?)`, convId);
     await db.run(`DELETE FROM messages WHERE convId = ?`, convId);
     const res = await db.run(`DELETE FROM conversations WHERE userId = ? AND convId = ?`, userId, convId);
     if (res.changes === 0) throw new Error('Conversation non trouvée');
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} newName 
+ * @return {Promise<void>}
+ */
 export async function changeConversationName(userId, convId, newName) {
     const db = await getDB();
     const res = await db.run(`UPDATE conversations SET convName = ? WHERE userId = ? AND convId = ?`, newName, userId, convId);
     if (res.changes === 0) throw new Error('Conversation non trouvée');
 }
 
-
+/**
+ * @param {string} userId
+ * @param {string} convId
+ * @param {number} tokenToAdd
+ * @returns {Promise<void>}
+ */
 export async function addToken(userId, convId, tokenToAdd) {
     const db = await getDB();
     await db.run(`
@@ -384,50 +517,137 @@ export async function addToken(userId, convId, tokenToAdd) {
 
 // --- MESSAGES ---
 
-export async function addMessage(userId, convId, message) {
+
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId 
+ * @param {string[]} parentId // for the first message, this should be [], else it should be the msg answering to 
+ * @param {string} role 
+ * @param {string} content 
+ * @param {string} author 
+ * @param {string} timestamp 
+ * @param {number} token 
+ * @param {number} historyTokens 
+ * @return {Promise<void>}
+ */
+export async function addMessage(userId, convId, msgId, parentId, role, content, author, timestamp = new Date().toISOString(), token = 0, historyTokens = 0) {
     const db = await getDB();
-    await getConversationById(userId, convId);
+    await getConversationById(userId, convId); // Ensure the conversation exists
 
-    const { msgId = uuidv4(), role, content, timestamp = new Date().toISOString(), token = 0, historyTokens = 0 } = message;
-
-    await db.run(
-        `INSERT INTO messages (msgId, convId, role, content, timestamp, token, historyTokens) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    await db.run(`
+        INSERT INTO messages (msgId, convId, role, author, content, timestamp, token, historyTokens) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         msgId,
         convId,
         role,
+        author,
         content,
         timestamp,
         token,
         historyTokens
     );
-
-    await db.run(`UPDATE conversations SET date = ? WHERE convId = ?`, new Date().toISOString(), convId);
-    return msgId;
+    await db.run(`UPDATE conversations SET date = ? WHERE convId = ?`, timestamp, convId);
+    if (parentId && parentId.length > 0) {
+        for (const parent of parentId) {
+            await db.run(`
+                INSERT INTO message_parents (childId, parentId) VALUES (?, ?)`, msgId, parent
+            );
+        }
+    }
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId 
+ * @returns {Promise<Message>}
+ */
 export async function getMessageById(userId, convId, msgId) {
     const db = await getDB();
 
     const message = await db.get(`
-    SELECT m.*
-    FROM messages m
-    JOIN conversations c ON m.convId = c.convId
-    WHERE m.msgId = ? AND m.convId = ? AND c.userId = ?
-  `, msgId, convId, userId);
-    if (!message) throw new Error('Message non trouvé');
+        SELECT m.*
+        FROM messages m
+        JOIN conversations c ON m.convId = c.convId
+        WHERE m.msgId = ? AND m.convId = ? AND c.userId = ?`, msgId, convId, userId);
+    if (!message) throw new Error(`Message with ID ${msgId} not found`);
 
     return message;
 }
 
-
-export async function getAllMessages(userId, convId) {
+/**
+ * Get the parents of a message
+ * @param {string} userId
+ * @param {string} msgId
+ * @return {Promise<Message[]>}
+ */
+export async function getMessageParents(userId, msgId) {
     const db = await getDB();
-    const conv = await getConversationById(userId, convId);
-    return conv.msgList
+    const parents = await db.all(`
+        SELECT m.*
+        FROM message_parents mp
+        JOIN messages m ON mp.parentId = m.msgId
+        JOIN conversations c ON m.convId = c.convId
+        WHERE mp.childId = ? AND c.userId = ?`, msgId, userId);
+    return parents;
 }
 
+/**
+ * Return the messages of a conversation with the graph structure encoded in an object
+ * @param {string} convId
+ * @return {Promise<Graph>}
+ */
+export async function getAllMessagesGraph(convId) {
+    const db = await getDB();
 
+    const messages = await db.all(`SELECT * FROM messages WHERE convId = ? ORDER BY timestamp ASC`, convId);
+
+    const relations = await db.all(`
+        SELECT * FROM message_parents WHERE childId IN (
+        SELECT msgId FROM messages WHERE convId = ?)`, convId);
+
+    const graph = {};
+    const childrenMap = {}; // { parentId: [childId1, childId2, ...] }
+    const parentMap = {}; // { childId: [parentId1, parentId2, ...] }
+
+    for (const rel of relations) {
+        if (!parentMap[rel.childId]) parentMap[rel.childId] = [];
+        if (!childrenMap[rel.parentId]) childrenMap[rel.parentId] = [];
+
+        parentMap[rel.childId].push(rel.parentId);
+        childrenMap[rel.parentId].push(rel.childId);
+    }
+
+    const rootId = [];
+
+    for (const msg of messages) {
+        graph[msg.msgId] = {
+            message: msg,
+            parents: parentMap[msg.msgId] || [],
+            children: childrenMap[msg.msgId] || []
+        };
+
+        if (graph[msg.msgId].parents.length === 0) {
+            rootId.push(msg.msgId);
+        }
+    }
+
+    return {
+        rootId,
+        messagesMap: graph
+    }
+}
+
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId 
+ * @param {string} newContent
+ * @return {Promise<void>} 
+ */
 export async function editMessage(userId, convId, msgId, newContent) {
     const db = await getDB();
     await getMessageById(userId, convId, msgId);
@@ -441,13 +661,49 @@ export async function editMessage(userId, convId, msgId, newContent) {
     await db.run(`UPDATE conversations SET date = ? WHERE convId = ?`, new Date().toISOString(), convId);
 }
 
-
+/**
+ * 
+ * @param {string} userId 
+ * @param {string} convId 
+ * @param {string} msgId
+ * @returns {Promise<void>} 
+ */
 export async function deleteMessage(userId, convId, msgId) {
     const db = await getDB();
+    console.log(`Deleting message ${msgId}`);
     await getMessageById(userId, convId, msgId);
 
-    await db.run(`
-    DELETE FROM messages WHERE msgId = ? AND convId = ?
-  `, msgId, convId);
+    await db.run(`DELETE FROM messages WHERE msgId = ? AND convId = ?`, msgId, convId);
+    await db.run(`DELETE FROM message_parents WHERE childId = ? OR parentId = ?`, msgId, msgId);
 }
 
+
+export async function deleteMessageAndChildren(userId, convId, msgId) {
+    const graph = await getAllMessagesGraph(convId);
+    const toDelete = [msgId];
+    const deleted = new Set();
+    while (toDelete.length > 0) {
+        const curId = toDelete.pop();
+        const curNode = graph.messagesMap[curId];
+        if (curNode && !deleted.has(curId)) {
+            toDelete.push(...curNode.children);
+            await deleteMessage(userId, convId, curId);
+            deleted.add(curId);
+        }
+    }
+}
+
+export async function deleteChildren(userId, convId, msgId) {
+    const graph = await getAllMessagesGraph(convId);
+    const toDelete = graph.messagesMap[msgId]?.children || [];
+    const deleted = new Set();
+    while (toDelete.length > 0) {
+        const curId = toDelete.pop();
+        const curNode = graph.messagesMap[curId];
+        if (curNode && !deleted.has(curId)) {
+            toDelete.push(...curNode.children);
+            await deleteMessage(userId, convId, curId);
+            deleted.add(curId);
+        }
+    }
+}

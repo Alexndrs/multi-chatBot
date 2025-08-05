@@ -1,6 +1,7 @@
 import express from 'express';
 import * as chatAPI from '../core/chatAPI.js';
 import authenticateToken from '../middleware/auth.js';
+import * as db from '../db/sqlite_interface.js';
 
 export function handleStreamError(res, error, logPrefix = '') {
     console.error(`${logPrefix} ${error.message}`, error);
@@ -14,10 +15,10 @@ export function handleStreamError(res, error, logPrefix = '') {
 
 
 const router = express.Router();
-router.post('/', authenticateToken, async (req, res) => {
-    const { convId, messageContent, model_name } = req.body;
+router.post('/reply', authenticateToken, async (req, res) => {
+    const { convId, messageContent, modelNames, parentId } = req.body;
     const userId = req.user.userId;
-    if (!userId || !convId || !messageContent || !model_name) {
+    if (!userId || !convId || !messageContent || !modelNames) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     try {
@@ -25,45 +26,151 @@ router.post('/', authenticateToken, async (req, res) => {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Transfer-Encoding', 'chunked');
 
-        // onToken envoie chaque token
-        const onToken = (chunk) => {
-            res.write(chunk); // stream vers le client
-        };
+        const userMessage = await chatAPI.addUserMessage(userId, convId, parentId, messageContent);
 
-        const onIdGenerated = (userMsg, newMsg) => {
-            res.write(`\n<<MsgCONTAINER>>${JSON.stringify({ userMsg, newMsg })}\n`);
-        };
+        res.write(`\n<<messageContainer>>${JSON.stringify(userMessage)}\n`);
 
+        const history = await chatAPI.generateLinearHistoryForOneMessage(convId, userMessage.msgId);
 
-        const { userMsg, newMsg } = await chatAPI.handleMessage(userId, convId, messageContent, onToken, onIdGenerated, model_name);
-        res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token, responseToken: newMsg.token })}\n`);
+        const replies = await chatAPI.generateReply(
+            userId,
+            convId,
+            history,
+            modelNames,
+            (token, model) => {
+                res.write(`\n<<tk>>${JSON.stringify({ model, token })}\n`);
+            },
+            (replyContainer) => {
+                // When client receives this, it should create a new containers for the multiple received replies
+                res.write(`\n<<replyContainer>>${JSON.stringify(replyContainer)}\n`);
+            }
+        );
+
+        res.write(`\n<<finalReplies>>${JSON.stringify(replies)}\n`);
+
+        for (const modelName in replies) {
+            const message = replies[modelName];
+            await db.addMessage(userId, convId, message.msgId, [userMessage.msgId], message.role, message.content, message.author, message.timestamp, message.token, message.historyToken);
+        }
+
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error sending/streaming message:');
     }
 });
 
-
-router.put('/', authenticateToken, async (req, res) => {
-    const { convId, msgId, newContent, model_name } = req.body;
+router.post('/merge', authenticateToken, async (req, res) => {
+    const { convId, modelName, parentId } = req.body;
     const userId = req.user.userId;
-    if (!userId || !convId || !msgId || !newContent || !model_name) {
+    if (!userId || !convId || !modelName) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    try {
+
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+
+        const parents = await Promise.all(parentId.map(msgId => db.getMessageById(userId, convId, msgId)));
+
+        const linearHistoryForMerge = await chatAPI.generateLinearHistoryForMultipleMessages(convId, parents);
+
+        const replies = await chatAPI.generateReply(
+            userId,
+            convId,
+            linearHistoryForMerge,
+            [modelName],
+            (token, model) => {
+                res.write(`\n<<tk>>${JSON.stringify({ model, token })}\n`);
+            },
+            (replyContainer) => {
+                // When client receives this, it should create a new container for the merged reply Message
+                res.write(`\n<<mergeContainer>>${JSON.stringify(replyContainer[modelName])}\n`);
+            }
+        );
+
+        res.write(`\n<<finalMerge>>${JSON.stringify(replies[modelName])}\n`);
+
+
+        const mergedMessage = replies[modelName];
+        await db.addMessage(userId, mergedMessage.convId, mergedMessage.msgId, parentId, mergedMessage.role, mergedMessage.content, mergedMessage.author, mergedMessage.timestamp, mergedMessage.token, mergedMessage.historyToken);
+        res.end();
+    } catch (error) {
+        handleStreamError(res, error, 'Error sending/streaming message:');
+    }
+});
+
+router.post('/choose', authenticateToken, async (req, res) => {
+    const { convId, msgId } = req.body;
+    const userId = req.user.userId;
+    if (!userId || !convId || !msgId) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await chatAPI.chooseReply(userId, convId, msgId);
+        res.status(200).json({ message: 'Reply chosen successfully' });
+    } catch (error) {
+        console.error('Error choosing reply:', error);
+        res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+});
+
+router.put('/edit', authenticateToken, async (req, res) => {
+    const { convId, msgId, newContent, modelNames } = req.body;
+    const userId = req.user.userId;
+    if (!userId || !convId || !msgId || !newContent || !modelNames) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
     try {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Transfer-Encoding', 'chunked');
 
-        const onToken = (chunk) => {
-            res.write(chunk);
-        };
+        const replies = await chatAPI.editUserMessage(
+            userId,
+            convId,
+            msgId,
+            newContent,
+            modelNames,
+            (token, model) => {
+                res.write(`\n<<tk>>${JSON.stringify({ model, token })}\n`);
+            },
+            (replyContainer) => {
+                // When client receives this, it should replace the old user message with the new one and creating the new reply container
+                res.write(`\n<<replyContainer>>${JSON.stringify(replyContainer)}\n`);
+            }
+        );
 
-        const onIdGenerated = (userMsg, newMsg) => {
-            res.write(`\n<<MsgCONTAINER>>${JSON.stringify({ userMsg, newMsg })}\n`);
-        };
+        res.write(`\n<<finalReplies>>${JSON.stringify(replies)}\n`);
+        res.end();
+    } catch (error) {
+        handleStreamError(res, error, 'Error editing/streaming message:');
+    }
+});
 
-        const { userMsg, newMsg } = await chatAPI.editMessage(userId, convId, msgId, newContent, onToken, onIdGenerated, model_name);
-        res.write(`\n<<tokenUsage>>${JSON.stringify({ currentMessageTokens: userMsg.token, historyTokens: userMsg.historyTokens, responseToken: newMsg.token })}\n`);
+router.put('/regenerate', authenticateToken, async (req, res) => {
+    const { convId, msgId, modelName } = req.body;
+    const userId = req.user.userId;
+    if (!userId || !convId || !msgId || !modelName) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    try {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        const reply = await chatAPI.regenerateReply(
+            userId,
+            convId,
+            msgId,
+            modelName,
+            (token, model) => {
+                res.write(`\n<<tk>>${JSON.stringify({ model, token })}\n`);
+            },
+            (replyContainer) => {
+                // When client receives this, it should replace the old assistant message with the new one
+                res.write(`\n<<replyContainer>>${JSON.stringify(replyContainer[modelName])}\n`);
+            }
+        );
+
+        res.write(`\n<<finalReply>>${JSON.stringify(reply)}\n`);
         res.end();
     } catch (error) {
         handleStreamError(res, error, 'Error editing/streaming message:');

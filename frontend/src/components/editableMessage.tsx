@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Edit, Check, Undo2 } from 'lucide-react';
 
 
-export function EditableMessage({ message, onEdit, }: { message: string | null; onEdit: (newMessage: string | null) => void; }) {
+export function EditableMessage({ message, onEdit, }: { message: string; onEdit: (newMessage: string) => void; }) {
     const [isEditing, setIsEditing] = useState(false);
     const [editedMessage, setEditedMessage] = useState(message)
     const [displayMessage, setDisplayMessage] = useState(message)
@@ -11,7 +11,7 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
 
     const handleEdit = () => {
         // TODO : Forbid empty messages
-        if (editedMessage === null || editedMessage.trim() === "") {
+        if (editedMessage.trim() === "") {
             setEditedMessage(displayMessage);
             return;
         }
@@ -28,12 +28,12 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
     }, [isEditing]);
 
     return (
-        <div className="flex flex-col w-full min-w-[25vw] max-w-[50vw] bg-slate-300/3 shadow-lg border-t-2 border-white/7 p-4 rounded-lg">
+        <div className="flex flex-col w-full min-w-[25vw] max-w-[50vw] bg-[var(--color-onTop)] border-[var(--color-onTop)] shadow-lg border-t-2 p-4 rounded-lg">
             {isEditing ? (
                 <div className="flex flex-col w-auto">
                     <textarea
                         ref={textareaRef}
-                        className="w-auto px-3 rounded-lg outline-none focus:none resize-none text-gray-200 min-h-[48px] overflow-auto"
+                        className="w-auto px-3 rounded-lg outline-none focus:none resize-none min-h-[48px] overflow-auto"
                         value={editedMessage ? editedMessage : ""}
                         onChange={(e) => {
                             setEditedMessage(e.target.value)
@@ -69,9 +69,9 @@ export function EditableMessage({ message, onEdit, }: { message: string | null; 
                     </div>
                 </div>
             ) : (
-                <div className="relative flex flex-col w-full">
+                <div className="flex flex-col w-full">
                     <p
-                        className="w-auto p-2 rounded-lg text-gray-200 break-words whitespace-pre-line">
+                        className="w-auto p-2 rounded-lg break-words whitespace-pre-line">
 
                         {displayMessage}
                     </p>

@@ -1,3 +1,4 @@
+/// <reference path="../core/types.js" />
 import { tokenizer } from './api_providers.js';
 
 export const apis = {
@@ -62,4 +63,41 @@ export function applySlidingWindow(messages, maxTokenBudget) {
     }
 
     return selected.reverse();
+}
+
+
+/**
+ * Génère une chaîne de caractères au format Mermaid pour visualiser un graphe de conversation.
+ * @param {Graph} graphData - L'objet graphe contenant messagesMap.
+ * @returns {string} - La chaîne de caractères formatée pour un bloc de code Mermaid.
+ */
+export function generateMermaidGraph(graphData) {
+    const { messagesMap } = graphData;
+    const mermaidLines = ['graph TD;']; // TD = Top Down, pour un affichage de haut en bas
+
+    // Utilisons un Set pour éviter de redéfinir les liens si l'information est redondante
+    const links = new Set();
+
+    for (const msgId in messagesMap) {
+        const node = messagesMap[msgId];
+        const content = node.message.content;
+        // replace " to ' 
+        const shortMsg = content.substring(0, 450).replace(/"/g, "'");
+        const shortId = msgId.substring(0, 8); // 
+        // Définit le texte du nœud (ex: "a7151e99...")
+        mermaidLines.push(`    ${msgId}["${shortMsg}\n${shortId}"];`);
+
+        // Crée les liens vers les enfants
+        if (node.children && node.children.length > 0) {
+            for (const childId of node.children) {
+                links.add(`    ${msgId} --> ${childId};`);
+            }
+        }
+    }
+
+    // Ajoute les lignes de liens au code final
+    mermaidLines.push(...links);
+
+    // Retourne le tout dans un bloc de code prêt à l'emploi
+    return '```mermaid\n' + mermaidLines.join('\n') + '\n```';
 }

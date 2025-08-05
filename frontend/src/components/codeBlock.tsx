@@ -76,7 +76,7 @@ export function CodeBlock({ language, value }: { language: string; value: string
         <div className="relative group">
             <button
                 onClick={handleCopy}
-                className="absolute top-1 right-1 text-xs text-gray-300 bg-gray-800 border border-gray-600 px-2 py-1 rounded-md hover:bg-gray-700 hover:cursor-pointer transition-colors"
+                className="absolute top-1 right-1 text-xs border bg-[var(--color-onTop)]/60 hover:bg-[var(--color-onTop)] border-[var(--color-onTop)] px-3 py-2 rounded-[20px] hover:cursor-pointer transition-all"
             >
                 {copied ? 'Copied !' : 'Copy'}
             </button>
@@ -85,11 +85,12 @@ export function CodeBlock({ language, value }: { language: string; value: string
                 language={language}
                 style={oneDark}
                 customStyle={{
-                    background: 'transparent',
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
+                    width: '100%',
+                    maxWidth: '100%',
+                    overflowX: 'auto',
+                    padding: '20px',
+                    borderRadius: '20px',
                     margin: 0,
-                    minWidth: '50vw',
                 }}
 
 

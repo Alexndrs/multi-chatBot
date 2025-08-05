@@ -5,9 +5,8 @@ import cors from 'cors';
 import messageRouter from './routes/message.js';
 import userRouter from './routes/auth.js';
 import conversationRouter from './routes/conversation.js';
-import apiKeyRouter from './routes/keys.js';
+import apiKeyRouter from './routes/key.js';
 import { initDB } from './db/sqlite_interface.js';
-import { createUser } from './core/auth.js';
 
 
 
@@ -18,13 +17,12 @@ app.use(express.json());
 app.use('/message', messageRouter);
 app.use('/user', userRouter);
 app.use('/conversation', conversationRouter);
-app.use('/apiKeys', apiKeyRouter);
+app.use('/key', apiKeyRouter);
 
 const PORT = process.env.PORT || 8000;
 async function startServer() {
     try {
         await initDB();
-        // createUser("alex@example.com", "Alex", "password123");
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });

@@ -1,7 +1,6 @@
 import express from 'express';
-import * as encryption from '../core/encryption.js';
 import authenticateToken from '../middleware/auth.js';
-import { testKey } from '../core/chatAPI.js';
+import * as k from '../core/key.js';
 
 const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
@@ -13,11 +12,11 @@ router.post('/', authenticateToken, async (req, res) => {
 
     try {
         // Test the API key before adding it
-        const testResult = await testKey(key, api);
+        const testResult = await k.testKey(key, api);
         if (testResult.error) {
             return res.status(400).json({ message: `Invalid API key for ${api}: ${testResult.message}`, error: true });
         }
-        await encryption.addKey(key, api, userId);
+        await k.addKey(key, api, userId);
         res.status(200).json(testResult);
     } catch (error) {
         console.error('Error adding key:', error);
@@ -28,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     try {
-        const keys = await encryption.getKeys(userId);
+        const keys = await k.getKeys(userId);
         res.status(200).json(keys);
     } catch (error) {
         console.error('Error fetching keys:', error);
@@ -44,7 +43,7 @@ router.delete('/:api_name', authenticateToken, async (req, res) => {
     }
 
     try {
-        await encryption.deleteKeyForApi(userId, api_name);
+        await k.deleteKeyForApi(userId, api_name);
         res.status(200).json({ message: 'API key deleted successfully' });
     } catch (error) {
         console.error('Error deleting key:', error);
@@ -60,7 +59,7 @@ router.get('/:api_name', authenticateToken, async (req, res) => {
     }
 
     try {
-        const key = await encryption.getKeyForApi(userId, api_name);
+        const key = await k.getKeyForApi(userId, api_name);
         if (!key) {
             return res.status(404).json({ error: 'API key not found' });
         }

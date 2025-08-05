@@ -67,7 +67,7 @@ const VerifyPage = () => {
 
     return (
         <div>
-            <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a] text-white overflow-hidden">
+            <div className="relative flex items-center justify-center min-h-screen text-white overflow-hidden">
 
                 <div className='absolute w-full flex flex-col gap-10 opacity-5'>
                     {shuffledArrays.map((shuffledLogos, index) => (
@@ -90,13 +90,13 @@ const VerifyPage = () => {
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                     >
-                        <div className="bg-blue-300/5 p-6 rounded-xl border-t-2 border-gray-500/20 backdrop-blur-md max-w-md w-full">
+                        <div className="bg-[var(--color-onTop)] p-6 rounded-xl border-t-2 border-[var(--color-onTop)] backdrop-blur-md max-w-md w-full">
                             <h2 className="text-xl mb-4 text-lime-400 font-bold">Verify your mail</h2>
-                            <p className="text-sm text-gray-400 mb-4">
+                            <p className="text-sm text-[var(--color-smallTextColor)] mb-4">
                                 Enter the verification code sent to your email to activate your account.
                             </p>
                             <input
-                                className="w-full mb-4 p-2 bg-gray-600/20 border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30 text-white"
+                                className="w-full mb-4 p-2 [var(--color-onTop)] border-b-2 [var(--color-onTop)] rounded focus:outline-none placeholder:opacity-30 text-white"
                                 placeholder="Code de vérification"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
@@ -105,7 +105,7 @@ const VerifyPage = () => {
                             <button
                                 onClick={handleVerify}
                                 disabled={loading}
-                                className="w-full mb-2 p-2 bg-lime-400 hover:bg-lime-500 rounded font-medium text-black"
+                                className="w-full mb-2 p-2 bg-[var(--color-CTA)]/80 hover:bg-[var(--color-CTA)] rounded font-medium text-black"
                             >
                                 {loading ? 'Verification...' : 'Verified'}
                             </button>
@@ -113,7 +113,7 @@ const VerifyPage = () => {
                             <button
                                 onClick={handleResend}
                                 disabled={loading}
-                                className="w-full p-2 bg-gray-500/30 hover:bg-gray-500/50 rounded font-medium text-white text-sm"
+                                className="w-full p-2 [var(--color-onTop)]/50 hover:[var(--color-onTop)] rounded text-sm"
                             >
                                 Resend verification code
                             </button>

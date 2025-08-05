@@ -1,5 +1,7 @@
 import { useUser } from './useUser';
-import { removeToken, createUser, loginUser, getUserInfo, getUserConversations, verifyCode, resendVerificationEmail } from '../api';
+import { removeToken, createUser, loginUser, getUserInfo, verifyCode, resendVerificationEmail } from '../api/user';
+import { getConversationList } from '../api/conversation';
+
 import { isUnauthorizedError } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,21 +10,21 @@ import { useNavigate } from 'react-router-dom';
  * Provides methods for login, registration, verification, and user initialization.
  */
 export function useAuthLogic() {
-    const { setUserData, setAvailableApis, setAvailableModels, setStatus, setLoading } = useUser();
+    const { setUserData, setAvailableApis, setAvailableModels, setStatus, setLoading, setConvList } = useUser();
     const navigate = useNavigate();
 
     const applyUserData = async () => {
         const userData = await getUserInfo();
-        const conversations = await getUserConversations();
+        const conversations = await getConversationList();
 
         setUserData({
             token: localStorage.getItem('token'),
             name: userData.userInfo.name,
-            email: userData.userInfo.email,
-            conversations,
+            email: userData.userInfo.mail,
             userApis: userData.apiInfo.userApis || [],
-            verified: userData.userInfo.verified,
+            verified: userData.verified,
         });
+        setConvList(conversations);
 
         setAvailableApis(userData.apiInfo.availableApis || {});
         setAvailableModels(userData.apiInfo.availableModels || {});
@@ -60,16 +62,8 @@ export function useAuthLogic() {
 
     const register = async (name: string, email: string, password: string) => {
         await createUser(name, email, password);
-        try {
-            await applyUserData();
-        } catch (err) {
-            if (isUnauthorizedError(err)) {
-                setStatus('unverified');
-                navigate('/verify');
-                return;
-            }
-            throw err;
-        }
+        setStatus('unverified');
+        navigate('/verify');
     };
 
     const verifyUser = async (code: string) => {

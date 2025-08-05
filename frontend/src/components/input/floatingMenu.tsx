@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { useConv } from "../../hooks/useConv";
 import { useUser } from "../../hooks/useUser";
 
 interface FloatingMenuProps {
@@ -10,8 +9,7 @@ interface FloatingMenuProps {
 
 export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const { setTask, setSelectedModel, selectedModel } = useConv();
-    const { availableModels, availableApis, userData } = useUser();
+    const { availableModels, availableApis, userData, setSelectedModel, selectedModel } = useUser();
 
     type ModelItem = { modelName: string; isAvailableForUser: boolean };
     type SectionItem = { task: string; models: ModelItem[] };
@@ -59,17 +57,15 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
     return (
         <div
             ref={menuRef}
-            className="absolute bottom-full mb-4 left-0 z-50 bg-slate-700/5 text-gray-200 shadow-lg rounded-xl text-sm min-w-[220px] border-t-2 border-white/7 backdrop-blur-3xl flex flex-row"
+            className="absolute bottom-full mb-4 left-0 z-50 bg-[var(--color-onTop)] shadow-lg rounded-xl text-sm min-w-[220px] border-t-2 border-[var(--color-onTop)] backdrop-blur-3xl flex flex-row"
         >
 
             {items.map((section, idx) => (
-                <div className="py-3 border-l-2 border-r-3 border-l-slate-300/6 border-r-black/20 opacity-100 first:ml-0 first:border-l-0 last:border-r-0">
+                <div className="py-3 border-l-2 border-r-3 border-l-[var(--color-onTop)] border-r-black/20 opacity-100 first:ml-0 first:border-l-0 last:border-r-0">
                     <div key={idx} className="flex flex-col min-w-[180px] ml-0 opacity-100 first:ml-0 max-h-[200px] overflow-auto hide-scrollbar">
-                        {/* Titre de section (task) et nombre de model*/}
-                        <div className="text-xs px-3 text-gray-500 uppercase tracking-wide mb-1 mt-2 cursor-default">
+                        <div className="smallText px-3 uppercase tracking-wide mb-1 mt-2 cursor-default">
                             {section.task} {section.models.length > 0 ? `(${section.models.length})` : ""}
                         </div>
-                        {/* Modèles associés */}
                         <div className="flex flex-col justify-center">
 
                             {section.models.length > 0 ? (
@@ -83,19 +79,18 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
                                         <div
                                             key={model.modelName}
                                             className={`
-                                            group relative px-5 py-2 border-t-2 border-t-transparent text-gray-300 transition-all duration-200 ease-in-out
+                                            group relative px-5 py-2 border-t-2 border-t-transparent transition-all duration-200 ease-in-out
                                             ${!isAvailable
                                                     ? 'opacity-30 cursor-not-allowed'
-                                                    : 'cursor-pointer hover:border-t-slate-300/20 hover:shadow-xl'}
+                                                    : ' cursor-pointer hover:border-t-[var(--color-onTop)] hover:shadow-xl'}
                                             ${isSelected
-                                                    ? 'bg-lime-300/10 text-lime-400 border-l-4 border-l-lime-400 hover:bg-red-400/10 hover:text-red-500 hover:border-l-red-500'
+                                                    ? 'opacity-100 bg-lime-300/10 text-[var(--color-CTA)] border-l-4 border-l-[var(--color-CTA)] hover:bg-red-400/10 hover:text-red-500 hover:border-l-red-500'
                                                     : isAvailable
-                                                        ? 'hover:bg-slate-400/10'
+                                                        ? 'hover:bg-[var(--color-onTop)] opacity-80'
                                                         : ''
                                                 }`}
                                             onClick={() => {
                                                 if (!model.isAvailableForUser) return;
-                                                setTask(section.task);
                                                 if (selectedModel.includes(model.modelName)) {
                                                     setSelectedModel(selectedModel.filter(m => m !== model.modelName));
                                                 }
@@ -127,7 +122,7 @@ export default function FloatingMenu({ onSelect, onClose }: FloatingMenuProps) {
                                                                     </svg>
                                                                 </div>
                                                             ) : (
-                                                                <div className="flex items-center justify-center w-6 h-6 bg-lime-500/20 rounded-full border border-lime-500/30 text-lime-500 hover:bg-lime-500/30">
+                                                                <div className="flex items-center justify-center w-6 h-6 bg-[var(--color-CTA)]/20 rounded-full border border-[var(--color-CTA)]/30 text-[var(--color-CTA)] hover:bg-[var(--color-CTA)]/30">
                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                                     </svg>

@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
+import LogoIcon from "../components/icons/LogoIcon";
 
 const LoadingPage = () => {
     return (
-        <div className="h-screen w-screen bg-gradient-to-br from-[#12141b] to-[#191c2a] flex flex-col items-center justify-center text-white">
+        <div className="h-screen w-screen flex flex-col items-center justify-center">
             <motion.h1
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="text-4xl font-bold mb-8"
             >
-                🧠 Chatbot.Bridge
+                <span><LogoIcon className="w-15 h-15 text-CTA" /></span> Chatbothub
             </motion.h1>
 
             <motion.div

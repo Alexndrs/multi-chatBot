@@ -1,14 +1,7 @@
 import crypto from "crypto";
-import 'dotenv/config';
-const mySecret = process.env.ENCRYPT_SECRET;
-
-import { getUserKeys, getUserKeysForApi, addUserKey, deleteKey } from "../db/sqlite_interface.js";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
-
-// export const generateSecretKey = () => crypto.randomBytes(32).toString('hex');
-// secret placed in .env
 
 export function encrypt(text, secretKey) {
     const iv = crypto.randomBytes(IV_LENGTH);
@@ -33,32 +26,4 @@ export function decrypt(encryptedData, secretKey) {
     decrypted += decipher.final('utf8');
 
     return decrypted;
-}
-
-export async function addKey(key, api_name, userId) {
-    console.log("Adding the key : ", key, "for api:", api_name);
-
-    const encryptedKey = encrypt(key, mySecret);
-    await addUserKey(userId, encryptedKey, api_name);
-}
-
-export async function deleteKeyForApi(userId, api_name) {
-    await deleteKey(userId, api_name);
-}
-
-export async function getKeys(userId) {
-    const keys = await getUserKeys(userId);
-    return keys.map(key => ({
-        ...key,
-        key: decrypt(key.key, mySecret)
-    }));
-}
-
-export async function getKeyForApi(userId, api_name) {
-    const key = await getUserKeysForApi(userId, api_name);
-    if (!key) return undefined;
-    return {
-        ...key,
-        key: decrypt(key.key, mySecret)
-    };
 }

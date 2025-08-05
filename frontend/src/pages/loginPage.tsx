@@ -26,7 +26,7 @@ const LoginPage = () => {
                 await login(email, password);
             }
         } catch (err) {
-            setError('❌ Échec de la connexion ou de la création du compte.');
+            setError(`${err instanceof Error ? err.message : 'An unexpected error occurred'}`);
             console.error(err);
         }
     };
@@ -54,7 +54,7 @@ const LoginPage = () => {
     }, []);
 
     return (
-        <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-t from-[#12141b] to-[#191c2a] text-white overflow-hidden">
+        <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
 
 
             <div className='absolute w-full flex flex-col gap-10 opacity-5'>
@@ -77,7 +77,7 @@ const LoginPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="p-0 rounded-lg shadow-xl bg-blue-300/5 border-t-2 border-gray-500/20 space-y-4 w-[90%] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg relative z-10 backdrop-blur-md"
+                    className="p-0 rounded-lg shadow-xl bg-[var(--color-onTop)] border-t-2 border-[var(--color-onTop)] space-y-4 w-[90%] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg relative z-10 backdrop-blur-md"
                 >
                     <div className='px-12 py-5 mb-0 border-b-3 border-black/20 flex items-center'>
                         <LogoIcon className="w-15 h-15 mb-0 text-lime-400" />
@@ -86,7 +86,7 @@ const LoginPage = () => {
                         </h2>
                     </div>
 
-                    <div className='px-12 py-5 flex flex-col mb-0 bt-0 border-b-3 border-b-black/20 border-t-2 border-t-white/7'>
+                    <div className='px-12 py-5 flex flex-col mb-0 bt-0 border-b-3 border-b-black/20 border-t-2 border-t-[var(--color-onTop)]'>
                         {isRegister && (
                             <div>
                                 <label className="text-sm">What should we call you?</label>
@@ -95,7 +95,7 @@ const LoginPage = () => {
                                     placeholder="Your name"
                                     value={name}
                                     onChange={e => setName(e.target.value)}
-                                    className="w-full h-10 p-2 mb-4 bg-gray-600/20 border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30"
+                                    className="w-full h-10 p-2 mb-4 bg-[var(--color-onTop)] border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30"
                                 />
                             </div>
                         )}
@@ -107,7 +107,7 @@ const LoginPage = () => {
                                 placeholder="you@example.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
-                                className="w-full h-10 p-2 mb-4 bg-gray-600/20 border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30"
+                                className="w-full h-10 p-2 mb-4 bg-[var(--color-onTop)] border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30"
                             />
                         </div>
 
@@ -120,11 +120,11 @@ const LoginPage = () => {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                className="w-full h-10 p-2 mb-4 bg-gray-600/20 border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30 pr-10"
+                                className="w-full h-10 p-2 mb-4 bg-[var(--color-onTop)] border-b-2 border-black/35 rounded focus:outline-none placeholder:opacity-30 pr-10"
                             />
                             <button
                                 type="button"
-                                className="absolute right-2 top-[35px] text-gray-400 hover:text-white"
+                                className="absolute right-2 top-[35px] text-white opacity-50 hover:opacity-100"
                                 onClick={() => setShowPassword(prev => !prev)}
                                 tabIndex={-1}
                             >
@@ -141,8 +141,8 @@ const LoginPage = () => {
 
                     </div>
 
-                    <div className='px-12 py-5 border-t-2 border-white/7'>
-                        <p className="text-sm text-gray-400 text-center">
+                    <div className='px-12 py-5 border-t-2 border-[var(--color-onTop)]'>
+                        <p className="text-sm text-neutral-400 text-center">
                             {isRegister ? 'Already onboard?' : "New here?"}{' '}
                             <button
                                 type="button"
