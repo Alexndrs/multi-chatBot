@@ -205,10 +205,7 @@ export function useConversationLogic() {
                     ...targetNode,
                     message: updatedMessage
                 };
-            } else {
-                console.warn(`Target message with ID ${targetId} not found in graph.`);
             }
-
             return {
                 ...prevGraph,
                 messagesMap: newMessagesMap
@@ -222,8 +219,6 @@ export function useConversationLogic() {
             if (newMessagesMap[msgId]) {
                 newMessagesMap[msgId].message.token = token;
                 newMessagesMap[msgId].message.historyToken = historyToken;
-            } else {
-                console.warn(`Message with ID ${msgId} not found in graph.`);
             }
             return {
                 ...prevGraph,
@@ -267,7 +262,7 @@ export function useConversationLogic() {
     const replyToMessage = async (userMessage: string, parentId: string[]): Promise<void> => {
 
         if (parentId.length === 0) {
-            // set last messages as parents :
+            // set last messages as parents or create a new conversation if zero messages:
             const linearized = getLinearizedGraph();
             if (linearized.length === 0) {
                 addConversation(userMessage);
@@ -374,8 +369,8 @@ export function useConversationLogic() {
         )
     }
 
-    const chooseReply = (convId: string, msgId: string) => {
-        chooseReplyAPI(convId, msgId);
+    const chooseReply = async (convId: string, msgId: string) => {
+        await chooseReplyAPI(convId, msgId)
         // Delete other message in the same multiMessage
         for (const parentId of graph.messagesMap[msgId].parents) {
             const parentNode = graph.messagesMap[parentId];

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import SettingsPage from "./pages/settingsPage";
 import ContactPage from "./pages/contactPage";
 import VerifyPage from "./pages/verifyPage";
-import TestPage from "./pages/testPage";
+import ChatPage from "./pages/chatPage";
 import Layout from "./components/layout";
 import LoginPage from "./pages/loginPage";
 
@@ -33,8 +33,7 @@ const AppContent = ({ status }: Props) => {
     return (
         <Layout>
             <Routes>
-                {/* <Route path="/" element={<ChatPage />} /> */}
-                <Route path="/" element={<TestPage />} />
+                <Route path="/" element={<ChatPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="*" element={<Navigate to="/" />} />

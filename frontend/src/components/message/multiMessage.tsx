@@ -1,15 +1,16 @@
 import type { multiMessage } from '../../api/types';
 import { UserMessage } from './userMessage';
 import { useConversationLogic } from '../../hooks/useConversationLogic';
-import { BotMessageV2 } from './botMessage_v2';
+import { BotMessage } from './botMessage';
 
 
 interface MultiMessageProps {
     multiMessage: multiMessage;
     isLast: boolean;
+    setError: (error: string | null) => void;
 }
 
-export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
+export function MultiMessage({ multiMessage, isLast, setError }: MultiMessageProps) {
     const { mergeMessages, editMessage } = useConversationLogic();
 
     if (multiMessage.messages.length === 0) return null;
@@ -24,7 +25,7 @@ export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
                 onEdit={(newMessage: string) => { editMessage(newMessage, multiMessage.messages[0].msgId) }}
             />
         ) : (
-            <BotMessageV2 splittedMessage={multiMessage.messages[0]} />
+            <BotMessage splittedMessage={multiMessage.messages[0]} />
         )
     );
 
@@ -37,22 +38,30 @@ export function MultiMessage({ multiMessage, isLast }: MultiMessageProps) {
         }
     };
 
+    const handleMerge = async () => {
+        try {
+            const parentIds = multiMessage.messages.map(msg => msg.msgId);
+            await mergeMessages(parentIds);
+        } catch (error) {
+            setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+        }
+    }
+
+    const allMessagesAreNotEmpty = multiMessage.messages.every(msg => msg.content.trim() !== '');
+
     return (
         <div className="flex flex-col w-full justify-center items-center gap-4">
             <div className={`grid ${getGridClass(multiMessage.messages.length)} gap-4 w-full items-stretch`}>
                 {multiMessage.messages.map((message) => (
-                    <BotMessageV2 splittedMessage={message} isMulti={true} key={message.msgId} isLast={isLast} />
+                    <BotMessage splittedMessage={message} isMulti={true} key={message.msgId} isLast={isLast} setError={setError} />
                 ))}
             </div>
 
             {/* Merge button */}
-            {isLast && multiMessage.messages.length > 1 && (
+            {isLast && multiMessage.messages.length > 1 && allMessagesAreNotEmpty && (
                 <button
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 cursor-pointer transition-colors duration-200"
-                    onClick={() => {
-                        const parentIds = multiMessage.messages.map(msg => msg.msgId);
-                        mergeMessages(parentIds);
-                    }}
+                    onClick={handleMerge}
                 >
                     Merge Answers
                 </button>

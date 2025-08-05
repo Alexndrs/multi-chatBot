@@ -32,7 +32,7 @@
 */
 /// <reference path="./types.js" />
 import * as db from '../db/sqlite_interface.js';
-import { generateReply } from './chatAPI_v2.js';
+import { generateReply } from './chatAPI.js';
 import { v4 as uuidv4 } from 'uuid';
 
 

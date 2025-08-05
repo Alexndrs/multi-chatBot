@@ -420,16 +420,20 @@ export const regenerateMessage = async (
 
 
 export const chooseReply = async (convId: string, msgId: string): Promise<void> => {
-    const response = await fetch(`${serverUrl}/message/choose`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${getToken()}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ convId, msgId })
-    });
-
-    if (!response.ok) {
-        throw new Error('Failed to choose reply');
+    try {
+        const response = await fetch(`${serverUrl}/message/choose`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ convId, msgId })
+        });
+        if (!response.ok) {
+            const json = await response.json();
+            throw new Error(json.error || 'Failed to choose reply');
+        }
+    } catch (error) {
+        throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
 };

@@ -112,7 +112,7 @@ const SideBar = forwardRef<HTMLDivElement, { open: boolean; onClose: () => void 
     return (
         <div
             ref={ref}
-            className={`fixed top-0 left-0 h-screen w-64 bg-[var(--color-onTop)] border-r-2 border-[var(--color-onTop)] p-4 z-50 shadow-lg transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"
+            className={`fixed top-0 left-0 h-screen w-64 bg-[var(--color-onTop)] border-r-2 border-[var(--color-onTop)] p-4 z-50 shadow-lg transition-transform duration-300 backdrop-blur-xl ${open ? "translate-x-0" : "-translate-x-full"
                 }`}
         >
             <button

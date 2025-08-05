@@ -1,5 +1,5 @@
 import express from 'express';
-import * as chatAPI from '../core/chatAPI_v2.js';
+import * as chatAPI from '../core/chatAPI.js';
 import { getUserConversationMetadata } from '../db/sqlite_interface.js';
 import * as conv from '../core/conversation.js';
 import * as db from '../db/sqlite_interface.js';

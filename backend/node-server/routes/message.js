@@ -1,5 +1,5 @@
 import express from 'express';
-import * as chatAPI from '../core/chatAPI_v2.js';
+import * as chatAPI from '../core/chatAPI.js';
 import authenticateToken from '../middleware/auth.js';
 import * as db from '../db/sqlite_interface.js';
 
@@ -107,11 +107,11 @@ router.post('/choose', authenticateToken, async (req, res) => {
     }
 
     try {
-        chatAPI.chooseReply(userId, convId, msgId);
+        await chatAPI.chooseReply(userId, convId, msgId);
         res.status(200).json({ message: 'Reply chosen successfully' });
     } catch (error) {
         console.error('Error choosing reply:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });
 
