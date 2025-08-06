@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useUser } from '../hooks/useUser';
 import { AnimatePresence, motion } from 'framer-motion';
-import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
 import { useAuthLogic } from '../hooks/useAuthLogic';
+import SliderBg from '../components/sliderBg';
 
 const VerifyPage = () => {
     const { setStatus } = useUser();
@@ -43,43 +43,11 @@ const VerifyPage = () => {
         }
     }
 
-    const shuffleArray = <T,>(array: T[]): T[] => {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    };
-
-    const shuffledArrays = useMemo(() => {
-        const logos = [
-            "/api_logo/chatGPT.png",
-            "/api_logo/claude.png",
-            "/api_logo/llama.png",
-            "/api_logo/qwen.png",
-            "/api_logo/gemma.png",
-            "/api_logo/gemini.png",
-            "/api_logo/mistral.png",
-        ];
-        return Array.from({ length: 7 }, () => shuffleArray(logos));
-    }, []);
-
     return (
         <div>
             <div className="relative flex items-center justify-center min-h-screen text-white overflow-hidden">
 
-                <div className='absolute w-full flex flex-col gap-10 opacity-5'>
-                    {shuffledArrays.map((shuffledLogos, index) => (
-                        <div className='relative w-full h-30'>
-                            <InfiniteSlider key={index} gap={24} reverse={index % 2 === 0}>
-                                {shuffledLogos.map((logo, logoIndex) => (
-                                    <img key={`slider-${logoIndex}`} src={logo} className="h-30 w-auto" />
-                                ))}
-                            </InfiniteSlider>
-                        </div>
-                    ))}
-                </div>
+                <SliderBg />
 
 
                 <AnimatePresence mode='wait'>
@@ -96,7 +64,7 @@ const VerifyPage = () => {
                                 Enter the verification code sent to your email to activate your account.
                             </p>
                             <input
-                                className="w-full mb-4 p-2 [var(--color-onTop)] border-b-2 [var(--color-onTop)] rounded focus:outline-none placeholder:opacity-30 text-white"
+                                className="w-full mb-4 p-2 [var(--color-onTop)] border-b-2 border-[var(--color-onTop)] rounded focus:outline-none placeholder:opacity-30 text-white"
                                 placeholder="Code de vérification"
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}

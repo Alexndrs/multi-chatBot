@@ -29,7 +29,12 @@ export async function sendVerificationEmail({ to, name, code }) {
         `
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        console.error('Error sending verification email:', error);
+        throw new Error('Failed to send verification email');
+    }
 }
 
 

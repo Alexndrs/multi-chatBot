@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
 import LogoIcon from '../components/icons/LogoIcon';
-import { InfiniteSlider } from '../components/motion-primitives/infinite-slider';
 import { useAuthLogic } from '../hooks/useAuthLogic';
+import SliderBg from '../components/sliderBg';
 
 
 const LoginPage = () => {
@@ -31,43 +31,13 @@ const LoginPage = () => {
         }
     };
 
-    const shuffleArray = <T,>(array: T[]): T[] => {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    };
 
-    const shuffledArrays = useMemo(() => {
-        const logos = [
-            "/api_logo/chatGPT.png",
-            "/api_logo/claude.png",
-            "/api_logo/llama.png",
-            "/api_logo/qwen.png",
-            "/api_logo/gemma.png",
-            "/api_logo/gemini.png",
-            "/api_logo/mistral.png",
-        ];
-        return Array.from({ length: 7 }, () => shuffleArray(logos));
-    }, []);
 
     return (
         <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
 
 
-            <div className='absolute w-full flex flex-col gap-10 opacity-5'>
-                {shuffledArrays.map((shuffledLogos, index) => (
-                    <div className='relative w-full h-30'>
-                        <InfiniteSlider key={index} gap={24} reverse={index % 2 === 0}>
-                            {shuffledLogos.map((logo, logoIndex) => (
-                                <img key={`slider-${logoIndex}`} src={logo} className="h-30 w-auto" />
-                            ))}
-                        </InfiniteSlider>
-                    </div>
-                ))}
-            </div>
+            <SliderBg />
 
             <AnimatePresence mode="wait">
                 <motion.form
@@ -153,8 +123,11 @@ const LoginPage = () => {
                             </button>
                         </p>
                     </div>
-
-                    {error && <p className="text-red-400 text-sm">{error}</p>}
+                    {error && (
+                        <div className='mb-4 w-full flex items-center justify-center'>
+                            <p className="px-4 py-2 text-red-400 text-sm bg-red-900/20 border-1 border-red-400 rounded-md">{error}</p>
+                        </div>
+                    )}
                 </motion.form>
             </AnimatePresence>
         </div>

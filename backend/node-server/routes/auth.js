@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
         res.status(201).json({ userId, token });
     } catch (error) {
         console.error('Error creating user:', error);
-        res.status(500).json({ error: `${error || 'Internal server error while creating user'}` });
+        res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });
 
@@ -45,7 +45,7 @@ router.post('/resend', authenticateToken, async (req, res) => {
         res.status(200).json({ message: 'Verification email resent successfully' });
     } catch (error) {
         console.error('Error resending verification email:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });
 
@@ -64,7 +64,7 @@ router.post('/verify/:code', authenticateToken, async (req, res) => {
         return res.status(status).json({ error: result.error });
     } catch (error) {
         console.error('Error verifying user:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });
 
@@ -79,7 +79,7 @@ router.post('/login', async (req, res) => {
         res.status(200).json({ userId, token });
     } catch (error) {
         console.error('Error logging in user:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error.message || 'Internal server error' });
     }
 });
 

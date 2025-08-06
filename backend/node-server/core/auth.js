@@ -21,7 +21,7 @@ export async function createUser(mail, name, pass, code) {
     // Verify if user already exists
     const existingUser = await db.getUserByMail(mail);
     if (existingUser) {
-        throw new Error('Email already exists');
+        throw new Error('This email already exists');
     }
     const hashPass = await bcrypt.hash(pass, saltRounds);
     const userId = uuidv4();
@@ -32,7 +32,7 @@ export async function createUser(mail, name, pass, code) {
         hashPass,
         code
     );
-    const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
+    const token = jwt.sign({ userId: userId, email: mail }, JWT_SECRET, { expiresIn: '24h' });
     return { userId, token };
 }
 
@@ -55,7 +55,7 @@ export async function loginUser(mail, pass) {
         throw new Error('Invalid password');
     }
     // Générer le token
-    const token = jwt.sign({ userId: user.userId, email: mail }, JWT_SECRET, { expiresIn: '2h' });
+    const token = jwt.sign({ userId: user.userId, email: mail }, JWT_SECRET, { expiresIn: '24h' });
 
     return { userId: user.userId, token };
 }
