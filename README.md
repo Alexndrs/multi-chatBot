@@ -17,10 +17,25 @@ A fullstack AI-powered chat platform supporting **multiple LLM providers** (Open
 > * Using Nginx as reverse proxy and PM2 for process management.
 > * Using webhook for CI/CD
 
+**Auth system**
 <p align="center">
-  <img src="./demo.gif" width="100%" alt="Chat demo" />
+  <img src="./Animation1.gif" width="100%" alt="Chat demo" />
 </p>
 
+**Multi response and merging**
+<p align="center">
+  <img src="./Animation2.gif" width="100%" alt="Chat demo" />
+</p>
+
+**Submitting API key to access the model you want**
+<p align="center">
+  <img src="./Animation3.gif" width="100%" alt="Chat demo" />
+</p>
+
+**LaTeX and Code rendering in real time**
+<p align="center">
+  <img src="./Animation4.gif" width="100%" alt="Chat demo" />
+</p>
 
 
 ## 🚀 Features
